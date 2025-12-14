@@ -1,0 +1,126 @@
+@import url("https://fonts.googleapis.com/css2?family=ABeeZee:ital@0;1&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "ABeeZee", sans-serif !important;
+}
+
+:root {
+  --color-background: #ffffff;
+  --color-foreground: #171717;
+}
+
+/* ============ CUSTOM COMPONENTS ============ */
+@layer components {
+  .text-normal {
+    @apply text-[14px];
+  }
+  .text-heading {
+    @apply text-[16px];
+  }
+  .text-xsmall {
+    @apply text-[8px];
+  }
+  .text-small {
+    @apply text-[10px];
+  }
+}
+
+.ant-table-thead > tr > th {
+  background-color: #f97316 !important; /* orange-500 */
+  color: white !important;
+  font-weight: 600;
+  padding: 6px 10px !important;
+  font-family: "ABeeZee", sans-serif !important;
+}
+.ant-table-tbody > tr > td {
+  padding: 8px 10px !important;
+  font-family: "ABeeZee", sans-serif !important;
+  text-transform: capitalize !important;
+  font-size: small !important;
+}
+/* Scrollable wrapper */
+.table-container {
+  overflow-x: auto; /* horizontal scroll */
+  max-width: 100%;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #f97316 #f3f4f6; /* Firefox: thumb color + track color */
+}
+
+/* Webkit (Chrome, Edge, Safari) */
+.table-container::-webkit-scrollbar {
+  height: 8px; /* horizontal scrollbar height */
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f3f4f6; /* light gray track */
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background-color: #f97316; /* orange thumb */
+  border-radius: 4px;
+  border: 2px solid #f3f4f6; /* space around thumb */
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background-color: #ea580c; /* darker orange on hover */
+}
+
+.table-container {
+  overflow: auto; /* vertical & horizontal scroll */
+  max-width: 100%;
+  /* max-height: 400px; optional: set max height */
+  border-radius: 8px;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #f97316 #f3f4f6; /* thumb + track color */
+}
+
+/* Webkit browsers (Chrome, Edge, Safari) */
+.table-container::-webkit-scrollbar {
+  width: 5px; /* vertical scrollbar width */
+  height: 10px; /* horizontal scrollbar height */
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 5px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background-color: #f97316;
+  border-radius: 5px;
+  border: 2px solid #f3f4f6; /* space around thumb */
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background-color: #ea580c; /* hover effect */
+}
+
+/* Optional: smooth scrolling for all browsers */
+.table-container {
+  scroll-behavior: smooth;
+}
+
+/* PRINT POS ONLY */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #pos-receipt,
+  #pos-receipt * {
+    visibility: visible;
+  }
+
+  #pos-receipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 58mm; /* or 80mm for bigger printers */
+    padding: 10px;
+  }
+}
