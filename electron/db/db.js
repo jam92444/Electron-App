@@ -17,6 +17,10 @@ function initDatabase() {
   db.pragma("foreign_keys = ON");
 
   // TABLES
+
+  /**----------------------------------
+     Items Table
+   ---------------------------------*/
   db.prepare(
     `
     CREATE TABLE IF NOT EXISTS items (
@@ -29,6 +33,9 @@ function initDatabase() {
   `
   ).run();
 
+  /**----------------------------------
+     Item Vairents Table
+   ---------------------------------*/
   db.prepare(
     `
     CREATE TABLE IF NOT EXISTS item_variants (
@@ -41,6 +48,9 @@ function initDatabase() {
   `
   ).run();
 
+  /**----------------------------------
+     Size Table
+   ---------------------------------*/
   db.prepare(
     `
     CREATE TABLE IF NOT EXISTS sizes (
@@ -48,6 +58,42 @@ function initDatabase() {
       size INTEGER UNIQUE
     )
   `
+  ).run();
+
+  /**----------------------------------
+     Bill Table
+   ---------------------------------*/
+  db.prepare(
+    `
+  CREATE TABLE IF NOT EXISTS bills (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    total_pieces INTEGER,
+    total_before_discount REAL,
+    discount REAL,
+    discount_amount REAL,
+    total_after_discount REAL,
+    payment_mode TEXT
+  )
+`
+  ).run();
+
+  /**----------------------------------
+     Bill Items Table
+   ---------------------------------*/
+  db.prepare(
+    `
+  CREATE TABLE IF NOT EXISTS bill_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bill_id INTEGER,
+    item_code TEXT,
+    item_name TEXT,
+    price REAL,
+    size TEXT,
+    quantity INTEGER,
+    total_amount REAL
+  )
+`
   ).run();
 
   return db;

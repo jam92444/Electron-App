@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { discount as discountOptions } from "../../../Utils/data";
-import Input from "../../../components/ReuseComponents/Input";
-import Button from "../../../components/ReuseComponents/Button";
-import Modal from "../../../components/ReuseComponents/Modal";
-import Select from "react-select"; // searchable select
+import { GrPowerReset } from "react-icons/gr";
 import { CiEdit, CiTrash } from "react-icons/ci";
 import { getItems } from "../../../services/items";
-
+import { saveBill, updateBill } from "../../../services/bills";
+import Input from "../../../components/ReuseComponents/Input";
+import Select from "react-select"; // searchable select
+import Button from "../../../components/ReuseComponents/Button";
+import Modal from "../../../components/ReuseComponents/Modal";
 // ----------- Main Component -----------
 const GenerateBill = () => {
   const [billItems, setBillItems] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [modal, setModal] = useState(null);
+  const [billId, setBillId] = useState(null);
   const [billSummary, setBillSummary] = useState({
     totalPieces: 0,
     totalBeforeDiscount: 0,
@@ -20,7 +22,6 @@ const GenerateBill = () => {
     paymentmode: "",
     totalAfterDiscount: 0,
   });
-  // const
 
   const [billDiscount, setBillDiscount] = useState(0);
 
@@ -48,6 +49,7 @@ const GenerateBill = () => {
     });
   }, [billItems, billDiscount]);
 
+  // ----------- RoundOFF Amount -----------
   const handleRoundOff = () => {
     if (billSummary.totalAfterDiscount <= 0) return; // prevent 0 or negative
 
@@ -70,6 +72,21 @@ const GenerateBill = () => {
     }));
   };
 
+  // ----------- Reset Form -----------
+  const handleResetForm = () => {
+    setBillItems([]);
+    setEditIndex(null);
+    setBillId(null);
+    setBillSummary({
+      totalPieces: 0,
+      totalBeforeDiscount: 0,
+      discount: 0,
+      discountAmount: 0,
+      paymentmode: "",
+      totalAfterDiscount: 0,
+    });
+    setBillDiscount(0);
+  };
   // ----------- Add/Update Item -----------
   const handleSaveItem = (item) => {
     if (!item.itemName || !item.price || !item.quantity) {
@@ -91,6 +108,54 @@ const GenerateBill = () => {
     setBillItems(updated);
     setEditIndex(null);
   };
+
+  // ---------------Save Bill to DB---------------
+  const handleSaveBill = async (printAfter = false) => {
+    if (billItems.length === 0) {
+      alert("No items to save!");
+      return;
+    }
+
+    try {
+      let res;
+
+      if (!billId) {
+        // FIRST TIME SAVE
+        res = await saveBill(billSummary, billItems);
+
+        if (!res.success) {
+          alert("Failed to save bill");
+          return;
+        }
+
+        setBillId(res.billId);
+      } else {
+        // UPDATE EXISTING BILL
+        res = await updateBill(billId, billSummary, billItems);
+
+        if (!res.success) {
+          alert("Failed to update bill");
+          return;
+        }
+      }
+
+      if (printAfter) {
+        window.print();
+      } else {
+        alert("Bill saved successfully");
+        handleResetForm();
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong while saving bill");
+    }
+  };
+
+  //--------------- Print Bill and Save---------------
+  const handlePrintBill = () => handleSaveBill(true);
+
+  // ---------------Save only---------------
+  const handleSaveOnly = () => handleSaveBill(false);
 
   // ----------- Edit bill items -----------
   const handleEdit = (index) => setEditIndex(index);
@@ -119,22 +184,52 @@ const GenerateBill = () => {
     });
   };
 
-  // ----------- PRINT (Only POS Section) -----------
-  const handlePrintBill = () => {
-    try {
-      if (billItems.length === 0) {
-        alert("No items to print! Please add items first.");
-        return;
-      }
-
-      window.print(); // Prints ONLY #pos-receipt
-    } catch (error) {
-      alert("Printer not connected or printing failed!");
+  // ----------- delete Bill -----------
+  const handleDeleteBill = async () => {
+    if (!billId) {
+      alert("No saved bill to delete");
+      return;
     }
+
+    setModal({
+      title: "Confirm Delete",
+      message: "This bill will be permanently deleted. Continue?",
+      actions: (
+        <>
+          <Button
+            buttonName="Delete"
+            buttonType="delete"
+            onClick={async () => {
+              const res = await deleteBill(billId);
+
+              if (res.success) {
+                setBillItems([]);
+                setBillId(null);
+                setBillDiscount(0);
+                setModal(null);
+                alert("Bill deleted successfully");
+              } else {
+                alert("Failed to delete bill");
+              }
+            }}
+          />
+          <Button buttonName="Cancel" onClick={() => setModal(null)} />
+        </>
+      ),
+    });
   };
+  console.log(billItems, "billItems");
   return (
     <div className="bg-white p-2 sm:p-6 rounded-lg  min-h-[80vh]">
-      <h1 className="text-xl font-semibold mb-4">Generate Bill</h1>
+      <div className="flex items-center gap-4 py-2 justify-between">
+        <h1 className="text-xl font-semibold ">Generate Bill</h1>
+        <button
+          className="mr-2 p-2 border flex items-center  gap-1 mb-2 rounded-lg shadow-md hover:scale-95 hover:shadow-sm transition-all duration-150"
+          onClick={() => handleResetForm()}
+        >
+          <GrPowerReset /> <span>Reset</span>
+        </button>
+      </div>
 
       <AddBillItemForm
         initialItem={editIndex !== null ? billItems[editIndex] : null}
@@ -149,6 +244,8 @@ const GenerateBill = () => {
         billSummary={billSummary}
         setBillDiscount={setBillDiscount}
         onPrint={handlePrintBill}
+        onDeleteBill={handleDeleteBill}
+        onSaveOnly={handleSaveOnly}
         onRoundOff={handleRoundOff}
       />
 
@@ -164,7 +261,6 @@ const GenerateBill = () => {
           {" "}
           No 6 fathima nagar, 3rd St near saramedu, Coimbatore-641008
         </p>
-        <p className="text-center text-[8px] -mt-2">Ph:- 8248114687</p>
 
         <div className="flex justify-between mb-2">
           <span className="text-[8px]">
@@ -184,23 +280,37 @@ const GenerateBill = () => {
             })}
           </span>
         </div>
+        <div className="text-nowrap overflow-x-hidden -mb-1">
+          ----------------------------------------------------------------------------------------------
+        </div>
         <div className="grid grid-cols-4  text-start text-[9px]">
           <span className="w-full text-wrap col-span-2">Item</span>
-          <span>Pcs</span>
+          <span>Size</span>
           <span>Price</span>
         </div>
-        <hr />
+        <div className="text-nowrap overflow-x-hidden -mt-1">
+          ----------------------------------------------------------------------------------------------
+        </div>
 
         {/* Items */}
         {billItems.map((item, index) => (
           <div key={index} className="grid grid-cols-4  text-start text-[8px]">
-            <span className="w-full text-wrap col-span-2">{item.itemName}</span>
-            <span className="">{item.quantity}</span>
+            <p className="w-full flex flex-col text-wrap col-span-2">
+              <span>
+                {item.itemCode} x {item.quantity}
+              </span>
+              <span className="text-wrap text-[6px] -mt-1">
+                ( {item.itemName} )
+              </span>
+            </p>
+            <span className="">{item.size ? item.size : "-"}</span>
             <span className="">₹{Number(item.totalAmount).toFixed(2)}</span>
           </div>
         ))}
 
-        <hr />
+        <div className="text-nowrap overflow-x-hidden -mb-1">
+          ----------------------------------------------------------------------------------------------
+        </div>
         <div className="grid grid-cols-4  text-start text-[9px] font-semibold">
           <span className="w-full text-wrap col-span-2">Total:</span>
           <span className=""></span>
@@ -208,7 +318,9 @@ const GenerateBill = () => {
             ₹{billSummary.totalBeforeDiscount.toFixed(2)}
           </span>
         </div>
-        <hr />
+        <div className="text-nowrap overflow-x-hidden -mt-1">
+          ----------------------------------------------------------------------------------------------
+        </div>
         <div className="grid grid-cols-3  text-end text-[8px] mt-3">
           <span className=""></span>
           <span className="w-full text-wrap">Total Pcs:</span>
@@ -229,7 +341,10 @@ const GenerateBill = () => {
           <span className="">Grand Total:</span>
           <span className="">₹{billSummary.totalAfterDiscount.toFixed(2)}</span>
         </div>
-        <p className="text-center  text-[7px] mt-2">
+        <p className="text-center text-[7px] mt-2">
+          Ph:- 9244437480, 8248114687{" "}
+        </p>
+        <p className="text-center  text-[7px]">
           Note: Once the product is purchased, it cannot be returned. However,
           it may be exchanged within 24 hours of purchase.
         </p>
@@ -254,7 +369,6 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
     totalAmount: 0,
   });
   const [AllItems, setAllItems] = useState([]);
-  const [sample, setSample] = useState([]);
   useEffect(() => {
     if (initialItem) setItem(initialItem);
   }, [initialItem]);
@@ -293,7 +407,6 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
         ]);
       } else {
         setAllItems(response.items);
-        console.log(response.items);
       }
     };
     fetchItems();
@@ -402,10 +515,16 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
       </div>
 
       <div className="mt-4 flex gap-4 justify-end">
-        <Button buttonName="Reset" type="button" onClick={handleReset} />
+        <Button
+          buttonName="Cancel"
+          type="button"
+          classname="shadow-md hover:scale-95 hover:shadow-sm transition-all duration-150"
+          onClick={handleReset}
+        />
         <Button
           buttonName={initialItem ? "Update" : "Add Item"}
           buttonType="save"
+          classname="shadow-md hover:scale-95 hover:shadow-sm transition-all duration-150"
           type="submit"
         />
         {initialItem && (
@@ -429,6 +548,8 @@ const BillItemsTable = ({
   billSummary,
   setBillDiscount,
   onPrint,
+  onDeleteBill,
+  onSaveOnly,
   onRoundOff,
 }) => {
   return (
@@ -484,11 +605,12 @@ const BillItemsTable = ({
           </tbody>
         </table>
       </div>
-
       <GenerateFinalAmount
         billSummary={billSummary}
         setBillDiscount={setBillDiscount}
         onPrint={onPrint}
+        onSaveOnly={onSaveOnly}
+        onDeleteBill={onDeleteBill}
         onRoundOff={onRoundOff}
       />
     </div>
@@ -500,10 +622,12 @@ const GenerateFinalAmount = ({
   billSummary,
   setBillDiscount,
   onPrint,
+  onSaveOnly,
   onRoundOff,
+  onDeleteBill,
 }) => {
   return (
-    <div className="mt-10 float-right mr-4 p-4 rounded-lg border shadow-lg bg-white w-full sm:w-[300px]">
+    <div className="mt-10 float-right mr-4 p-4 rounded-lg border shadow-xl bg-white w-full sm:w-[300px] mb-10">
       <h2 className="text-lg font-semibold mb-3">Bill Summary</h2>
 
       <p className="flex justify-between text-sm mb-1">
@@ -551,18 +675,30 @@ const GenerateFinalAmount = ({
         </span>
       </p>
 
-      <div className="flex items-center gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2  items-center gap-2">
         <Button
-          classname="rounded-md"
+          classname="rounded-md shadow-md hover:scale-95 hover:shadow-sm transition-all duration-150"
           buttonName={"Print Bill"}
           buttonType="save"
           onClick={onPrint}
         />
-
         <Button
           buttonName={"Round off"}
           buttonType="save"
-          onClick={onRoundOff} // ✅ call parent
+          onClick={onRoundOff}
+        />
+
+        <Button
+          classname="rounded-md shadow-md hover:scale-95 hover:shadow-sm transition-all duration-150"
+          buttonName={"Save Only"}
+          buttonType="save"
+          onClick={onSaveOnly}
+        />
+        <Button
+          classname="rounded-md shadow-md hover:scale-95 hover:shadow-sm transition-all duration-150"
+          buttonName={"Delete Bill"}
+          buttonType="delete"
+          onClick={onDeleteBill}
         />
       </div>
     </div>

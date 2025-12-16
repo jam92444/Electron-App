@@ -3,6 +3,7 @@ const path = require("path");
 const { initDatabase } = require("./db/db");
 const { registerItemHandlers } = require("./modules/items");
 const { registerSizeHandlers } = require("./modules/size");
+const { registerBillHandlers } = require("./modules/billHandlers");
 
 let mainWindow;
 let db;
@@ -32,7 +33,7 @@ app.whenReady().then(() => {
   // 🔐 Register IPC handlers ONCE
   registerItemHandlers(db);
   registerSizeHandlers(db);
-
+  registerBillHandlers(db);
   createWindow();
 });
 

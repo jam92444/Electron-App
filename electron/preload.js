@@ -17,4 +17,19 @@ contextBridge.exposeInMainWorld("api", {
   updateSize: (id, newSize) =>
     ipcRenderer.invoke("db:updateSize", { id, newSize }),
   deleteSize: (id) => ipcRenderer.invoke("db:deleteSize", id),
+
+  // -----------------------------
+  // Billing
+  // -----------------------------
+
+  saveBill: (bill, items) => ipcRenderer.invoke("db:saveBill", bill, items),
+
+  updateBill: (billId, bill, items) =>
+    ipcRenderer.invoke("db:updateBill", billId, bill, items),
+
+  getBills: () => ipcRenderer.invoke("db:getBills"),
+
+  getBillById: (billId) => ipcRenderer.invoke("db:getBillById", billId),
+
+  deleteBill: (billId) => ipcRenderer.invoke("db:deleteBill", billId),
 });
