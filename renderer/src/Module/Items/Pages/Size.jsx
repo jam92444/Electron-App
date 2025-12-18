@@ -9,7 +9,7 @@ import {
   insertSize,
   updateSize,
   deleteSize,
-} from "../../../services/sizes";
+} from "../Services/sizes";
 
 // ----------- Main Component -----------
 const Size = () => {

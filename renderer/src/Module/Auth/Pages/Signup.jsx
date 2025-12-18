@@ -1,8 +1,7 @@
-import asset from "../../Utils/asset";
-import Input from "../../components/ReuseComponents/Input";
-import Button from "../../components/ReuseComponents/Button";
+import asset from "../../../Utils/asset";
+import Input from "../../../components/ReuseComponents/Input";
+import Button from "../../../components/ReuseComponents/Button";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Signup = () => {

@@ -1,5 +1,6 @@
-import Button from "../../components/ReuseComponents/Button";
-import asset from "../../Utils/asset";
+
+import Button from "../../../components/ReuseComponents/Button";
+import asset from "../../../Utils/asset";
 
 const VerifyEmailMessagePage = () => {
   const handleGoToMail = () => {

@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { discount as discountOptions } from "../../../Utils/data";
 import { GrPowerReset } from "react-icons/gr";
 import { CiEdit, CiTrash } from "react-icons/ci";
-import { getItems } from "../../../services/items";
-import { saveBill, updateBill } from "../../../services/bills";
+import { getItems } from "../../Items/Services/items";
+import { saveBill, updateBill } from "../Services/bills";
 import Select from "react-select"; // searchable select
 import Button from "../../../components/ReuseComponents/Button";
 import Input from "../../../components/ReuseComponents/Input";
