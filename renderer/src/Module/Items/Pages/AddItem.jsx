@@ -11,8 +11,8 @@ import {
   getItems,
   insertItem,
   updateItem,
-} from "../../../services/items";
-import { getSizes } from "../../../services/sizes";
+} from "../Services/items";
+import { getSizes } from "../Services/sizes";
 
 /* ---------------------------------------------------------
    MAIN COMPONENT

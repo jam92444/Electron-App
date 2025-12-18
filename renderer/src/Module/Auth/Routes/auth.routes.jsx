@@ -1,11 +1,11 @@
-import { withSuspense } from "./withSuspense";
+import { withSuspense } from "../../../Router/withSuspense";
 import {
   Signup,
   Login,
   ForgotPassword,
   VerifyEmailMessagePage,
   ResetPassword,
-} from "./lazyImports";
+} from "./auth.lazyImports";
 
 export const authRoutes = [
   { path: "signup", element: withSuspense(<Signup />) },

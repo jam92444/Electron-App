@@ -1,46 +1,29 @@
 import AppLayout from "../Layout/AppLayout";
-import { withSuspense } from "./withSuspense";
-import {
-  Home,
-  AddItem,
-  Size,
-  Discounts,
-  CompanySetting,
-  GenerateBills,
-  GenerateLabel,
-} from "./lazyImports";
-import SalesBill from "../Module/Billing/Pages/SalesBill";
 import { labelRoutes } from "../Module/Label/Routes/label.routes";
+import { BillingRoutes } from "../Module/Billing/Routers/bills.routes";
+import { SettingRoutes } from "../Module/Settings/Routes/setting.routes";
+import { ItemsRoutes } from "../Module/Items/Routers/items.routes";
+import { DashboardRoutes } from "../Module/Dashboard/Routes/dashboard.routes";
 
 export const appRoutes = [
   {
     path: "/",
     element: <AppLayout />, // layout should NOT be wrapped in suspense
     children: [
-      { index: true, element: withSuspense(<Home />) },
+      //Dashboard Module routes
+      ...DashboardRoutes,
 
-      // Masters
-      { path: "add-item", element: withSuspense(<AddItem />) },
-      { path: "size", element: withSuspense(<Size />) },
-      { path: "discounts", element: withSuspense(<Discounts />) },
+      // Items Module Routes
+      ...ItemsRoutes,
 
-      // Settings
-      {
-        path: "setting/company-details",
-        element: withSuspense(<CompanySetting />),
-      },
+      // Settings Module Routes
+      ...SettingRoutes,
 
-      // Billing
-      {
-        path: "billing/generate-bill",
-        element: withSuspense(<GenerateBills />),
-      },
-      // Receipt
-      { path: "billing/sales-bill", element: withSuspense(<SalesBill />) },
+      // Billing  Module Routes
+      ...BillingRoutes,
 
-      // Label
-      ...labelRoutes
-    
+      // Label Module Routes
+      ...labelRoutes,
     ],
   },
 ];
