@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { authRoutes } from "./auth.routes.jsx";
 import { appRoutes } from "./app.routes.jsx";
-import NotFoundPage from "../pages/NotFound/NotFoundPage";
+import NotFoundPage from "../components/NotFound/NotFoundPage.jsx";
 
 const router = createBrowserRouter([
   ...authRoutes,

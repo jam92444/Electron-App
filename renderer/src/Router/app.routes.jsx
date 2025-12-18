@@ -9,11 +9,13 @@ import {
   GenerateBills,
   GenerateLabel,
 } from "./lazyImports";
+import SalesBill from "../Module/Billing/Pages/SalesBill";
+import { labelRoutes } from "../Module/Label/Routes/label.routes";
 
 export const appRoutes = [
   {
     path: "/",
-    element: <AppLayout />,  // layout should NOT be wrapped in suspense
+    element: <AppLayout />, // layout should NOT be wrapped in suspense
     children: [
       { index: true, element: withSuspense(<Home />) },
 
@@ -23,13 +25,22 @@ export const appRoutes = [
       { path: "discounts", element: withSuspense(<Discounts />) },
 
       // Settings
-      { path: "setting/company-details", element: withSuspense(<CompanySetting />) },
+      {
+        path: "setting/company-details",
+        element: withSuspense(<CompanySetting />),
+      },
 
       // Billing
-      { path: "billing/generate-bill", element: withSuspense(<GenerateBills />) },
+      {
+        path: "billing/generate-bill",
+        element: withSuspense(<GenerateBills />),
+      },
+      // Receipt
+      { path: "billing/sales-bill", element: withSuspense(<SalesBill />) },
 
       // Label
-      { path: "label/generate-label", element: withSuspense(<GenerateLabel />) },
+      ...labelRoutes
+    
     ],
   },
 ];

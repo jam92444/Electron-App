@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
-import LabelPreview from "./LabelPreview";
+import LabelPreview from "../Components/LabelPreview";
 
 export default function GenerateLabel() {
   const [labelData, setLabelData] = useState({
@@ -37,7 +37,12 @@ export default function GenerateLabel() {
           onChange={handleChange}
         />
         <br />
-        <input name="sku" placeholder="SKU" value={labelData.sku} onChange={handleChange} />
+        <input
+          name="sku"
+          placeholder="SKU"
+          value={labelData.sku}
+          onChange={handleChange}
+        />
         <br />
         <input
           name="weight"

@@ -4,10 +4,9 @@ import { GrPowerReset } from "react-icons/gr";
 import { CiEdit, CiTrash } from "react-icons/ci";
 import { getItems } from "../../../services/items";
 import { saveBill, updateBill } from "../../../services/bills";
-import Input from "../../../components/ReuseComponents/Input";
 import Select from "react-select"; // searchable select
 import Button from "../../../components/ReuseComponents/Button";
-import Modal from "../../../components/ReuseComponents/Modal";
+import Input from "../../../components/ReuseComponents/Input";
 // ----------- Main Component -----------
 const GenerateBill = () => {
   const [billItems, setBillItems] = useState([]);

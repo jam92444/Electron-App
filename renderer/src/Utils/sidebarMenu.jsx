@@ -22,9 +22,12 @@ export const menuItems = [
     ],
   },
   {
-    label: "Billing",
+    label: "Sales",
     icon: <Squares2X2Icon className="w-4 h-4" />,
-    children: [{ label: "Generate Bill", path: "/billing/generate-bill" }],
+    children: [
+      { label: "Generate Bill", path: "/billing/generate-bill" },
+      { label: "Sales Bill", path: "billing/sales-bill" },
+    ],
   },
   {
     label: "Label",
