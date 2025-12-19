@@ -87,7 +87,7 @@ const AddItem = () => {
   };
 
   return (
-    <div className="p-0 sm:p-4 rounded min-h-screen">
+    <div className="p-0 sm:p-4 rounded min-h-screen ">
       <h1 className="text-lg px-4 sm:p-0 sm:text-xl font-semibold uppercase text-gray-900  sm:mb-4">
         {editingIndex !== null ? "Edit Item" : "Add New Item"}
       </h1>

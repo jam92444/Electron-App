@@ -4,7 +4,7 @@ import {
   Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 import { HiOutlineTag } from "react-icons/hi";
-import { IoSettingsOutline } from "react-icons/io5";
+import { IoSettingsOutline, IoStorefrontOutline } from "react-icons/io5";
 
 export const menuItems = [
   {
@@ -19,6 +19,13 @@ export const menuItems = [
       { label: "Items", path: "/add-item" },
       { label: "Sizes", path: "/size" },
       { label: "Discounts", path: "/discounts" },
+    ],
+  },
+  {
+    label: "Vendor",
+    icon: <IoStorefrontOutline className="w-4 h-4" />,
+    children: [
+      { label: "Vendor", path: "/vendor/add-vendor" },
     ],
   },
   {
