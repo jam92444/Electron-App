@@ -96,6 +96,36 @@ function initDatabase() {
 `
   ).run();
 
+  /**----------------------------------
+   Vendor Table
+----------------------------------*/
+  db.prepare(
+    `
+  CREATE TABLE IF NOT EXISTS vendors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vendorName TEXT NOT NULL,
+    contactPerson TEXT,
+    phone TEXT NOT NULL,
+    whatsapp TEXT,
+    email TEXT NOT NULL,
+    address1 TEXT NOT NULL,
+    address2 TEXT,
+    city TEXT NOT NULL,
+    state TEXT NOT NULL,
+    country TEXT NOT NULL DEFAULT 'IN',
+    gstType TEXT,
+    gstNumber TEXT,
+    bankName TEXT,
+    accountHolder TEXT,
+    accountNumber TEXT,
+    ifsc TEXT,
+    upi TEXT,
+    paymentTerms TEXT DEFAULT '30 Days',
+    status TEXT DEFAULT 'Active'
+  )
+`
+  ).run();
+
   return db;
 }
 

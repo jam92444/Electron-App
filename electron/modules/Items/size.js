@@ -1,6 +1,7 @@
 const { ipcMain } = require("electron");
 
 function registerSizeHandlers(db) {
+
   /* -------------------------------------
         INSERT OR ADD NEW SIZE
     ----------------------------------------*/
@@ -97,6 +98,32 @@ function registerSizeHandlers(db) {
       return { success: false, error: err.message };
     }
   });
+
+
+  /* -----------------------------
+     FILTERED SIZE
+  ----------------------------- */
+  ipcMain.handle("db:filterSizes", (e, filters) => {
+  try {
+    let query = "SELECT * FROM sizes WHERE 1=1";
+    const params = [];
+
+    if (filters.sizeName) {
+      query += " AND sizeName LIKE ?";
+      params.push(`%${filters.sizeName}%`);
+    }
+    if (filters.unit) {
+      query += " AND unit = ?";
+      params.push(filters.unit);
+    }
+
+    const sizes = db.prepare(query).all(...params);
+    return { success: true, sizes };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 }
 
 module.exports = { registerSizeHandlers };

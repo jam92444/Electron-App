@@ -118,6 +118,41 @@ function registerItemHandlers(db) {
       return { success: false, error: err.message };
     }
   });
+
+  // --------- FILTER ITEMS -------
+  ipcMain.handle("db:filterItems", (e, filters) => {
+  try {
+    let query = "SELECT * FROM items WHERE 1=1";
+    const params = [];
+
+    if (filters.itemName) {
+      query += " AND itemName LIKE ?";
+      params.push(`%${filters.itemName}%`);
+    }
+    if (filters.unit) {
+      query += " AND unit = ?";
+      params.push(filters.unit);
+    }
+    if (filters.hasVariants !== undefined) {
+      query += " AND hasVariants = ?";
+      params.push(filters.hasVariants ? 1 : 0);
+    }
+
+    const items = db.prepare(query).all(...params);
+    const variants = db.prepare("SELECT * FROM item_variants").all();
+
+    const merged = items.map((item) => ({
+      ...item,
+      hasVariants: !!item.hasVariants,
+      variants: variants.filter((v) => v.itemID === item.itemID),
+    }));
+
+    return { success: true, items: merged };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 }
 
 module.exports = { registerItemHandlers };

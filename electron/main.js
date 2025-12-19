@@ -1,9 +1,10 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const { initDatabase } = require("./db/db");
-const { registerItemHandlers } = require("./modules/items");
-const { registerSizeHandlers } = require("./modules/size");
-const { registerBillHandlers } = require("./modules/billHandlers");
+const { registerItemHandlers } = require("./modules/Items/items");
+const { registerSizeHandlers } = require("./modules/Items/size");
+const { registerBillHandlers } = require("./modules/Billing/billHandlers");
+const { registerVendorHandlers } = require("./modules/Vendor/Vendor");
 
 let mainWindow;
 let db;
@@ -34,6 +35,7 @@ app.whenReady().then(() => {
   registerItemHandlers(db);
   registerSizeHandlers(db);
   registerBillHandlers(db);
+  registerVendorHandlers(db)
   createWindow();
 });
 

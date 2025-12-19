@@ -3,6 +3,13 @@ import Input from "../../../components/ReuseComponents/Input";
 import { Country, State, City } from "country-state-city";
 import { useState } from "react";
 
+// Utility function to capitalize each word
+const capitalizeWords = (str) =>
+  str
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
 const VendorBasicDetails = ({ vendorData, setVendorData }) => {
   const [errors, setErrors] = useState({});
 
@@ -81,30 +88,37 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
       : [];
 
   return (
-    <div className="mb-8  p-4 rounded-lg ">
+    <div className="mb-8 p-4 rounded-lg">
       <h2 className="font-semibold mb-3 text-lg">Basic Details</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Vendor Name */}
         <Input
           label="Vendor Name *"
           value={vendorData.vendorName}
           onChange={(e) => {
-            setVendorData({ ...vendorData, vendorName: e.target.value });
-            validateField("vendorName", e.target.value);
+            const capitalized = capitalizeWords(e.target.value);
+            setVendorData({ ...vendorData, vendorName: capitalized });
+            validateField("vendorName", capitalized);
           }}
+          error={errors.vendorName}
         />
-        {errors.vendorName && (
-          <p className="text-red-500 text-xs mt-1">{errors.vendorName}</p>
-        )}
 
+        {/* Contact Person */}
         <Input
           label="Contact Person"
+          classname="capitalize"
           value={vendorData.contactPerson}
           onChange={(e) =>
-            setVendorData({ ...vendorData, contactPerson: e.target.value })
+            setVendorData({
+              ...vendorData,
+              contactPerson: capitalizeWords(e.target.value),
+            })
           }
+          error={errors.contactPerson}
         />
 
+        {/* Phone */}
         <Input
           label="Phone *"
           value={vendorData.phone}
@@ -112,11 +126,9 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
             setVendorData({ ...vendorData, phone: e.target.value });
             validateField("phone", e.target.value);
           }}
+          error={errors.phone}
         />
-        {errors.phone && (
-          <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
-        )}
-
+        {/* WhatsApp */}
         <Input
           label="WhatsApp"
           value={vendorData.whatsapp}
@@ -125,6 +137,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
           }
         />
 
+        {/* Email */}
         <Input
           label="Email *"
           value={vendorData.email}
@@ -132,10 +145,8 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
             setVendorData({ ...vendorData, email: e.target.value });
             validateField("email", e.target.value);
           }}
+          error={errors.email}
         />
-        {errors.email && (
-          <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-        )}
 
         {/* Country */}
         <div>
@@ -199,6 +210,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
           )}
         </div>
 
+        {/* GST Number */}
         <Input
           label="GST Number"
           value={vendorData.gstNumber}
@@ -207,11 +219,9 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
             setVendorData({ ...vendorData, gstNumber: value });
             validateField("gstNumber", value);
           }}
+          error={errors.gstNumber}
         />
-        {errors.gstNumber && (
-          <p className="text-red-500 text-xs mt-1">{errors.gstNumber}</p>
-        )}
-
+        {/* Address */}
         <Input
           label="Address Line 1"
           value={vendorData.address1}

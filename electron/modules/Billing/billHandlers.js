@@ -1,6 +1,7 @@
 const { ipcMain } = require("electron");
 
 function registerBillHandlers(db) {
+
   // ---------- SAVE BILL (TRANSACTION) ----------
   const insertBillTx = db.transaction((bill, items) => {
     const billStmt = db.prepare(`
@@ -173,6 +174,41 @@ function registerBillHandlers(db) {
       return { success: false, error: err.message };
     }
   });
+
+  // ---------- GET FILTERED BILL ----------
+  ipcMain.handle("db:filterBills", (e, filters) => {
+  try {
+    let query = "SELECT * FROM bills WHERE 1=1";
+    const params = [];
+
+    if (filters.customerName) {
+      query += " AND customerName LIKE ?";
+      params.push(`%${filters.customerName}%`);
+    }
+    if (filters.billNumber) {
+      query += " AND billNumber LIKE ?";
+      params.push(`%${filters.billNumber}%`);
+    }
+    if (filters.status) {
+      query += " AND status = ?";
+      params.push(filters.status);
+    }
+    if (filters.fromDate) {
+      query += " AND billDate >= ?";
+      params.push(filters.fromDate);
+    }
+    if (filters.toDate) {
+      query += " AND billDate <= ?";
+      params.push(filters.toDate);
+    }
+
+    const bills = db.prepare(query).all(...params);
+    return { success: true, bills };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 }
 
 module.exports = { registerBillHandlers };
