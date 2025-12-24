@@ -1,145 +1,167 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../../../components/ReuseComponents/Button";
 import VendorBasicDetails from "../Components/VendorBasicDetails";
 import VendorBankDetails from "../Components/VendorBankDetails";
 import Spinner from "../../../components/ReuseComponents/Spinner";
 import Modal from "../../../components/ReuseComponents/Modal";
-import { insertVendor } from "../Services/vendors";
+import { insertVendor, updateVendor } from "../Services/vendors";
+import toast from "react-hot-toast";
+
+/* ---------------- INITIAL STATE ---------------- */
+const initialVendorState = {
+  vendorName: "",
+  contactPerson: "",
+  phone: "",
+  whatsapp: "",
+  email: "",
+  address1: "",
+  address2: "",
+  city: "",
+  state: "",
+  country: "IN",
+  gstType: "",
+  gstNumber: "",
+  bankName: "",
+  accountHolder: "",
+  accountNumber: "",
+  ifsc: "",
+  upi: "",
+  paymentTerms: "30 Days",
+  status: "Active",
+};
 
 const Vendor = () => {
-  const [vendorData, setVendorData] = useState({
-    // Basic
-    vendorName: "",
-    contactPerson: "",
-    phone: "",
-    whatsapp: "",
-    email: "",
-    address1: "",
-    address2: "",
-    city: "",
-    state: "",
-    country: "IN",
-    gstType: "",
-    gstNumber: "",
-    // Bank
-    bankName: "",
-    accountHolder: "",
-    accountNumber: "",
-    ifsc: "",
-    upi: "",
-    paymentTerms: "30 Days",
-    status: "Active",
-  });
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const editingVendor = location.state?.vendor;
+
+  /* ---------------- STATE ---------------- */
+  const [vendorData, setVendorData] = useState(
+    editingVendor ?? initialVendorState
+  );
 
   const [loading, setLoading] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  const [confirmTitle, setConfirmTitle] = useState("Confirm Save");
-  const [confirmMessage, setConfirmMessage] = useState(
-    "Are you sure you want to save this vendor?"
-  );
-  const [confirmBtnName, setConfirmBtnName] = useState("Save");
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [confirmBtnName, setConfirmBtnName] = useState("");
 
+  /* ---------------- VALIDATION ---------------- */
   const requiredFields = [
     "vendorName",
     "phone",
-    "email",
     "country",
     "state",
     "city",
     "address1",
   ];
 
-  const isFormValid = requiredFields.every((field) => vendorData[field]);
+  const isFormValid = requiredFields.every(
+    (field) => vendorData[field]
+  );
 
-  // Reset form to initial state
+  /* ---------------- RESET FORM ---------------- */
   const resetForm = () => {
-    setVendorData({
-      vendorName: "",
-      contactPerson: "",
-      phone: "",
-      whatsapp: "",
-      email: "",
-      address1: "",
-      address2: "",
-      city: "",
-      state: "",
-      country: "IN",
-      gstType: "",
-      gstNumber: "",
-      bankName: "",
-      accountHolder: "",
-      accountNumber: "",
-      ifsc: "",
-      upi: "",
-      paymentTerms: "30 Days",
-      status: "Active",
-    });
+    setVendorData(initialVendorState);
   };
 
-  // Submit handler -> open confirmation modal
+  /* ---------------- SUBMIT ---------------- */
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!isFormValid) {
-      alert("Please fill all required fields");
+      toast.error("Please fill all required fields");
       return;
     }
 
-    setConfirmTitle("Confirm Save");
-    setConfirmMessage("Are you sure you want to save this vendor?");
-    setConfirmBtnName("Save");
+    setConfirmTitle(editingVendor ? "Confirm Update" : "Confirm Save");
+    setConfirmMessage(
+      editingVendor
+        ? "Are you sure you want to update this vendor?"
+        : "Are you sure you want to save this vendor?"
+    );
+    setConfirmBtnName(editingVendor ? "Update" : "Save");
+
     setConfirm(true);
   };
 
-  // Called when user confirms modal
+  /* ---------------- CONFIRM SAVE ---------------- */
   const handleConfirmSave = async () => {
     setConfirm(false);
     setLoading(true);
 
     try {
-      const response = await insertVendor(vendorData);
+      const response = editingVendor
+        ? await updateVendor(vendorData)
+        : await insertVendor(vendorData);
 
-      if (response.success) {
-        alert("Vendor saved successfully!");
-        resetForm();
-        // Optionally fetch vendors if you have a list
-        // fetchVendors();
-      } else {
-        if (response.error === "VENDOR_ALREADY_EXISTS") {
-          alert("A vendor with this email or phone already exists.");
+      if (response?.success) {
+        toast.success(
+          editingVendor
+            ? "Vendor updated successfully!"
+            : "Vendor saved successfully!"
+        );
+
+        // ✅ UX BEST PRACTICE
+        if (editingVendor) {
+          navigate("/vendor/manage-vendor"); // redirect after update
         } else {
-          alert(`Error: ${response.error}`);
+          resetForm(); // reset only for add
         }
+      } else {
+        toast.error(response?.error ?? "Vendor already exists");
       }
-    } catch (err) {
-      console.error("Error saving vendor:", err);
-      alert("An unexpected error occurred while saving the vendor.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
-  return loading ? (
-    <Spinner />
-  ) : (
-    <form onSubmit={handleSubmit} className="bg-white p-4 sm:py-6 sm:px-4">
-      <h1 className="text-lg sm:text-xl font-semibold mb-4">Create Vendor</h1>
+  /* ---------------- RENDER ---------------- */
+  if (loading) return <Spinner />;
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white p-4 sm:py-6 sm:px-4"
+    >
+      <h1 className="text-lg sm:text-xl uppercase font-semibold mb-4">
+        {editingVendor ? "Edit Vendor" : "Create Vendor"}
+      </h1>
+
       <div className="border border-gray-300 shadow-xl rounded-lg p-4">
-        <VendorBasicDetails vendorData={vendorData} setVendorData={setVendorData} />
-        <VendorBankDetails vendorData={vendorData} setVendorData={setVendorData} />
+        <VendorBasicDetails
+          vendorData={vendorData}
+          setVendorData={setVendorData}
+        />
+
+        <VendorBankDetails
+          vendorData={vendorData}
+          setVendorData={setVendorData}
+        />
 
         <div className="flex justify-end gap-3 my-6 mx-4">
-          <Button buttonName="Reset" type="button" onClick={resetForm} />
           <Button
-            buttonName="Save Vendor"
+            buttonName="Reset"
+            type="button"
+            onClick={resetForm}
+            disabled={editingVendor} // optional: disable reset in edit mode
+          />
+
+          <Button
+            buttonName={editingVendor ? "Update Vendor" : "Save Vendor"}
             buttonType="save"
             type="submit"
+            disabled={!isFormValid}
             classname={`${
               !isFormValid
                 ? "bg-gray-100 cursor-not-allowed text-gray-500"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
             }`}
-            disabled={!isFormValid}
           />
         </div>
       </div>

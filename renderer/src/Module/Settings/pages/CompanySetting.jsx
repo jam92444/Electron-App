@@ -1,13 +1,13 @@
 import { CiEdit, CiSaveDown1 } from "react-icons/ci";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import * as yup from "yup";
-import asset from "../../../Utils/asset";
 import Input from "../../../components/ReuseComponents/Input";
 import Textarea from "../../../components/ReuseComponents/TextArea";
 import Modal from "../../../components/ReuseComponents/Modal";
 import Button from "../../../components/ReuseComponents/Button";
+import { Country, State, City } from "country-state-city";
 
-// EditableField: renders input or display with label & error
+// ---------------- Editable Field ----------------
 const EditableField = ({
   label,
   value,
@@ -17,412 +17,328 @@ const EditableField = ({
   inputType = "input",
   error,
   maxLength,
-  ...rest
+  options = [],
 }) => {
   const id = label.toLowerCase().replace(/\s+/g, "-");
+
+  if (!isEditing) {
+    return (
+      <div>
+        <p className="mt-2 text-xs text-gray-700 select-none">{label}</p>
+        <p className="text-sm sm:text-base">{value || "NA"}</p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      {isEditing ? (
+      {inputType === "select" ? (
         <>
-          {inputType === "input" ? (
-            <Input
-              id={id}
-              label={label}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder={`Enter ${label}`}
-              type={type}
-              maxLength={maxLength}
-              classname="border max-w-[350px] text-sm sm:text-base"
-              aria-describedby={error ? `${id}-error` : undefined}
-              {...rest}
-            />
-          ) : (
-            <Textarea
-              id={id}
-              label={label}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder={`Enter ${label}`}
-              rows={5}
-              className="text-sm sm:text-base"
-              aria-describedby={error ? `${id}-error` : undefined}
-              {...rest}
-            />
-          )}
-          {error && (
-            <p
-              id={`${id}-error`}
-              role="alert"
-              className="text-xs text-red-600 mt-1 select-none"
-            >
-              {error}
-            </p>
-          )}
+          <label className="text-xs text-gray-700">{label}</label>
+          <select
+            id={id}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="border rounded w-full p-2 text-sm"
+          >
+            <option value="">Select {label}</option>
+            {options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         </>
+      ) : inputType === "textarea" ? (
+        <Textarea
+          label={label}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={4}
+        />
       ) : (
-        <>
-          <p className="mt-2 text-xs text-gray-700  select-none">{label}</p>
-          <p className=" text-sm sm:text-base">{value || "NA"}</p>
-        </>
+        <Input
+          label={label}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          type={type}
+          maxLength={maxLength}
+        />
       )}
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
     </div>
   );
 };
 
-// Validation Schemas
+// ---------------- Validation ----------------
 const companySchema = yup.object().shape({
   companyName: yup.string().required("Company Name is required"),
   gstTin: yup.string().required("GST TIN is required"),
   contactNumber: yup
     .string()
     .matches(/^[0-9]{10}$/, "Contact Number must be 10 digits")
-    .required("Contact Number is required"),
-  companyEmail: yup
-    .string()
-    .email("Invalid email")
-    .required("Email is required"),
+    .required(),
+  companyEmail: yup.string().email().required(),
 });
 
 const billingSchema = yup.object().shape({
-  fullAddress: yup.string().required("Full Address is required"),
+  fullAddress: yup.string().required("Address is required"),
+  country: yup.string().required("Country is required"),
+  state: yup.string().required("State is required"),
+  city: yup.string().required("City is required"),
   pinCode: yup
     .string()
     .matches(/^\d{6}$/, "Pin Code must be 6 digits")
-    .required("Pin Code is required"),
-  city: yup.string().required("City is required"),
-  state: yup.string().required("State is required"),
+    .required(),
 });
 
-const CompanySetting = () => {
-  return (
-    <div className="  w-full min-h-screen rounded-md p-2 sm:p-4">
-      <h1 className="text-md sm:text-xl  mb-2 select-none font-semibold uppercase ">
-        Company Settings
-      </h1>
-      <div className="flex flex-col gap-2 sm:gap-4">
-        <CompanyDetails />
-        <BillingDetails />
-        <OtherDetails />
-      </div>
+// ---------------- Main Wrapper ----------------
+const CompanySetting = () => (
+  <div className="w-full min-h-screen p-2 sm:p-4">
+    <h1 className="text-xl font-semibold uppercase mb-4">Company Settings</h1>
+    <div className="flex flex-col gap-4">
+      <CompanyDetails />
+      <BillingDetails />
+      <OtherDetails />
     </div>
-  );
-};
-// --------------------Company Details---------------------------
+  </div>
+);
+
+// ---------------- Company Details ----------------
 const CompanyDetails = () => {
   const [editMode, setEditMode] = useState(false);
-  const [confirm, setConfirm] = useState(null);
-  const [title, setTitle] = useState("Confirm Save");
-  const [message, setMessage] = useState("");
-  const [confirmBtnName, setConfirmBtnName] = useState("Cancel");
-  const [validData, setValidData] = useState(false);
-
+  const [confirm, setConfirm] = useState(false);
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     companyName: "",
     gstTin: "",
     contactNumber: "",
     companyEmail: "",
   });
-  const [errors, setErrors] = useState({});
-
-  const handleChange = (field, val) => {
-    setFormData((prev) => ({ ...prev, [field]: val }));
-    setErrors((prev) => ({ ...prev, [field]: "" }));
-  };
-
-  const confirmSave = () => {
-    setEditMode(false);
-    setMessage(`Company Details ${editMode ? "updated" : "saved"}!`);
-    setConfirm(null);
-  };
 
   const handleSave = async () => {
     try {
       await companySchema.validate(formData, { abortEarly: false });
-      setErrors({});
-      setTitle(`Confirm ${editMode ? "Update" : "Save"}`);
-      setMessage(`Are you sure you want to ${editMode ? "Update" : "Save"}?`);
-      setConfirmBtnName(editMode ? "Update" : "Save");
-      setConfirm("true");
-      setValidData(true);
+      setConfirm(true);
     } catch (err) {
-      if (err.inner) {
-        const newErrors = {};
-        err.inner.forEach(({ path, message }) => {
-          newErrors[path] = message;
-        });
-        setErrors(newErrors);
-      }
-      setTitle("Alert!");
-      setMessage("Please fix the highlighted errors before saving.");
-      setConfirm("true");
-      setValidData(false);
-      setConfirmBtnName("Okay");
+      const e = {};
+      err.inner.forEach((i) => (e[i.path] = i.message));
+      setErrors(e);
     }
   };
 
   return (
-    <section className="bg-white  p-2 sm:p-4 rounded-md shadow-lg border">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-700 ">
-          Company Details
-        </h2>
-
+    <section className="bg-white p-4 rounded shadow border">
+      <div className="flex justify-between mb-2">
+        <h2 className="font-semibold">Company Details</h2>
         {editMode ? (
-          <div className="flex items-center gap-1">
+          <div className="flex gap-2">
             <button
+              className="border px-2 py-1 rounded text-sm bg-blue-500 text-white hover:scale-105 transition-all duration-100 hover:shadow-sm"
               onClick={handleSave}
-              className="flex items-center gap-2 border rounded-2xl px-2 py-1 text-sm cursor-pointer bg-red-400 hover:text-white border-red-400"
             >
-              <span>{editMode ? "Update" : "Save"}</span>
-              <CiSaveDown1 />
+              Save
             </button>
             <button
+              className="border px-2 py-1 rounded text-sm bg-red-500 text-white hover:scale-105 transition-all duration-100 hover:shadow-sm"
               onClick={() => setEditMode(false)}
-              className="flex items-center gap-2 border rounded-2xl px-2 py-1 text-sm cursor-pointer border-red-400 hover:bg-red-400 hover:text-white text-gray-700 "
             >
               Cancel
             </button>
           </div>
         ) : (
           <button
+            className="border px-2 py-1 rounded text-sm bg-green-500 text-white hover:scale-105 transition-all duration-100 hover:shadow-sm"
             onClick={() => setEditMode(true)}
-            className="flex items-center gap-2 border rounded-2xl px-2 py-1 text-sm cursor-pointer hover:bg-green-400 hover:text-white text-gray-700 "
           >
-            <span>Edit</span>
-            <CiEdit />
+            Edit
           </button>
         )}
       </div>
 
-      <div className="mt-4 flex w-full justify-between flex-col sm:flex-row-reverse p-1 sm:p-4 gap-2 sm:gap-4">
-        <div className="border border-gray-400 w-20 h-20 sm:w-40 content-center rounded-xl overflow-hidden p-1 sm:p-4">
-          <img src={asset.logo} alt="Company Logo" className="object-cover" />
-        </div>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <EditableField
+          label="Company Name"
+          value={formData.companyName}
+          onChange={(v) => setFormData({ ...formData, companyName: v })}
+          isEditing={editMode}
+          error={errors.companyName}
+        />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 w-full text-sm">
-          <EditableField
-            label="Company Name"
-            value={formData.companyName}
-            onChange={(val) => handleChange("companyName", val)}
-            isEditing={editMode}
-            error={errors.companyName}
-          />
-          <EditableField
-            label="GST TIN"
-            value={formData.gstTin}
-            onChange={(val) => handleChange("gstTin", val)}
-            isEditing={editMode}
-            error={errors.gstTin}
-          />
-          <EditableField
-            label="Contact Number"
-            value={formData.contactNumber}
-            onChange={(val) => handleChange("contactNumber", val)}
-            isEditing={editMode}
-            maxLength={10}
-            error={errors.contactNumber}
-          />
-          <EditableField
-            label="Company Email"
-            value={formData.companyEmail}
-            onChange={(val) => handleChange("companyEmail", val)}
-            isEditing={editMode}
-            type="email"
-            error={errors.companyEmail}
-          />
-        </div>
+        <EditableField
+          label="GST TIN"
+          value={formData.gstTin}
+          onChange={(v) => setFormData({ ...formData, gstTin: v })}
+          isEditing={editMode}
+          error={errors.gstTin}
+        />
+
+        <EditableField
+          label="Contact Number"
+          maxLength={10}
+          value={formData.contactNumber}
+          onChange={(v) => setFormData({ ...formData, contactNumber: v })}
+          isEditing={editMode}
+          error={errors.contactNumber}
+        />
+
+        <EditableField
+          label="Company Email"
+          type="email"
+          value={formData.companyEmail}
+          onChange={(v) => setFormData({ ...formData, companyEmail: v })}
+          isEditing={editMode}
+          error={errors.companyEmail}
+        />
       </div>
 
-      {confirm !== null && (
+      {confirm && (
         <Modal
-          title={title}
-          message={message}
-          onClose={() => setConfirm(null)}
-          actions={
-            <>
-              {validData && (
-                <Button
-                  buttonName="Cancel"
-                  buttonType="normal"
-                  onClick={() => setConfirm(null)}
-                />
-              )}
-              <Button
-                buttonName={confirmBtnName}
-                buttonType="normal"
-                onClick={() => {
-                  if (validData) confirmSave();
-                  else setConfirm(null);
-                }}
-              />
-            </>
-          }
+          title="Saved"
+          message="Company details saved successfully"
+          onClose={() => {
+            setConfirm(false);
+            setEditMode(false);
+          }}
+          actions={<Button buttonName="OK" />}
         />
       )}
     </section>
   );
 };
-//-------------------Billing Details ----------------------------
+
+// ---------------- Billing Details (Country-State-City) ----------------
 const BillingDetails = () => {
   const [editMode, setEditMode] = useState(false);
-  const [title, setTitle] = useState("Confirm Save");
-  const [message, setMessage] = useState("");
-  const [confirm, setConfirm] = useState(null);
-  const [confirmBtnName, setConfirmBtnName] = useState("Cancel");
-  const [validData, setValidData] = useState(false);
+  const [confirm, setConfirm] = useState(false);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     fullAddress: "",
-    pinCode: "",
-    city: "",
+    country: "",
     state: "",
+    city: "",
+    pinCode: "",
   });
 
-  const handleChange = (field, val) => {
-    setFormData((prev) => ({ ...prev, [field]: val }));
-    setErrors((prev) => ({ ...prev, [field]: "" }));
-  };
+  const countries = Country.getAllCountries();
+  const states = State.getStatesOfCountry(formData.country);
+  const cities = City.getCitiesOfState(formData.country, formData.state);
 
-  const confirmSave = () => {
-    setEditMode(false);
-    setMessage(`Billing Details ${editMode ? "updated" : "saved"}!`);
-    setConfirm(null);
+  const handleChange = (field, value) => {
+    setFormData((p) => ({
+      ...p,
+      [field]: value,
+      ...(field === "country" && { state: "", city: "" }),
+      ...(field === "state" && { city: "" }),
+    }));
   };
 
   const handleSave = async () => {
     try {
       await billingSchema.validate(formData, { abortEarly: false });
-      setErrors({});
-      setTitle(`Confirm ${editMode ? "Update" : "Save"}`);
-      setMessage(`Are you sure you want to ${editMode ? "Update" : "Save"}?`);
-      setConfirmBtnName(editMode ? "Update" : "Save");
-      setConfirm("true");
-      setValidData(true);
+      setConfirm(true);
     } catch (err) {
-      if (err.inner) {
-        const newErrors = {};
-        err.inner.forEach(({ path, message }) => {
-          newErrors[path] = message;
-        });
-        setErrors(newErrors);
-      }
-      setTitle("Alert!");
-      setMessage("Please fix the highlighted errors before saving.");
-      setConfirm("true");
-      setValidData(false);
-      setConfirmBtnName("Okay");
+      const e = {};
+      err.inner.forEach((i) => (e[i.path] = i.message));
+      setErrors(e);
     }
   };
 
   return (
-    <section
-      aria-labelledby="billing-details-heading"
-      className="bg-white  p-2 sm:p-4 rounded-md shadow-lg border"
-    >
-      <div className="flex items-center justify-between mb-2">
-        <h2
-          id="billing-details-heading"
-          className="text-base sm:text-lg font-semibold text-gray-700 "
-        >
-          Billing Details
-        </h2>
-
+    <section className="bg-white p-4 rounded shadow border">
+      <div className="flex justify-between mb-2">
+        <h2 className="font-semibold">Billing Details</h2>
         {editMode ? (
-          <div className="flex items-center gap-1">
+          <div className="flex gap-2">
             <button
+              className="border px-2 rounded text-sm bg-blue-500 text-white hover:scale-105 transition-all duration-100 hover:shadow-sm"
               onClick={handleSave}
-              className="flex items-center gap-2 border rounded-2xl px-2 py-1 text-sm cursor-pointer bg-red-400 hover:text-white border-red-400"
-              aria-label="Save Billing Details"
             >
-              <span>{editMode ? "Update" : "Save"}</span>
-              <CiSaveDown1 />
+              Save
             </button>
             <button
+              className="border px-2 rounded text-sm bg-red-500 text-white hover:scale-105 transition-all duration-100 hover:shadow-sm"
               onClick={() => setEditMode(false)}
-              className="flex items-center gap-2 border rounded-2xl px-2 py-1 text-sm cursor-pointer border-red-400 hover:bg-red-400 hover:text-white text-gray-700 "
             >
               Cancel
             </button>
           </div>
         ) : (
           <button
+            className="border px-2 rounded text-sm bg-green-500 text-white hover:scale-105 transition-all duration-100 hover:shadow-sm"
             onClick={() => setEditMode(true)}
-            className="flex items-center gap-2 border rounded-2xl px-2 py-1 text-sm cursor-pointer hover:bg-green-400 hover:text-white text-gray-700 "
-            aria-label="Edit Billing Details"
           >
-            <span>Edit</span>
-            <CiEdit />
+            Edit
           </button>
         )}
       </div>
 
-      <div className="mt-4 flex w-full justify-between flex-row-reverse p-1 sm:p-4 gap-2 sm:gap-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 w-full text-sm sm:text-base">
-          <EditableField
-            label="Full Address"
-            value={formData.fullAddress}
-            onChange={(val) => handleChange("fullAddress", val)}
-            isEditing={editMode}
-            inputType="textarea"
-            error={errors.fullAddress}
-          />
-          <EditableField
-            label="Pin Code"
-            value={formData.pinCode}
-            onChange={(val) => handleChange("pinCode", val)}
-            isEditing={editMode}
-            error={errors.pinCode}
-            maxLength={6}
-          />
-          <EditableField
-            label="City"
-            value={formData.city}
-            onChange={(val) => handleChange("city", val)}
-            isEditing={editMode}
-            error={errors.city}
-          />
-          <EditableField
-            label="State"
-            value={formData.state}
-            onChange={(val) => handleChange("state", val)}
-            isEditing={editMode}
-            error={errors.state}
-          />
-        </div>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <EditableField
+          label="Full Address"
+          inputType="textarea"
+          value={formData.fullAddress}
+          onChange={(v) => handleChange("fullAddress", v)}
+          isEditing={editMode}
+          error={errors.fullAddress}
+        />
+
+        <EditableField
+          label="Country"
+          inputType="select"
+          options={countries.map((c) => ({ value: c.isoCode, label: c.name }))}
+          value={formData.country}
+          onChange={(v) => handleChange("country", v)}
+          isEditing={editMode}
+          error={errors.country}
+        />
+
+        <EditableField
+          label="State"
+          inputType="select"
+          options={states.map((s) => ({ value: s.isoCode, label: s.name }))}
+          value={formData.state}
+          onChange={(v) => handleChange("state", v)}
+          isEditing={editMode}
+          error={errors.state}
+        />
+
+        <EditableField
+          label="City"
+          inputType="select"
+          options={cities.map((c) => ({ value: c.name, label: c.name }))}
+          value={formData.city}
+          onChange={(v) => handleChange("city", v)}
+          isEditing={editMode}
+          error={errors.city}
+        />
+
+        <EditableField
+          label="Pin Code"
+          maxLength={6}
+          value={formData.pinCode}
+          onChange={(v) => handleChange("pinCode", v)}
+          isEditing={editMode}
+          error={errors.pinCode}
+        />
       </div>
 
-      {confirm !== null && (
+      {confirm && (
         <Modal
-          title={title}
-          message={message}
-          onClose={() => setConfirm(null)}
-          actions={
-            <>
-              {validData && (
-                <Button
-                  buttonName="Cancel"
-                  buttonType="normal"
-                  onClick={() => setConfirm(null)}
-                />
-              )}
-              <Button
-                buttonName={confirmBtnName}
-                buttonType="normal"
-                onClick={() => {
-                  if (validData) confirmSave();
-                  else setConfirm(null);
-                }}
-              />
-            </>
-          }
+          title="Saved"
+          message="Billing details saved successfully"
+          onClose={() => {
+            setConfirm(false);
+            setEditMode(false);
+          }}
+          actions={<Button buttonName="OK" />}
         />
       )}
     </section>
   );
 };
 
-//------------------Other Details -------------------------------
+// ---------------- Other Details (unchanged logic) ----------------
 const OtherDetails = () => {
   const [editMode, setEditMode] = useState(false);
   const [confirm, setConfirm] = useState(null);
@@ -511,36 +427,31 @@ const OtherDetails = () => {
       className="bg-white  p-2 sm:p-4 rounded-md shadow-lg border"
     >
       <div className="flex items-center justify-between mb-2">
-        <h2
-          id="other-details-heading"
-          className="text-base sm:text-lg font-semibold text-gray-700 "
-        >
+        <h2 id="other-details-heading" className=" font-semibold text-black ">
           Other Details
         </h2>
 
         {editMode ? (
-          <div className="flex items-center gap-1">
+          <div className="flex gap-2">
             <button
+              className="border px-2 py-1 rounded text-sm bg-blue-500 text-white hover:scale-105 transition-all duration-100 hover:shadow-sm"
               onClick={handleSave}
-              className="flex items-center gap-2 border rounded-2xl px-2 py-1 text-sm cursor-pointer bg-red-400 hover:text-white border-red-400"
             >
-              <span>{editMode ? "Update" : "Save"}</span>
-              <CiSaveDown1 />
+              Save
             </button>
             <button
+              className="border px-2 py-1 rounded text-sm bg-red-500 text-white hover:scale-105 transition-all duration-100 hover:shadow-sm"
               onClick={() => setEditMode(false)}
-              className="flex items-center gap-2 border rounded-2xl px-2 py-1 text-sm cursor-pointer border-red-400 hover:bg-red-400 hover:text-white text-gray-700 "
             >
               Cancel
             </button>
           </div>
         ) : (
           <button
+            className="border px-2 py-1 rounded text-sm bg-green-500 text-white hover:scale-105 transition-all duration-100 hover:shadow-sm"
             onClick={() => setEditMode(true)}
-            className="flex items-center gap-2 border rounded-2xl px-2 py-1 text-sm cursor-pointer hover:bg-green-400 hover:text-white text-gray-700 "
           >
-            <span>Edit</span>
-            <CiEdit />
+            Edit
           </button>
         )}
       </div>

@@ -1,8 +1,7 @@
 const { ipcMain } = require("electron");
 
 function registerBillHandlers(db) {
-
-  // ---------- SAVE BILL (TRANSACTION) ----------
+  // ---------- SAVE BILL ----------
   const insertBillTx = db.transaction((bill, items) => {
     const billStmt = db.prepare(`
       INSERT INTO bills (
@@ -23,7 +22,7 @@ function registerBillHandlers(db) {
       bill.discount,
       bill.discountAmount,
       bill.totalAfterDiscount,
-      bill.paymentmode || ""
+      bill.payment_mode || ""
     );
 
     const billId = result.lastInsertRowid;
@@ -67,8 +66,7 @@ function registerBillHandlers(db) {
 
   // ---------- UPDATE BILL ----------
   const updateBillTx = db.transaction((billId, bill, items) => {
-    db.prepare(
-      `
+    db.prepare(`
       UPDATE bills SET
         total_pieces = ?,
         total_before_discount = ?,
@@ -77,18 +75,17 @@ function registerBillHandlers(db) {
         total_after_discount = ?,
         payment_mode = ?
       WHERE id = ?
-    `
-    ).run(
+    `).run(
       bill.totalPieces,
       bill.totalBeforeDiscount,
       bill.discount,
       bill.discountAmount,
       bill.totalAfterDiscount,
-      bill.paymentmode || "",
+      bill.payment_mode || "",
       billId
     );
 
-    // Remove old items
+    // Sync items: delete old and insert new
     db.prepare(`DELETE FROM bill_items WHERE bill_id = ?`).run(billId);
 
     const itemStmt = db.prepare(`
@@ -120,10 +117,7 @@ function registerBillHandlers(db) {
   ipcMain.handle("db:updateBill", (e, billId, bill, items) => {
     try {
       const exists = db.prepare("SELECT 1 FROM bills WHERE id = ?").get(billId);
-
-      if (!exists) {
-        return { success: false, error: "BILL_NOT_FOUND" };
-      }
+      if (!exists) return { success: false, error: "BILL_NOT_FOUND" };
 
       updateBillTx(billId, bill, items);
       return { success: true };
@@ -135,11 +129,8 @@ function registerBillHandlers(db) {
   // ---------- GET ALL BILLS ----------
   ipcMain.handle("db:getBills", () => {
     try {
-      const bills = db
-        .prepare(`SELECT * FROM bills ORDER BY created_at DESC`)
-        .all();
-
-      return { success: true, bills };
+      const bills = db.prepare(`SELECT * FROM bills ORDER BY created_at DESC`).all();
+      return { success: true, data:bills };
     } catch (err) {
       return { success: false, error: err.message };
     }
@@ -149,15 +140,9 @@ function registerBillHandlers(db) {
   ipcMain.handle("db:getBillById", (e, billId) => {
     try {
       const bill = db.prepare(`SELECT * FROM bills WHERE id = ?`).get(billId);
+      if (!bill) return { success: false, error: "BILL_NOT_FOUND" };
 
-      if (!bill) {
-        return { success: false, error: "BILL_NOT_FOUND" };
-      }
-
-      const items = db
-        .prepare(`SELECT * FROM bill_items WHERE bill_id = ?`)
-        .all(billId);
-
+      const items = db.prepare(`SELECT * FROM bill_items WHERE bill_id = ?`).all(billId);
       return { success: true, bill, items };
     } catch (err) {
       return { success: false, error: err.message };
@@ -167,48 +152,35 @@ function registerBillHandlers(db) {
   // ---------- DELETE BILL ----------
   ipcMain.handle("db:deleteBill", (e, billId) => {
     try {
-      db.prepare(`DELETE FROM bill_items WHERE bill_id = ?`).run(billId);
-      db.prepare(`DELETE FROM bills WHERE id = ?`).run(billId);
+      db.prepare(`DELETE FROM bills WHERE id = ?`).run(billId); // cascades to bill_items
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
     }
   });
 
-  // ---------- GET FILTERED BILL ----------
+  // ---------- FILTER BILLS ----------
   ipcMain.handle("db:filterBills", (e, filters) => {
-  try {
-    let query = "SELECT * FROM bills WHERE 1=1";
-    const params = [];
+    try {
+      let query = "SELECT * FROM bills WHERE 1=1";
+      const params = [];
 
-    if (filters.customerName) {
-      query += " AND customerName LIKE ?";
-      params.push(`%${filters.customerName}%`);
-    }
-    if (filters.billNumber) {
-      query += " AND billNumber LIKE ?";
-      params.push(`%${filters.billNumber}%`);
-    }
-    if (filters.status) {
-      query += " AND status = ?";
-      params.push(filters.status);
-    }
-    if (filters.fromDate) {
-      query += " AND billDate >= ?";
-      params.push(filters.fromDate);
-    }
-    if (filters.toDate) {
-      query += " AND billDate <= ?";
-      params.push(filters.toDate);
-    }
+      // Only filter by columns that exist
+      if (filters.fromDate) {
+        query += " AND created_at >= ?";
+        params.push(filters.fromDate);
+      }
+      if (filters.toDate) {
+        query += " AND created_at <= ?";
+        params.push(filters.toDate);
+      }
 
-    const bills = db.prepare(query).all(...params);
-    return { success: true, bills };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-});
-
+      const bills = db.prepare(query).all(...params);
+      return { success: true, bills };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
 }
 
 module.exports = { registerBillHandlers };

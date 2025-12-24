@@ -5,6 +5,7 @@ const { registerItemHandlers } = require("./modules/Items/items");
 const { registerSizeHandlers } = require("./modules/Items/size");
 const { registerBillHandlers } = require("./modules/Billing/billHandlers");
 const { registerVendorHandlers } = require("./modules/Vendor/Vendor");
+const { registerPurchaseHandlers } = require("./modules/Purchase/Purchase");
 
 let mainWindow;
 let db;
@@ -35,7 +36,8 @@ app.whenReady().then(() => {
   registerItemHandlers(db);
   registerSizeHandlers(db);
   registerBillHandlers(db);
-  registerVendorHandlers(db)
+  registerVendorHandlers(db);
+  registerPurchaseHandlers(db);
   createWindow();
 });
 

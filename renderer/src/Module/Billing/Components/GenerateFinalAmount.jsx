@@ -1,5 +1,5 @@
 import Button from "../../../components/ReuseComponents/Button";
-import {discount as discountOptions} from "../../../Utils/data";
+import { discount as discountOptions } from "../../../Utils/data";
 // ----------- Bill Summary -----------
 const GenerateFinalAmount = ({
   billSummary,
@@ -8,6 +8,7 @@ const GenerateFinalAmount = ({
   onSaveOnly,
   onRoundOff,
   onDeleteBill,
+  setBillSummary
 }) => {
   return (
     <div className="mt-10 float-right mr-4 p-4 rounded-lg border shadow-xl bg-white w-full sm:w-[300px] mb-10">
@@ -15,9 +16,18 @@ const GenerateFinalAmount = ({
 
       <p className="flex justify-between text-sm mb-1">
         <span>Payment Mode :</span>
-        <select className="border px-2 py-1 rounded text-sm">
-          <option value="cash">Cash</option>
-          <option value="online">Online</option>
+        <select
+          className="border px-2 py-1 rounded text-sm"
+          value={billSummary.payment_mode}
+          onChange={(e) =>
+            setBillSummary({
+              ...billSummary,
+              payment_mode: e.target.value, // save text: "Cash" or "Online"
+            })
+          }
+        >
+          <option value="Cash">Cash</option>
+          <option value="Online">Online</option>
         </select>
       </p>
 

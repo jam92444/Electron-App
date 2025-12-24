@@ -53,6 +53,7 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
           },
         ]);
       } else {
+        console.log(response.items)
         setAllItems(response.items);
       }
     };
@@ -85,11 +86,12 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
               const selectedItem = AllItems.find(
                 (i) => i.itemName === selected.value
               );
+              console.log(selectedItem)
               setItem({
                 ...item,
                 itemCode: selectedItem.itemID || "",
                 itemName: selectedItem.itemName,
-                price: selectedItem.hasVariants ? "" : selectedItem.price,
+                price: selectedItem.hasVariants ? "" : selectedItem.sellingPrice,
                 size: "",
               });
             }}
@@ -125,7 +127,7 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
                   setItem({
                     ...item,
                     size: selectedSize.size,
-                    price: selectedSize.price,
+                    price: selectedSize.sellingPrice,
                   });
                 }}
                 placeholder="Select Size*"
@@ -138,8 +140,10 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
           label="Price *"
           type="number"
           placeholder="Enter Price"
+          classname="select-none"
           value={item.price}
           onChange={(e) => setItem({ ...item, price: e.target.value })}
+          disabled
         />
 
         {/* Quantity */}

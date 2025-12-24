@@ -6,7 +6,7 @@ function registerVendorHandlers(db) {
   ipcMain.handle("db:getVendors", () => {
     try {
       const vendors = db.prepare(`SELECT * FROM vendors`).all();
-      return { success: true, vendors };
+      return { success: true, data:vendors };
     } catch (err) {
       return { success: false, error: err.message };
     }

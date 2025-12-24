@@ -41,23 +41,25 @@ const Modal = ({ title, message, onClose, actions }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
       role="dialog"
       aria-modal="true"
       onKeyDown={handleKeyDown}
     >
+      {/* Background overlay */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose}></div>
 
+      {/* Modal box */}
       <div
         ref={modalRef}
-        className="relative bg-white  p-6 rounded shadow-md w-80 z-10"
+        className="relative bg-white p-6 rounded shadow-md max-w-3xl w-full max-h-[90vh] overflow-y-auto z-10"
         onClick={(e) => e.stopPropagation()}
         tabIndex="0"
       >
-        <h3  className="text-md font-semibold mb-3 text-gray-800 ">{title}</h3>
-        <p className="text-sm text-gray-600  mb-4">{message}</p>
+        <h3 className="text-md font-semibold mb-3 text-gray-800">{title}</h3>
+        <div className="text-sm text-gray-600 mb-4">{message}</div>
         <div className="flex justify-end gap-3">
-          {actions ||<Button buttonName="Close" onClick={onClose} />} 
+          {actions || <Button buttonName="Close" onClick={onClose} />}
         </div>
       </div>
     </div>

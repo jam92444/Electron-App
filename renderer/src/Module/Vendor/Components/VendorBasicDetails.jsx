@@ -96,6 +96,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
         <Input
           label="Vendor Name *"
           value={vendorData.vendorName}
+          classname="capitalize"
           onChange={(e) => {
             const capitalized = capitalizeWords(e.target.value);
             setVendorData({ ...vendorData, vendorName: capitalized });
@@ -141,6 +142,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
         <Input
           label="Email *"
           value={vendorData.email}
+          classname="text-normal"
           onChange={(e) => {
             setVendorData({ ...vendorData, email: e.target.value });
             validateField("email", e.target.value);
@@ -149,8 +151,10 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
         />
 
         {/* Country */}
-        <div>
-          <label className="text-sm font-medium">Country *</label>
+        <div className="relative mt-4">
+          <label className="text-xs font-medium absolute bg-white -top-2 left-4 px-1 text-gray-100 z-20">
+            Country *
+          </label>
           <Select
             options={countryOptions}
             value={countryOptions.find((c) => c.value === vendorData.country)}
@@ -171,8 +175,10 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
         </div>
 
         {/* State */}
-        <div>
-          <label className="text-sm font-medium">State *</label>
+        <div className="relative mt-4">
+          <label className="text-xs font-medium absolute bg-white -top-2 left-4 px-1 text-gray-100 z-20">
+            State *
+          </label>
           <Select
             options={stateOptions}
             value={stateOptions.find((s) => s.value === vendorData.state)}
@@ -193,8 +199,10 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
         </div>
 
         {/* City */}
-        <div>
-          <label className="text-sm font-medium">City *</label>
+        <div className="relative mt-4">
+          <label className="text-xs font-medium absolute bg-white -top-2 left-4 px-1 text-gray-100 z-20">
+            City *
+          </label>
           <Select
             options={cityOptions}
             value={cityOptions.find((c) => c.value === vendorData.city)}
@@ -223,7 +231,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
         />
         {/* Address */}
         <Input
-          label="Address Line 1"
+          label="Address Line 1 *"
           value={vendorData.address1}
           onChange={(e) =>
             setVendorData({ ...vendorData, address1: e.target.value })

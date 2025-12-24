@@ -5,8 +5,7 @@ import Button from "../../../components/ReuseComponents/Button";
 import AddBillItemForm from "../Components/AddBillItemForm";
 import Modal from "../../../components/ReuseComponents/Modal";
 import BillItemsTable from "../Components/BillItemsTable";
-
-
+import toast from "react-hot-toast";
 // ----------- Main Component -----------
 const GenerateBill = () => {
   const [billItems, setBillItems] = useState([]);
@@ -18,7 +17,7 @@ const GenerateBill = () => {
     totalBeforeDiscount: 0,
     discount: 0,
     discountAmount: 0,
-    paymentmode: "",
+    payment_mode: "Cash",
     totalAfterDiscount: 0,
   });
 
@@ -40,13 +39,14 @@ const GenerateBill = () => {
     const totalAfterDiscount = totalBeforeDiscount - discountAmount;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBillSummary({
+    setBillSummary((prev) => ({
+      ...prev,
       totalPieces,
       totalBeforeDiscount,
       discount: billDiscount,
       discountAmount,
       totalAfterDiscount,
-    });
+    }));
   }, [billItems, billDiscount]);
 
   // ----------- RoundOFF Amount -----------
@@ -82,7 +82,7 @@ const GenerateBill = () => {
       totalBeforeDiscount: 0,
       discount: 0,
       discountAmount: 0,
-      paymentmode: "",
+      payment_mode: "",
       totalAfterDiscount: 0,
     });
     setBillDiscount(0);
@@ -121,6 +121,7 @@ const GenerateBill = () => {
 
       if (!billId) {
         // FIRST TIME SAVE
+        console.log(billSummary, "billsummary");
         res = await saveBill(billSummary, billItems);
 
         if (!res.success) {
@@ -134,7 +135,7 @@ const GenerateBill = () => {
         res = await updateBill(billId, billSummary, billItems);
 
         if (!res.success) {
-          alert("Failed to update bill");
+          toast.error("Failed to update bill");
           return;
         }
       }
@@ -142,12 +143,12 @@ const GenerateBill = () => {
       if (printAfter) {
         window.print();
       } else {
-        alert("Bill saved successfully");
+        toast.success("Bill saved successfully");
         handleResetForm();
       }
     } catch (err) {
       console.error(err);
-      alert("Something went wrong while saving bill");
+      toast.error("Something went wrong while saving bill");
     }
   };
 
@@ -218,7 +219,7 @@ const GenerateBill = () => {
       ),
     });
   };
-  console.log(billItems, "billItems");
+
   return (
     <div className="bg-white p-2 sm:p-6 rounded-lg  min-h-[80vh]">
       <div className="flex items-center gap-4 py-2 justify-between">
@@ -247,6 +248,7 @@ const GenerateBill = () => {
         onDeleteBill={handleDeleteBill}
         onSaveOnly={handleSaveOnly}
         onRoundOff={handleRoundOff}
+        setBillSummary={setBillSummary}
       />
 
       {/* -------- POS PRINT LAYOUT (Hidden on screen, prints only) ------- */}
@@ -326,16 +328,26 @@ const GenerateBill = () => {
           <span className="w-full text-wrap">Total Pcs:</span>
           <span className="">{billSummary.totalPieces} pcs </span>
         </div>
-        <div className="grid grid-cols-3  text-end text-[8px]">
-          <span className=""></span>
-          <span className="w-full text-wrap">Discount:</span>
-          <span className="">₹{billSummary.discountAmount.toFixed(2)} </span>
-        </div>
-        <div className="grid grid-cols-3  text-end text-[8px] font-semibold">
-          <span className="w-full text-wrap "></span>
-          <span className="">You save</span>
-          <span className="">₹{billSummary.discountAmount.toFixed(2)}</span>
-        </div>
+        {billSummary.discountAmount > 0 &&
+          billSummary.discountAmount !== null && (
+            <div className="grid grid-cols-3  text-end text-[8px]">
+              <span className=""></span>
+              <span className="w-full text-wrap">Discount:</span>
+              <span className="">
+                ₹{billSummary.discountAmount.toFixed(2)}{" "}
+              </span>
+            </div>
+          )}
+
+        {billSummary.discountAmount > 0 &&
+          billSummary.discountAmount !== null && (
+            <div className="grid grid-cols-3  text-end text-[8px] font-semibold">
+              <span className="w-full text-wrap "></span>
+              <span className="">You save</span>
+              <span className="">₹{billSummary.discountAmount.toFixed(2)}</span>
+            </div>
+          )}
+
         <div className="grid grid-cols-3  text-end text-[8px] font-semibold">
           <span className="w-full text-wrap "></span>
           <span className="">Grand Total:</span>

@@ -11,6 +11,7 @@ const BillItemsTable = ({
   onDeleteBill,
   onSaveOnly,
   onRoundOff,
+  setBillSummary
 }) => {
   return (
     <div className="bg-white sm:p-4 p-2 rounded shadow-xl border h-auto">
@@ -70,6 +71,7 @@ const BillItemsTable = ({
         setBillDiscount={setBillDiscount}
         onPrint={onPrint}
         onSaveOnly={onSaveOnly}
+        setBillSummary={setBillSummary}
         onDeleteBill={onDeleteBill}
         onRoundOff={onRoundOff}
       />

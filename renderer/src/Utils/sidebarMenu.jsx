@@ -25,7 +25,8 @@ export const menuItems = [
     label: "Vendor",
     icon: <IoStorefrontOutline className="w-4 h-4" />,
     children: [
-      { label: "Vendor", path: "/vendor/add-vendor" },
+      { label: "Create Vendor", path: "/vendor/add-vendor" },
+      { label: "Manage Vendor", path: "/vendor/manage-vendor" },
     ],
   },
   {
