@@ -1,14 +1,14 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("api", {
-  //----------------- Items --------------------
+  /* ----------------- Items ----------------- */
   getItems: () => ipcRenderer.invoke("db:getItems"),
   insertItem: (item) => ipcRenderer.invoke("db:insertItem", item),
   updateItem: (item) => ipcRenderer.invoke("db:updateItem", item),
   deleteItem: (itemId) => ipcRenderer.invoke("db:deleteItem", itemId),
   filterItems: (filters) => ipcRenderer.invoke("db:filterItems", filters),
 
-  // ---------------Size---------------------
+  /* ----------------- Sizes ----------------- */
   getSizes: () => ipcRenderer.invoke("db:getSizes"),
   insertSize: (size) => ipcRenderer.invoke("db:insertSize", size),
   updateSize: (id, newSize) =>
@@ -16,23 +16,23 @@ contextBridge.exposeInMainWorld("api", {
   deleteSize: (id) => ipcRenderer.invoke("db:deleteSize", id),
   filterSizes: (filters) => ipcRenderer.invoke("db:filterSizes", filters),
 
-  // ------------BIlls-----------------
+  /* ----------------- Bills ----------------- */
   getBills: () => ipcRenderer.invoke("db:getBills"),
   getBillById: (billId) => ipcRenderer.invoke("db:getBillById", billId),
   saveBill: (bill, items) => ipcRenderer.invoke("db:saveBill", bill, items),
   updateBill: (billId, bill, items) =>
     ipcRenderer.invoke("db:updateBill", billId, bill, items),
   deleteBill: (billId) => ipcRenderer.invoke("db:deleteBill", billId),
-
-  // --- Vendor ---
   filterBills: (filters) => ipcRenderer.invoke("db:filterBills", filters),
+
+  /* ----------------- Vendors ----------------- */
   getVendors: () => ipcRenderer.invoke("db:getVendors"),
   insertVendor: (vendor) => ipcRenderer.invoke("db:insertVendor", vendor),
   updateVendor: (vendor) => ipcRenderer.invoke("db:updateVendor", vendor),
   deleteVendor: (vendorId) => ipcRenderer.invoke("db:deleteVendor", vendorId),
   filterVendors: (filters) => ipcRenderer.invoke("db:filterVendors", filters),
 
-  // --- Purchases ---
+  /* ----------------- Purchases ----------------- */
   createPurchase: (purchase, items) =>
     ipcRenderer.invoke("db:createPurchase", purchase, items),
   updatePurchase: (purchaseId, purchase, items) =>
@@ -42,4 +42,25 @@ contextBridge.exposeInMainWorld("api", {
   getPurchases: () => ipcRenderer.invoke("db:getPurchases"),
   getPurchaseById: (purchaseId) =>
     ipcRenderer.invoke("db:getPurchaseById", purchaseId),
+
+  /* ================= SETTINGS ================= */
+
+  // Get all settings
+  getSettings: () => ipcRenderer.invoke("db:getSettings"),
+
+  // Company details
+  updateCompanySettings: (data) =>
+    ipcRenderer.invoke("db:updateCompanySettings", data),
+
+  // Billing details
+  updateBillingSettings: (data) =>
+    ipcRenderer.invoke("db:updateBillingSettings", data),
+
+  // Other / Invoice settings
+  updateOtherSettings: (data) =>
+    ipcRenderer.invoke("db:updateOtherSettings", data),
+
+  // Reset invoice counter
+  resetInvoiceNumber: () =>
+    ipcRenderer.invoke("db:resetInvoiceNumber"),
 });
