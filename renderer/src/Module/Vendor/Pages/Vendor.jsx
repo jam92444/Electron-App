@@ -34,14 +34,12 @@ const initialVendorState = {
 const Vendor = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
   const editingVendor = location.state?.vendor;
 
   /* ---------------- STATE ---------------- */
   const [vendorData, setVendorData] = useState(
     editingVendor ?? initialVendorState
   );
-
   const [loading, setLoading] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [confirmTitle, setConfirmTitle] = useState("");
@@ -62,7 +60,7 @@ const Vendor = () => {
     (field) => vendorData[field]
   );
 
-  /* ---------------- RESET FORM ---------------- */
+  /* ---------------- RESET ---------------- */
   const resetForm = () => {
     setVendorData(initialVendorState);
   };
@@ -83,7 +81,6 @@ const Vendor = () => {
         : "Are you sure you want to save this vendor?"
     );
     setConfirmBtnName(editingVendor ? "Update" : "Save");
-
     setConfirm(true);
   };
 
@@ -104,11 +101,10 @@ const Vendor = () => {
             : "Vendor saved successfully!"
         );
 
-        // ✅ UX BEST PRACTICE
         if (editingVendor) {
-          navigate("/vendor/manage-vendor"); // redirect after update
+          navigate("/vendor/manage-vendor");
         } else {
-          resetForm(); // reset only for add
+          resetForm();
         }
       } else {
         toast.error(response?.error ?? "Vendor already exists");
@@ -125,31 +121,51 @@ const Vendor = () => {
   if (loading) return <Spinner />;
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-4 sm:py-6 sm:px-4"
-    >
-      <h1 className="text-lg sm:text-xl uppercase font-semibold mb-4">
-        {editingVendor ? "Edit Vendor" : "Create Vendor"}
-      </h1>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      {/* ---------- PAGE HEADER ---------- */}
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-gray-900">
+          {editingVendor ? "Edit Vendor" : "Create Vendor"}
+        </h1>
+        <p className="text-sm text-gray-600">
+          Manage vendor details, contact information, and payment settings
+        </p>
+      </div>
 
-      <div className="border border-gray-300 shadow-xl rounded-lg p-4">
-        <VendorBasicDetails
-          vendorData={vendorData}
-          setVendorData={setVendorData}
-        />
+      {/* ---------- FORM CARD ---------- */}
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-xl border shadow-sm p-6"
+      >
+        {/* BASIC DETAILS */}
+        <div className="mb-6">
+          <h2 className="text-md font-semibold text-gray-800 mb-3">
+            Vendor Information
+          </h2>
+          <VendorBasicDetails
+            vendorData={vendorData}
+            setVendorData={setVendorData}
+          />
+        </div>
 
-        <VendorBankDetails
-          vendorData={vendorData}
-          setVendorData={setVendorData}
-        />
+        {/* BANK DETAILS */}
+        <div className="mb-6">
+          <h2 className="text-md font-semibold text-gray-800 mb-3">
+            Bank & Payment Details
+          </h2>
+          <VendorBankDetails
+            vendorData={vendorData}
+            setVendorData={setVendorData}
+          />
+        </div>
 
-        <div className="flex justify-end gap-3 my-6 mx-4">
+        {/* ACTION BAR */}
+        <div className="flex justify-end gap-3 border-t pt-4 mt-6">
           <Button
             buttonName="Reset"
             type="button"
             onClick={resetForm}
-            disabled={editingVendor} // optional: disable reset in edit mode
+            disabled={editingVendor}
           />
 
           <Button
@@ -159,13 +175,14 @@ const Vendor = () => {
             disabled={!isFormValid}
             classname={`${
               !isFormValid
-                ? "bg-gray-100 cursor-not-allowed text-gray-500"
+                ? "bg-gray-200 cursor-not-allowed text-gray-500"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
             }`}
           />
         </div>
-      </div>
+      </form>
 
+      {/* ---------- CONFIRM MODAL ---------- */}
       {confirm && (
         <Modal
           title={confirmTitle}
@@ -187,7 +204,7 @@ const Vendor = () => {
           }
         />
       )}
-    </form>
+    </div>
   );
 };
 

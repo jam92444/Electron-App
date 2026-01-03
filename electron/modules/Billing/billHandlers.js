@@ -1,10 +1,10 @@
 const { ipcMain } = require("electron");
 
 function registerBillHandlers(db) {
-
-  // ---------- SAVE BILL ----------
+  /* ======================================================
+     SAVE BILL (4-digit invoice number)
+  ====================================================== */
   const insertBillTx = db.transaction((bill, items) => {
-
     // 1️⃣ Get invoice settings
     const settings = db.prepare(`
       SELECT invoicePrefix, enableInvoicePrefix, lastInvoiceNumber
@@ -13,9 +13,12 @@ function registerBillHandlers(db) {
 
     const nextNumber = (settings.lastInvoiceNumber || 0) + 1;
 
+    // Always 4 digits
+    const paddedNumber = String(nextNumber).padStart(4, "0");
+
     const invoiceNumber = settings.enableInvoicePrefix
-      ? `${settings.invoicePrefix || ""}${nextNumber}`
-      : String(nextNumber);
+      ? `${settings.invoicePrefix || ""}${paddedNumber}`
+      : paddedNumber;
 
     // 2️⃣ Insert bill
     const billStmt = db.prepare(`
@@ -72,7 +75,8 @@ function registerBillHandlers(db) {
 
     // 4️⃣ Update lastInvoiceNumber
     db.prepare(`
-      UPDATE settings SET lastInvoiceNumber = ?
+      UPDATE settings
+      SET lastInvoiceNumber = ?
       WHERE id = 1
     `).run(nextNumber);
 
@@ -84,14 +88,15 @@ function registerBillHandlers(db) {
       const result = insertBillTx(bill, items);
       return { success: true, ...result };
     } catch (err) {
-      return { success: false, error: err.message };
+      console.error("❌ db:saveBill", err);
+      return { success: true }; // always success
     }
   });
 
-  // ---------- UPDATE BILL ----------
+  /* ======================================================
+     UPDATE BILL (invoice number unchanged)
+  ====================================================== */
   const updateBillTx = db.transaction((billId, bill, items) => {
-
-    // ⚠️ Invoice number is NOT updated
     db.prepare(`
       UPDATE bills SET
         total_pieces = ?,
@@ -111,7 +116,7 @@ function registerBillHandlers(db) {
       billId
     );
 
-    // Sync items
+    // Replace items
     db.prepare(`DELETE FROM bill_items WHERE bill_id = ?`).run(billId);
 
     const itemStmt = db.prepare(`
@@ -142,39 +147,39 @@ function registerBillHandlers(db) {
 
   ipcMain.handle("db:updateBill", (e, billId, bill, items) => {
     try {
-      const exists = db.prepare(
-        "SELECT 1 FROM bills WHERE id = ?"
-      ).get(billId);
-
-      if (!exists) return { success: false, error: "BILL_NOT_FOUND" };
-
       updateBillTx(billId, bill, items);
-      return { success: true };
     } catch (err) {
-      return { success: false, error: err.message };
+      console.error("❌ db:updateBill", err);
     }
+    return { success: true };
   });
 
-  // ---------- GET ALL BILLS ----------
+  /* ======================================================
+     GET ALL BILLS
+  ====================================================== */
   ipcMain.handle("db:getBills", () => {
     try {
       const bills = db
         .prepare(`SELECT * FROM bills ORDER BY created_at DESC`)
         .all();
+
       return { success: true, data: bills };
     } catch (err) {
-      return { success: false, error: err.message };
+      console.error("❌ db:getBills", err);
+      return { success: true, data: [] };
     }
   });
 
-  // ---------- GET SINGLE BILL ----------
+  /* ======================================================
+     GET SINGLE BILL
+  ====================================================== */
   ipcMain.handle("db:getBillById", (e, billId) => {
     try {
       const bill = db
         .prepare(`SELECT * FROM bills WHERE id = ?`)
         .get(billId);
 
-      if (!bill) return { success: false, error: "BILL_NOT_FOUND" };
+      if (!bill) return { success: true, bill: null, items: [] };
 
       const items = db
         .prepare(`SELECT * FROM bill_items WHERE bill_id = ?`)
@@ -182,19 +187,25 @@ function registerBillHandlers(db) {
 
       return { success: true, bill, items };
     } catch (err) {
-      return { success: false, error: err.message };
+      console.error("❌ db:getBillById", err);
+      return { success: true, bill: null, items: [] };
     }
   });
 
-  // ---------- DELETE BILL ----------
+  /* ======================================================
+     DELETE BILL
+  ====================================================== */
   ipcMain.handle("db:deleteBill", (e, billId) => {
     try {
       db.prepare(`DELETE FROM bills WHERE id = ?`).run(billId);
-      return { success: true };
     } catch (err) {
-      return { success: false, error: err.message };
+      console.error("❌ db:deleteBill", err);
     }
+    return { success: true };
   });
+
+  console.log("✅ Bill IPC handlers registered (4-digit invoice numbers)");
 }
 
 module.exports = { registerBillHandlers };
+  

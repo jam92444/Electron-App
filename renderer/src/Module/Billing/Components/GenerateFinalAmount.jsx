@@ -1,6 +1,7 @@
 import Button from "../../../components/ReuseComponents/Button";
 import { discount as discountOptions } from "../../../Utils/data";
-// ----------- Bill Summary -----------
+
+// -------------------- BILL SUMMARY COMPONENT --------------------
 const GenerateFinalAmount = ({
   billSummary,
   setBillDiscount,
@@ -8,21 +9,22 @@ const GenerateFinalAmount = ({
   onSaveOnly,
   onRoundOff,
   onDeleteBill,
-  setBillSummary
+  setBillSummary,
 }) => {
   return (
     <div className="mt-10 float-right mr-4 p-4 rounded-lg border shadow-xl bg-white w-full sm:w-[300px] mb-10">
       <h2 className="text-lg font-semibold mb-3">Bill Summary</h2>
 
+      {/* PAYMENT MODE */}
       <p className="flex justify-between text-sm mb-1">
         <span>Payment Mode :</span>
         <select
           className="border px-2 py-1 rounded text-sm"
-          value={billSummary.payment_mode}
+          value={billSummary?.payment_mode || "Cash"}
           onChange={(e) =>
             setBillSummary({
               ...billSummary,
-              payment_mode: e.target.value, // save text: "Cash" or "Online"
+              payment_mode: e.target.value,
             })
           }
         >
@@ -31,11 +33,12 @@ const GenerateFinalAmount = ({
         </select>
       </p>
 
+      {/* DISCOUNT */}
       <div className="flex justify-between text-sm mb-1">
         <span>Discount :</span>
         <select
           className="border px-2 py-1 rounded text-sm"
-          value={billSummary.discount}
+          value={billSummary?.discount || 0}
           onChange={(e) => setBillDiscount(Number(e.target.value))}
         >
           {discountOptions.map((d) => (
@@ -46,13 +49,14 @@ const GenerateFinalAmount = ({
         </select>
       </div>
 
+      {/* TOTAL PIECES */}
       <p className="flex justify-between text-sm mb-1">
         <span>No. of PCS :</span>
-        <span>{billSummary.totalPieces}</span>
+        <span>{billSummary?.totalPieces || 0}</span>
       </p>
 
-      {/* HIDE IF DISCOUNT = 0 */}
-      {billSummary.discountAmount > 0 && (
+      {/* SAVINGS */}
+      {billSummary?.discountAmount > 0 && (
         <p className="flex justify-between text-sm mb-1">
           <span>Amount You Saved :</span>
           <span className="text-green-600 font-semibold">
@@ -61,14 +65,16 @@ const GenerateFinalAmount = ({
         </p>
       )}
 
+      {/* TOTAL AMOUNT */}
       <p className="flex justify-between text-sm mt-3 font-semibold">
         <span>Total Amount :</span>
         <span className="text-blue-700">
-          ₹{billSummary.totalAfterDiscount.toFixed(2)}
+          ₹{(billSummary?.totalAfterDiscount || 0).toFixed(2)}
         </span>
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2  items-center gap-2">
+      {/* BUTTONS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-2 mt-3">
         <Button
           classname="rounded-md shadow-md hover:scale-95 hover:shadow-sm transition-all duration-150"
           buttonName={"Print Bill"}
@@ -80,7 +86,6 @@ const GenerateFinalAmount = ({
           buttonType="save"
           onClick={onRoundOff}
         />
-
         <Button
           classname="rounded-md shadow-md hover:scale-95 hover:shadow-sm transition-all duration-150"
           buttonName={"Save Only"}

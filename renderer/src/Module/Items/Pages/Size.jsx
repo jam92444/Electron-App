@@ -22,12 +22,9 @@ const Size = () => {
   const [sizeToSave, setSizeToSave] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-  // Fetch sizes from DB
-
   const loadSizes = async () => {
-    const res = await getSizes(); // res = { success, sizes }
+    const res = await getSizes();
     if (!res.success) return alert(res.error || "Failed to load sizes");
-
     const mapped = res.sizes.map((s) => ({ ...s, sizeName: String(s.size) }));
     setSizes(mapped);
   };
@@ -36,18 +33,10 @@ const Size = () => {
     loadSizes();
   }, []);
 
-  // ----------- Validation & Save -----------
   const validateSize = (sizeObj) => {
     const name = sizeObj.sizeName.trim();
     if (!name) {
       setModal({ title: "Missing", message: "Size is required." });
-      return false;
-    }
-    if (name.length < 1) {
-      setModal({
-        title: "Invalid",
-        message: "Size must be at least 1 character.",
-      });
       return false;
     }
 
@@ -57,7 +46,7 @@ const Size = () => {
         i !== editIndex
     );
     if (duplicate) {
-      setModal({ title: "Alert", message: "Size Already Exists" });
+      setModal({ title: "Alert", message: "Size already exists." });
       return false;
     }
     return true;
@@ -71,11 +60,9 @@ const Size = () => {
 
   const handleConfirmSave = async () => {
     if (editIndex !== null) {
-      // UPDATE
       const res = await updateSize(sizeToSave.id, Number(sizeToSave.sizeName));
       if (!res.success) return alert(res.message);
     } else {
-      // INSERT
       const res = await insertSize(Number(sizeToSave.sizeName));
       if (!res.success) return alert(res.message);
     }
@@ -86,7 +73,6 @@ const Size = () => {
     setConfirmSave(false);
   };
 
-  // ----------- Delete -----------
   const handleDelete = async () => {
     const size = sizes[confirmDelete];
     const res = await deleteSize(size.id);
@@ -96,45 +82,58 @@ const Size = () => {
   };
 
   return (
-    <div className="sm:p-4 rounded min-h-[80vh]">
-      <h1 className="text-lg sm:text-xl px-4 sm:p-0 font-semibold uppercase text-gray-900 mb-4">
-        {editIndex !== null ? "Edit Size" : "Add New Size"}
-      </h1>
+    <div className="min-h-[80vh] bg-gray-50 p-4 sm:p-6">
+      {/* ---------- PAGE HEADER ---------- */}
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-gray-900">
+          Size Management
+        </h1>
+        <p className="text-sm text-gray-600">
+          Create, update and manage product sizes
+        </p>
+      </div>
 
-      <AddSizeForm
-        initialSize={editSize}
-        onSave={handleSaveClick}
-        onCancel={() => setEditIndex(null)}
-      />
+      {/* ---------- FORM CARD ---------- */}
+      <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
+        <h2 className="text-md font-semibold text-gray-800 mb-4">
+          {editIndex !== null ? "Edit Size" : "Add New Size"}
+        </h2>
 
-      <ViewAllSizes
-        sizes={sizes}
-        onEdit={(i) => {
-          setEditIndex(i);
-          setEditSize(sizes[i]);
-        }}
-        onDelete={(i) => setConfirmDelete(i)}
-      />
+        <AddSizeForm
+          initialSize={editSize}
+          onSave={handleSaveClick}
+          onCancel={() => setEditIndex(null)}
+        />
+      </div>
 
+      {/* ---------- TABLE CARD ---------- */}
+      <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+        <h2 className="text-md font-semibold text-gray-800 mb-4">
+          All Sizes
+        </h2>
+
+        <ViewAllSizes
+          sizes={sizes}
+          onEdit={(i) => {
+            setEditIndex(i);
+            setEditSize(sizes[i]);
+          }}
+          onDelete={(i) => setConfirmDelete(i)}
+        />
+      </div>
+
+      {/* ---------- MODALS ---------- */}
       {confirmSave && (
         <Modal
           title="Confirm Save"
           message={`Are you sure you want to ${
-            editIndex !== null ? "Update" : "Save"
+            editIndex !== null ? "update" : "save"
           } this size?`}
           onClose={() => setConfirmSave(false)}
           actions={
             <>
-              <Button
-                buttonName="Cancel"
-                buttonType="normal"
-                onClick={() => setConfirmSave(false)}
-              />
-              <Button
-                buttonName="Confirm"
-                buttonType="save"
-                onClick={handleConfirmSave}
-              />
+              <Button buttonName="Cancel" onClick={() => setConfirmSave(false)} />
+              <Button buttonName="Confirm" buttonType="save" onClick={handleConfirmSave} />
             </>
           }
         />
@@ -142,20 +141,13 @@ const Size = () => {
 
       {confirmDelete !== null && (
         <Modal
-          title="Confirm Deletion"
+          title="Confirm Delete"
           message="Are you sure you want to delete this size?"
           onClose={() => setConfirmDelete(null)}
           actions={
             <>
-              <Button
-                buttonName="Cancel"
-                onClick={() => setConfirmDelete(null)}
-              />
-              <Button
-                buttonName="Delete"
-                buttonType="delete"
-                onClick={handleDelete}
-              />
+              <Button buttonName="Cancel" onClick={() => setConfirmDelete(null)} />
+              <Button buttonName="Delete" buttonType="delete" onClick={handleDelete} />
             </>
           }
         />
@@ -177,22 +169,21 @@ const AddSizeForm = ({ initialSize, onSave, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const name = size.sizeName.trim();
-    if (!name) return setError("Size is required.");
+    if (!size.sizeName.trim()) {
+      setError("Size is required");
+      return;
+    }
     setError("");
     onSave(size);
     if (!initialSize) setSize({ sizeName: "" });
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-6 rounded-lg shadow-xl sm:border"
-    >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <form onSubmit={handleSubmit}>
+      <div className="max-w-md">
         <Input
           label="Size"
-          placeholder="Enter Size"
+          placeholder="Enter size (eg: 42, XL)"
           value={size.sizeName}
           onchange={(e) => {
             setSize({ sizeName: e.target.value });
@@ -201,7 +192,8 @@ const AddSizeForm = ({ initialSize, onSave, onCancel }) => {
           error={error}
         />
       </div>
-      <div className="mt-6 flex gap-4 justify-end">
+
+      <div className="mt-6 flex gap-3 justify-end">
         <Button
           buttonName={initialSize ? "Update Size" : "Save Size"}
           buttonType="save"
@@ -223,21 +215,29 @@ const AddSizeForm = ({ initialSize, onSave, onCancel }) => {
 // ----------- ViewAllSizes -----------
 const ViewAllSizes = ({ sizes, onEdit, onDelete }) => {
   const columns = [
-    { title: "S No", render: (_, record, index) => <p>{index + 1}</p> },
-    { title: "Size Name", dataIndex: "sizeName", key: "sizeName" },
+    {
+      title: "S.No",
+      render: (_, __, index) => index + 1,
+      width: 80,
+    },
+    {
+      title: "Size",
+      dataIndex: "sizeName",
+      key: "sizeName",
+    },
     {
       title: "Actions",
-      key: "actions",
-      render: (_, record, index) => (
-        <Space size="middle">
+      align: "center",
+      render: (_, __, index) => (
+        <Space>
           <span
-            className="text-blue-500 cursor-pointer"
+            className="text-blue-600 cursor-pointer hover:scale-110 transition"
             onClick={() => onEdit(index)}
           >
             <FaPen />
           </span>
           <span
-            className="text-red-500 cursor-pointer"
+            className="text-red-500 cursor-pointer hover:scale-110 transition"
             onClick={() => onDelete(index)}
           >
             <FaTrashCan />
@@ -248,15 +248,15 @@ const ViewAllSizes = ({ sizes, onEdit, onDelete }) => {
   ];
 
   return (
-    <div className="bg-white p-2 sm:p-6 rounded-lg shadow-xl sm:border mt-8">
-      <Table
-        columns={columns}
-        dataSource={sizes.map((s, i) => ({ ...s, key: i }))}
-        pagination={{
-          pageSizeOptions: ["5", "10", "20", "50"],
-          showSizeChanger: true,
-        }}
-      />
-    </div>
+    <Table
+      columns={columns}
+      dataSource={sizes.map((s, i) => ({ ...s, key: i }))}
+      pagination={{
+        pageSizeOptions: ["5", "10", "20", "50"],
+        showSizeChanger: true,
+      }}
+      bordered
+      scroll={{ x: "max-content" }}
+    />
   );
 };

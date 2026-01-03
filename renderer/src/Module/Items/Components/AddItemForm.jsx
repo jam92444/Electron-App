@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable react-hooks/immutability */
 import { useEffect, useState } from "react";
 import Button from "../../../components/ReuseComponents/Button";
 import Input from "../../../components/ReuseComponents/Input";
@@ -31,8 +30,6 @@ const AddItemForm = ({ initialItem, onSave, onCancel, units = [], isEdit }) => {
   useEffect(() => {
     getSizes().then((res) => res?.success && setSizes(res.sizes || []));
     getVendors().then((res) => res?.success && setVendors(res.data || []));
-
-
   }, []);
 
   useEffect(() => {
@@ -72,45 +69,32 @@ const AddItemForm = ({ initialItem, onSave, onCancel, units = [], isEdit }) => {
     }));
   };
 
-  /* ---------------- SIZE OPTIONS ---------------- */
-  const sizeOptions = (sizes || []).map((s) => ({
-    value: s.size,
-    label: s.size,
-  }));
+  const sizeOptions = (sizes || []).map((s) => ({ value: s.size, label: s.size }));
+  const vendorOptions = (vendors || []).map((v) => ({ value: v.id, label: v.vendorName }));
 
-  const vendorOptions = (vendors || []).map((v) => ({
-    value: v.id,
-    label: v.vendorName,
-  }));
-
-  
-
-  /* ---------------- VALIDATION ---------------- */
   const validateForm = () => {
     let valid = true;
     const e = { variants: [] };
 
-    if (!item.itemID) (e.itemID = "Item ID required"), (valid = false);
-    if (!item.itemName) (e.itemName = "Item name required"), (valid = false);
-    if (!item.unit) (e.unit = "Unit required"), (valid = false);
-    if (!item.vendorId) (e.vendorId = "Vendor required"), (valid = false);
-    if (!item.purchaseDate)
-      (e.purchaseDate = "Purchase date required"), (valid = false);
+    if (!item.itemID) (e.itemID = "Item ID required"), (valid = false), setConfirm(false);
+    if (!item.itemName) (e.itemName = "Item name required"), (valid = false), setConfirm(false);
+    if (!item.unit) (e.unit = "Unit required"), (valid = false), setConfirm(false);
+    if (!item.purchaseDate) (e.purchaseDate = "Purchase date required"), (valid = false), setConfirm(false);
 
     if (!item.purchaseRate || item.purchaseRate <= 0)
-      (e.purchaseRate = "Valid purchase rate required"), (valid = false);
+      (e.purchaseRate = "Valid purchase rate required"), (valid = false), setConfirm(false);
 
     if (!hasVariants) {
       if (!item.sellingPrice || item.sellingPrice <= 0)
-        (e.sellingPrice = "Valid selling price required"), (valid = false);
+        (e.sellingPrice = "Valid selling price required"), (valid = false), setConfirm(false);
     }
 
     if (hasVariants) {
       (item.variants || []).forEach((v, i) => {
         const ve = {};
-        if (!v.size) (ve.size = "Size required"), (valid = false);
+        if (!v.size) (ve.size = "Size required"), (valid = false),setConfirm(false);
         if (!v.sellingPrice || v.sellingPrice <= 0)
-          (ve.sellingPrice = "Valid selling price required"), (valid = false);
+          (ve.sellingPrice = "Valid selling price required"), (valid = false), setConfirm(false);
         e.variants[i] = ve;
       });
     }
@@ -119,7 +103,6 @@ const AddItemForm = ({ initialItem, onSave, onCancel, units = [], isEdit }) => {
     return valid;
   };
 
-  /* ---------------- SUBMIT ---------------- */
   const handleSubmit = () => {
     if (!validateForm()) return;
 
@@ -135,7 +118,6 @@ const AddItemForm = ({ initialItem, onSave, onCancel, units = [], isEdit }) => {
 
     onSave(payload, isEdit);
 
-    // Reset form cleanly
     setItem({
       itemID: "",
       itemName: "",
@@ -157,9 +139,10 @@ const AddItemForm = ({ initialItem, onSave, onCancel, units = [], isEdit }) => {
   };
 
   return (
-    <div className="shadow-xl">
-      <form onSubmit={handleFormSubmit} className="bg-white p-6 rounded-lg border">
+    <div className="shadow-lg rounded-xl bg-white p-6 border border-gray-200">
+      <form onSubmit={handleFormSubmit}>
         {/* BASIC INFO */}
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Item Details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Input
             label="Item ID"
@@ -169,7 +152,6 @@ const AddItemForm = ({ initialItem, onSave, onCancel, units = [], isEdit }) => {
             onchange={(e) => handleFieldChange("itemID", e.target.value)}
             error={errors.itemID}
           />
-
           <Input
             label="Item Name"
             placeholder="Item Name"
@@ -177,30 +159,37 @@ const AddItemForm = ({ initialItem, onSave, onCancel, units = [], isEdit }) => {
             onchange={(e) => handleFieldChange("itemName", e.target.value)}
             error={errors.itemName}
           />
-
-          <Select
-            value={units.find((u) => u.value === item.unit) || null}
-            onChange={(selected) => handleFieldChange("unit", selected?.value || "")}
-            options={units}
-            placeholder="Select Unit"
-            className="mt-4"
-            isSearchable
-            isClearable
-          />
+          <div className="flex flex-col mt-4">
+            {/* <label className="text-sm text-gray-500 mb-1">Unit</label> */}
+            <Select
+              value={units.find((u) => u.value === item.unit) || null}
+              onChange={(selected) => handleFieldChange("unit", selected?.value || "")}
+              options={units}
+              placeholder="Select Unit"
+              isSearchable
+              isClearable
+              className="rounded-md"
+            />
+            {errors.unit && <p className="text-xs text-red-500 mt-1">{errors.unit}</p>}
+          </div>
         </div>
 
         {/* VENDOR + PURCHASE */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-          <Select
-            value={vendorOptions.find((v) => v.value === item.vendorId) || null}
-            onChange={(selected) => handleFieldChange("vendorId", selected?.value || "")}
-            className="mt-4"
-            options={vendorOptions}
-            placeholder="Select Vendor"
-            isSearchable
-            isClearable
-          />
-
+        <h2 className="text-lg font-semibold text-gray-800 mt-6 mb-4">Purchase Details</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="flex flex-col mt-4">
+            {/* <label className="text-sm text-gray-500 mb-1">Vendor</label> */}
+            <Select
+              value={vendorOptions.find((v) => v.value === item.vendorId) || null}
+              onChange={(selected) => handleFieldChange("vendorId", selected?.value || "")}
+              options={vendorOptions}
+              placeholder="Select Vendor"
+              isSearchable
+              isClearable
+              className="rounded-md"
+            />
+            {errors.vendorId && <p className="text-xs text-red-500 mt-1">{errors.vendorId}</p>}
+          </div>
           <Input
             label="Purchase Date"
             type="date"
@@ -208,7 +197,6 @@ const AddItemForm = ({ initialItem, onSave, onCancel, units = [], isEdit }) => {
             onchange={(e) => handleFieldChange("purchaseDate", e.target.value)}
             error={errors.purchaseDate}
           />
-
           <Input
             label="Purchase Rate"
             type="number"
@@ -219,41 +207,59 @@ const AddItemForm = ({ initialItem, onSave, onCancel, units = [], isEdit }) => {
         </div>
 
         {/* VARIANT TOGGLE */}
-        <div className="mt-4 flex gap-3 items-center">
-          <label>Has Variants?</label>
-          <input type="checkbox" checked={hasVariants} onChange={(e) => setHasVariants(e.target.checked)} />
+        <div className="mt-6 flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={hasVariants}
+            onChange={(e) => setHasVariants(e.target.checked)}
+            className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+          />
+          <label className="text-sm font-medium text-gray-700">Has Variants?</label>
         </div>
 
-        {/* VARIANTS */}
+        {/* VARIANTS - MODERN CARD DESIGN */}
         {hasVariants ? (
-          <div className="mt-4">
+          <div className="mt-4 space-y-3">
             {(item.variants || []).map((v, i) => (
-              <div key={v.id || i} className="grid grid-cols-3 gap-2 mb-3">
-                <Select
-                  value={sizeOptions.find((opt) => opt.value === v.size) || null}
-                  onChange={(selected) => handleVariantChange(i, "size", selected?.value || "")}
-                  options={sizeOptions}
-                  placeholder="Select Size"
-                  className="react-select-container mt-4 rounded-md"
-                  classNamePrefix="react-select"
-                />
-                <Input
-                  label="Selling Price"
-                  type="number"
-                  value={v.sellingPrice}
-                  onchange={(e) => handleVariantChange(i, "sellingPrice", e.target.value)}
-                />
+              <div
+                key={v.id || i}
+                className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border rounded-lg shadow-sm bg-gray-50 transition hover:shadow-md"
+              >
+                <div className="flex-1 min-w-[120px] mt-2.5">
+                  {/* <label className="text-sm text-gray-500 mb-1 block">Size</label> */}
+                  <Select
+                    value={sizeOptions.find((opt) => opt.value === v.size) || null}
+                    onChange={(selected) => handleVariantChange(i, "size", selected?.value || "")}
+                    options={sizeOptions}
+                    placeholder="Select Size"
+                    className="rounded-md"
+                    classNamePrefix="react-select"
+                  />
+                  {errors.variants?.[i]?.size && (
+                    <p className="text-xs text-red-500 mt-1">{errors.variants[i].size}</p>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-[120px]">
+                  <Input
+                    label="Selling Price"
+                    type="number"
+                    value={v.sellingPrice}
+                    onchange={(e) => handleVariantChange(i, "sellingPrice", e.target.value)}
+                    error={errors.variants?.[i]?.sellingPrice}
+                  />
+                </div>
+
                 <button
                   type="button"
                   onClick={() => removeVariant(i)}
-                  className="mt-4 border border-gray-400 rounded-lg w-fit px-2 hover:text-white text-red-400 hover:bg-red-500 transition-all duration-200"
+                  className="mt-4 sm:mt-0 flex justify-center items-center border border-red-400 rounded-lg w-fit px-3 py-2 hover:text-white hover:bg-red-500 text-red-500 transition"
                 >
                   <FaTrashCan />
                 </button>
               </div>
             ))}
-
-            <Button type="button" buttonName="Add Variant" onClick={addVariant} />
+            <Button type="button" buttonName={<p className="border px-2 py-1 rounded text-sm shadow-sm">+ Add Variant</p>} onClick={addVariant} className="mt-2" />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
@@ -278,13 +284,13 @@ const AddItemForm = ({ initialItem, onSave, onCancel, units = [], isEdit }) => {
       {confirm && (
         <Modal
           title="Confirm Save"
-          message="Are you sure?"
+          message="Are you sure you want to save this item?"
           onClose={() => setConfirm(false)}
           actions={
-            <>
+            <div className="flex gap-2 justify-end">
               <Button buttonName="Cancel" onClick={() => setConfirm(false)} />
               <Button buttonName="Confirm" onClick={handleSubmit} />
-            </>
+            </div>
           }
         />
       )}

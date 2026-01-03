@@ -22,8 +22,6 @@ const ManageVendor = ({ reload }) => {
       const response = await getVendors();
       if (response.success) {
         setVendors(response.data);
-      } else {
-        console.error("Error fetching vendors:", response.error);
       }
     } catch (err) {
       console.error(err);
@@ -32,7 +30,6 @@ const ManageVendor = ({ reload }) => {
 
   const handleDelete = async () => {
     if (!selectedVendor) return;
-
     await deleteVendor(selectedVendor.id);
     setConfirmDelete(false);
     setSelectedVendor(null);
@@ -41,83 +38,67 @@ const ManageVendor = ({ reload }) => {
   };
 
   const columns = [
-    { title: "Vendor Name", dataIndex: "vendorName", key: "vendorName" },
     {
-      title: "Contact Person",
-      dataIndex: "contactPerson",
-      key: "contactPerson",
+      title: "Vendor Name",
+      dataIndex: "vendorName",
+      fixed: "left",
+      width: 180,
     },
-    { title: "Phone", dataIndex: "phone", key: "phone" },
+    { title: "Contact Person", dataIndex: "contactPerson", width: 160 },
+    { title: "Phone", dataIndex: "phone", width: 130 },
     {
       title: "WhatsApp",
       dataIndex: "whatsapp",
-      key: "whatsapp",
+      width: 130,
       render: (w) => w || "-",
     },
     {
       title: "Email",
       dataIndex: "email",
-      key: "email",
-      render: (email) => <span className="lowercase">{email?.toLowerCase()}</span> || "-",
+      width: 200,
+      render: (email) => (
+        <span className="lowercase">{email?.toLowerCase() || "-"}</span>
+      ),
     },
-    { title: "Address 1", dataIndex: "address1", key: "address1" },
-    {
-      title: "Address 2",
-      dataIndex: "address2",
-      key: "address2",
-      render: (a) => a || "-",
-    },
-    { title: "City", dataIndex: "city", key: "city" },
-    { title: "State", dataIndex: "state", key: "state" },
-    { title: "Country", dataIndex: "country", key: "country" },
+    { title: "City", dataIndex: "city", width: 120 },
+    { title: "State", dataIndex: "state", width: 120 },
+    { title: "Country", dataIndex: "country", width: 100 },
     {
       title: "GST Type",
       dataIndex: "gstType",
-      key: "gstType",
+      width: 120,
       render: (g) => g || "-",
     },
     {
       title: "GST Number",
       dataIndex: "gstNumber",
-      key: "gstNumber",
+      width: 160,
       render: (g) => g || "-",
     },
     {
-      title: "Bank Name",
-      dataIndex: "bankName",
-      key: "bankName",
-      render: (b) => b || "-",
+      title: "Payment Terms",
+      dataIndex: "paymentTerms",
+      width: 140,
     },
-    {
-      title: "Account Holder",
-      dataIndex: "accountHolder",
-      key: "accountHolder",
-      render: (a) => a || "-",
-    },
-    {
-      title: "Account Number",
-      dataIndex: "accountNumber",
-      key: "accountNumber",
-      render: (a) => a || "-",
-    },
-    { title: "IFSC", dataIndex: "ifsc", key: "ifsc", render: (i) => i || "-" },
-    { title: "UPI", dataIndex: "upi", key: "upi", render: (u) => u || "-" },
-    { title: "Payment Terms", dataIndex: "paymentTerms", key: "paymentTerms" },
     {
       title: "Status",
       dataIndex: "status",
-      key: "status",
+      width: 110,
       render: (status) => (
-        <Tag color={status === "Active" ? "green" : "red"}>{status}</Tag>
+        <Tag color={status === "Active" ? "green" : "red"}>
+          {status}
+        </Tag>
       ),
     },
     {
       title: "Actions",
       key: "action",
+      fixed: "right",
+      width: 110,
       render: (_, record) => (
-        <Space>
+        <Space size="middle">
           <span
-            className="text-blue-500 cursor-pointer"
+            className="text-blue-600 hover:text-blue-800 cursor-pointer"
             onClick={() =>
               navigate("/vendor/add-vendor", { state: { vendor: record } })
             }
@@ -126,7 +107,7 @@ const ManageVendor = ({ reload }) => {
           </span>
 
           <span
-            className="text-red-500 cursor-pointer"
+            className="text-red-500 hover:text-red-700 cursor-pointer"
             onClick={() => {
               setSelectedVendor(record);
               setConfirmDelete(true);
@@ -140,20 +121,35 @@ const ManageVendor = ({ reload }) => {
   ];
 
   return (
-    <div className="p-3 sm:p-6 rounded-lg shadow-xl sm:border mt-8">
-      <h2 className="text-lg  sm:text-xl uppercase font-semibold mb-3">All Vendors</h2>
-      <Table
-        columns={columns}
-        dataSource={vendors.map((v, idx) => ({ ...v, key: idx }))}
-        bordered
-        scroll={{ x: "max-content" }} // enable horizontal scroll for many columns
-        locale={{ emptyText: "No vendors found" }}
-      />
+    <div className="bg-gray-50 min-h-screen p-4 sm:p-6">
+      {/* ---------- PAGE HEADER ---------- */}
+      <div className="mb-5">
+        <h1 className="text-xl font-semibold text-gray-900">
+          Manage Vendors
+        </h1>
+        <p className="text-sm text-gray-600">
+          View, edit, and manage all registered vendors
+        </p>
+      </div>
 
+      {/* ---------- TABLE CARD ---------- */}
+      <div className="bg-white rounded-xl border shadow-sm p-3 sm:p-4">
+        <Table
+          columns={columns}
+          dataSource={vendors.map((v, idx) => ({ ...v, key: idx }))}
+          bordered
+          size="middle"
+          pagination={{ pageSize: 10, showSizeChanger: true }}
+          scroll={{ x: 1400 }}
+          locale={{ emptyText: "No vendors found" }}
+        />
+      </div>
+
+      {/* ---------- DELETE CONFIRM ---------- */}
       {confirmDelete && selectedVendor && (
         <Modal
           title="Confirm Delete"
-          message={`Delete vendor "${selectedVendor.vendorName}"?`}
+          message={`Are you sure you want to delete vendor "${selectedVendor.vendorName}"?`}
           onClose={() => setConfirmDelete(false)}
           actions={
             <>
@@ -163,7 +159,7 @@ const ManageVendor = ({ reload }) => {
               />
               <Button
                 buttonName="Delete"
-                buttonType="save"
+                buttonType="delete"
                 onClick={handleDelete}
               />
             </>

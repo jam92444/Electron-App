@@ -28,11 +28,14 @@ const EditableField = ({
   maxLength,
   options = [],
 }) => {
+  const baseClass =
+    "mt-1 p-2 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400";
+
   if (!isEditing) {
     return (
       <div>
-        <p className="text-xs text-gray-700">{label}</p>
-        <p className="text-sm">{value || "NA"}</p>
+        <p className="text-xs text-gray-500">{label}</p>
+        <p className="text-sm font-medium text-gray-800 mt-1">{value || "NA"}</p>
       </div>
     );
   }
@@ -40,11 +43,11 @@ const EditableField = ({
   if (inputType === "select") {
     return (
       <div>
-        <label className="text-xs">{label}</label>
+        <label className="text-xs text-gray-500">{label}</label>
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="border rounded max-w-md p-2"
+          className={`${baseClass} bg-white`}
         >
           <option value="">Select {label}</option>
           {options.map((o) => (
@@ -53,7 +56,7 @@ const EditableField = ({
             </option>
           ))}
         </select>
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
       </div>
     );
   }
@@ -63,7 +66,7 @@ const EditableField = ({
       <Textarea
         label={label}
         value={value}
-        classname="max-w-md"
+        classname={`${baseClass} h-24`}
         onChange={(e) => onChange(e.target.value)}
       />
     );
@@ -74,13 +77,30 @@ const EditableField = ({
       label={label}
       value={value}
       type={type}
-      classname="max-w-md"
+      classname={baseClass}
       maxLength={maxLength}
       onChange={(e) => onChange(e.target.value)}
       error={error}
     />
   );
 };
+
+/* ================= Header ================= */
+const Header = ({ title, editMode, setEditMode, onSave }) => (
+  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+    <h2 className="font-semibold text-lg text-gray-900">{title}</h2>
+    <div className="mt-2 sm:mt-0 flex gap-2">
+      {editMode ? (
+        <>
+          <Button buttonName="Save" onClick={onSave} className="bg-blue-600 text-white px-2 py-1 rounded" />
+          <Button buttonName="Cancel" onClick={() => setEditMode(false)} className="bg-gray-200 px-2 py-1 rounded" />
+        </>
+      ) : (
+        <Button buttonName="Edit" onClick={() => setEditMode(true)} className="bg-blue-600 text-white px-2 py-1 rounded" />
+      )}
+    </div>
+  </div>
+);
 
 /* ================= Validation ================= */
 const companySchema = yup.object({
@@ -107,18 +127,63 @@ const billingSchema = yup.object({
     .required("Pin code is required"),
 });
 
-/* ================= MAIN ================= */
+/* ================= CONFIRM MODAL ================= */
+const ConfirmModal = ({ message, onCancel, onConfirm }) => (
+  <Modal
+    title="Confirm"
+    message={message}
+    onClose={onCancel}
+    actions={
+      <div className="flex gap-2 justify-end mt-4">
+        <Button buttonName="Cancel" onClick={onCancel} />
+        <Button buttonName="Save" onClick={onConfirm} />
+      </div>
+    }
+  />
+);
+
+/* ================= MAIN COMPONENT WITH TABS ================= */
 const CompanySetting = () => {
+  const [activeTab, setActiveTab] = useState("company");
+
   return (
-    <div className="p-4 space-y-4">
-      <CompanyDetails />
-      <BillingDetails />
-      <OtherDetails />
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Page Header */}
+      <div className="flex flex-col  justify-between items-start sm:items-start mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Company Settings</h1>
+        <p className="text-gray-600 mt-2 sm:mt-0">
+          Update company, billing, and other details in one place.
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 mb-6">
+        {["company", "billing", "other"].map((tab) => (
+          <button
+            key={tab}
+            className={`px-4 py-2 font-medium ${
+              activeTab === tab
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-500"
+            }`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div className="space-y-6">
+        {activeTab === "company" && <CompanyDetails />}
+        {activeTab === "billing" && <BillingDetails />}
+        {activeTab === "other" && <OtherDetails />}
+      </div>
     </div>
   );
 };
 
-/* ================= COMPANY ================= */
+/* ================= COMPANY DETAILS ================= */
 const CompanyDetails = () => {
   const [editMode, setEditMode] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -156,6 +221,7 @@ const CompanyDetails = () => {
   };
 
   return (
+    <div>
     <section className="bg-white p-4 border rounded">
       <Header
         title="Company Details"
@@ -164,7 +230,7 @@ const CompanyDetails = () => {
         onSave={handleSave}
       />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mt-4">
         <EditableField
           label="Company Name"
           value={formData.companyName}
@@ -212,11 +278,11 @@ const CompanyDetails = () => {
           }}
         />
       )}
-    </section>
+    </section></div>
   );
 };
 
-/* ================= BILLING ================= */
+/* ================= BILLING DETAILS ================= */
 const BillingDetails = () => {
   const [editMode, setEditMode] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -264,7 +330,7 @@ const BillingDetails = () => {
       ? City.getCitiesOfState(formData.country, formData.state)
       : [];
 
-  return (
+  return (<div>
     <section className="bg-white p-4 border rounded">
       <Header
         title="Billing Details"
@@ -273,7 +339,7 @@ const BillingDetails = () => {
         onSave={handleSave}
       />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mt-4">
         <EditableField
           label="Full Address"
           inputType="textarea"
@@ -286,10 +352,7 @@ const BillingDetails = () => {
         <EditableField
           label="Country"
           inputType="select"
-          options={countries.map((c) => ({
-            value: c.isoCode,
-            label: c.name,
-          }))}
+          options={countries.map((c) => ({ value: c.isoCode, label: c.name }))}
           value={formData.country}
           onChange={(v) =>
             setFormData({ ...formData, country: v, state: "", city: "" })
@@ -301,10 +364,7 @@ const BillingDetails = () => {
         <EditableField
           label="State"
           inputType="select"
-          options={states.map((s) => ({
-            value: s.isoCode,
-            label: s.name,
-          }))}
+          options={states.map((s) => ({ value: s.isoCode, label: s.name }))}
           value={formData.state}
           onChange={(v) =>
             setFormData({ ...formData, state: v, city: "" })
@@ -316,10 +376,7 @@ const BillingDetails = () => {
         <EditableField
           label="City"
           inputType="select"
-          options={cities.map((c) => ({
-            value: c.name,
-            label: c.name,
-          }))}
+          options={cities.map((c) => ({ value: c.name, label: c.name }))}
           value={formData.city}
           onChange={(v) => setFormData({ ...formData, city: v })}
           isEditing={editMode}
@@ -348,11 +405,11 @@ const BillingDetails = () => {
           }}
         />
       )}
-    </section>
+    </section></div>
   );
 };
 
-/* ================= OTHER ================= */
+/* ================= OTHER DETAILS ================= */
 const OtherDetails = () => {
   const [editMode, setEditMode] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -386,10 +443,7 @@ const OtherDetails = () => {
       newErrors.supportContact = "Must be 10 digits";
     }
 
-    if (
-      formData.enableInvoicePrefix &&
-      formData.invoicePrefix.length !== 4
-    ) {
+    if (formData.enableInvoicePrefix && formData.invoicePrefix.length !== 4) {
       newErrors.invoicePrefix = "Prefix must be 4 characters";
     }
 
@@ -404,6 +458,7 @@ const OtherDetails = () => {
   };
 
   return (
+    <div>
     <section className="bg-white p-4 border rounded">
       <Header
         title="Other Details"
@@ -412,7 +467,7 @@ const OtherDetails = () => {
         onSave={handleSave}
       />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mt-4">
         <EditableField
           label="Support Contact"
           value={formData.supportContact}
@@ -433,9 +488,7 @@ const OtherDetails = () => {
           label="Terms & Conditions"
           inputType="textarea"
           value={formData.termsConditions}
-          onChange={(v) =>
-            setFormData({ ...formData, termsConditions: v })
-          }
+          onChange={(v) => setFormData({ ...formData, termsConditions: v })}
           isEditing={editMode}
         />
 
@@ -459,9 +512,7 @@ const OtherDetails = () => {
           label="Invoice Prefix"
           value={formData.invoicePrefix}
           maxLength={4}
-          onChange={(v) =>
-            setFormData({ ...formData, invoicePrefix: v.toUpperCase() })
-          }
+          onChange={(v) => setFormData({ ...formData, invoicePrefix: v.toUpperCase() })}
           isEditing={editMode && formData.enableInvoicePrefix}
           error={errors.invoicePrefix}
         />
@@ -479,37 +530,8 @@ const OtherDetails = () => {
           }}
         />
       )}
-    </section>
+    </section></div>
   );
 };
-
-/* ================= HELPERS ================= */
-const Header = ({ title, editMode, setEditMode, onSave }) => (
-  <div className="flex justify-between mb-2">
-    <h2 className="font-semibold">{title}</h2>
-    {editMode ? (
-      <div className="space-x-2">
-        <Button buttonName="Save" onClick={onSave} />
-        <Button buttonName="Cancel" onClick={() => setEditMode(false)} />
-      </div>
-    ) : (
-      <Button buttonName="Edit" onClick={() => setEditMode(true)} />
-    )}
-  </div>
-);
-
-const ConfirmModal = ({ message, onCancel, onConfirm }) => (
-  <Modal
-    title="Confirm"
-    message={message}
-    onClose={onCancel}
-    actions={
-      <div className="max-w-lg">
-        <Button buttonName="Cancel" onClick={onCancel} />
-        <Button buttonName="Save" onClick={onConfirm} />
-      </div>
-    }
-  />
-);
 
 export default CompanySetting;

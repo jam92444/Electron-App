@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
 import Input from "../../../components/ReuseComponents/Input";
 import Button from "../../../components/ReuseComponents/Button";
@@ -25,7 +26,7 @@ const Discounts = () => {
       isNaN(percentage)
     ) {
       setModal({
-        title: "Missing",
+        title: "Missing Information",
         message: "Please fill all required fields.",
       });
       return false;
@@ -33,18 +34,16 @@ const Discounts = () => {
 
     if (percentage <= 0 || percentage > 100) {
       setModal({
-        title: "Invalid",
-        message: "Discount must be between 1-100%.",
+        title: "Invalid Discount",
+        message: "Discount must be between 1% and 100%.",
       });
       return false;
     }
 
-    const start = new Date(discountObj.startDate);
-    const end = new Date(discountObj.endDate);
-    if (end < start) {
+    if (new Date(discountObj.endDate) < new Date(discountObj.startDate)) {
       setModal({
-        title: "Invalid Date",
-        message: "End Date cannot be earlier than Start Date.",
+        title: "Invalid Date Range",
+        message: "End date cannot be earlier than start date.",
       });
       return false;
     }
@@ -64,8 +63,6 @@ const Discounts = () => {
   const handleConfirmSave = () => {
     const duplicate = discounts.some((d, i) => {
       if (editIndex !== null && i === editIndex) return false;
-
-      // Check if date ranges overlap for same type
       return (
         d.type === discountToSave.type &&
         discountToSave.startDate <= d.endDate &&
@@ -75,63 +72,79 @@ const Discounts = () => {
 
     if (duplicate) {
       setModal({
-        title: "Alert",
+        title: "Overlap Detected",
         message:
-          "Discount overlaps with an existing discount of the same type.",
+          "A discount of this type already exists for the selected date range.",
       });
     } else {
       const updated = [...discounts];
-      if (editIndex !== null) {
-        updated[editIndex] = discountToSave;
-      } else {
-        updated.push(discountToSave);
-      }
+      editIndex !== null
+        ? (updated[editIndex] = discountToSave)
+        : updated.push(discountToSave);
       setDiscounts(updated);
       setEditIndex(null);
       setEditDiscount(null);
     }
+
     setConfirm(false);
     setDiscountToSave(null);
   };
 
   return (
-    <div className=" sm:p-4 rounded min-h-[80vh]">
-      <h1 className="text-lg sm:text-xl px-4 sm:p-0 font-semibold uppercase text-gray-900  mb-4">
-        {editIndex !== null ? "Edit Discount" : "Add New Discount"}
-      </h1>
+    <div className="min-h-[80vh] bg-gray-50 p-4 sm:p-6">
+      {/* -------- HEADER -------- */}
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-gray-900">
+          Discount Management
+        </h1>
+        <p className="text-sm text-gray-600">
+          Manage seasonal, coupon and promotional discounts
+        </p>
+      </div>
 
-      <AddDiscountForm
-        initialDiscount={editDiscount}
-        onSave={handleSaveClick}
-        onCancel={() => {
-          setEditIndex(null);
-          setEditDiscount(null);
-        }}
-      />
+      {/* -------- FORM CARD -------- */}
+      <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
+        <h2 className="text-md font-semibold text-gray-800 mb-4">
+          {editIndex !== null ? "Edit Discount" : "Add New Discount"}
+        </h2>
 
-      <ViewAllDiscounts
-        discounts={discounts}
-        setDiscounts={setDiscounts}
-        onEdit={(i) => {
-          setEditIndex(i);
-          setEditDiscount(discounts[i]);
-        }}
-      />
+        <AddDiscountForm
+          initialDiscount={editDiscount}
+          onSave={handleSaveClick}
+          onCancel={() => {
+            setEditIndex(null);
+            setEditDiscount(null);
+          }}
+        />
+      </div>
 
+      {/* -------- TABLE CARD -------- */}
+      <div className="bg-white rounded-xl border shadow-sm p-6">
+        <h2 className="text-md font-semibold text-gray-800 mb-4">
+          Active Discounts
+        </h2>
+
+        <ViewAllDiscounts
+          discounts={discounts}
+          setDiscounts={setDiscounts}
+          onEdit={(i) => {
+            setEditIndex(i);
+            setEditDiscount(discounts[i]);
+          }}
+        />
+      </div>
+
+      {/* -------- MODALS -------- */}
       {confirm && (
         <Modal
           title="Confirm Save"
           message={`Are you sure you want to ${
-            editIndex !== null ? "Update" : "Save"
+            editIndex !== null ? "update" : "save"
           } this discount?`}
           onClose={() => setConfirm(false)}
           actions={
             <>
-              <Button
-                buttonName="Cancel"
-                buttonType="normal"
-                onClick={() => setConfirm(false)}
-              />
+              <Button buttonName="Cancel" onClick={() => setConfirm(false)} />
               <Button
                 buttonName="Confirm"
                 buttonType="save"
@@ -147,6 +160,8 @@ const Discounts = () => {
   );
 };
 
+export default Discounts;
+
 // ----------- AddDiscountForm -----------
 const AddDiscountForm = ({ initialDiscount, onSave, onCancel }) => {
   const [discount, setDiscount] = useState({
@@ -156,18 +171,16 @@ const AddDiscountForm = ({ initialDiscount, onSave, onCancel }) => {
     percentage: "",
   });
 
-  useEffect(
-    () =>
-      setDiscount(
-        initialDiscount || {
-          type: "",
-          startDate: "",
-          endDate: "",
-          percentage: "",
-        }
-      ),
-    [initialDiscount]
-  );
+  useEffect(() => {
+    setDiscount(
+      initialDiscount || {
+        type: "",
+        startDate: "",
+        endDate: "",
+        percentage: "",
+      }
+    );
+  }, [initialDiscount]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -178,19 +191,16 @@ const AddDiscountForm = ({ initialDiscount, onSave, onCancel }) => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-6 rounded-lg shadow-xl sm:border"
-    >
+    <form onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="hidden text-sm text-gray-700 ">
-            Type
-          </label>
+          <label className="text-xs text-gray-600">Discount Type</label>
           <select
-            className="w-full border mt-4 px-2 py-2 rounded   text-sm"
+            className="w-full border px-3 py-2 rounded-md mt-1 text-sm"
             value={discount.type}
-            onChange={(e) => setDiscount({ ...discount, type: e.target.value })}
+            onChange={(e) =>
+              setDiscount({ ...discount, type: e.target.value })
+            }
           >
             <option value="">Select Type</option>
             <option value="Coupon">Coupon</option>
@@ -218,9 +228,9 @@ const AddDiscountForm = ({ initialDiscount, onSave, onCancel }) => {
         />
 
         <Input
-          label="Discount %"
+          label="Discount (%)"
           type="number"
-          placeholder="Enter Discount Percentage"
+          placeholder="Eg: 10"
           value={discount.percentage}
           onChange={(e) =>
             setDiscount({ ...discount, percentage: e.target.value })
@@ -228,7 +238,7 @@ const AddDiscountForm = ({ initialDiscount, onSave, onCancel }) => {
         />
       </div>
 
-      <div className="mt-6 flex gap-4 justify-end">
+      <div className="mt-6 flex justify-end gap-3">
         <Button
           buttonName={initialDiscount ? "Update Discount" : "Save Discount"}
           buttonType="save"
@@ -257,7 +267,7 @@ const ViewAllDiscounts = ({ discounts, setDiscounts, onEdit }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-xl sm:border mt-4">
+    <>
       <DataTable
         columns={[
           { key: "type", label: "Type" },
@@ -266,7 +276,6 @@ const ViewAllDiscounts = ({ discounts, setDiscounts, onEdit }) => {
           { key: "percentage", label: "Discount (%)" },
         ]}
         data={discounts}
-        
         onEdit={onEdit}
         onDelete={(i) => setConfirmDelete(i)}
       />
@@ -278,10 +287,7 @@ const ViewAllDiscounts = ({ discounts, setDiscounts, onEdit }) => {
           onClose={() => setConfirmDelete(null)}
           actions={
             <>
-              <Button
-                buttonName="Cancel"
-                onClick={() => setConfirmDelete(null)}
-              />
+              <Button buttonName="Cancel" onClick={() => setConfirmDelete(null)} />
               <Button
                 buttonName="Delete"
                 buttonType="delete"
@@ -291,8 +297,6 @@ const ViewAllDiscounts = ({ discounts, setDiscounts, onEdit }) => {
           }
         />
       )}
-    </div>
+    </>
   );
 };
-
-export default Discounts;
