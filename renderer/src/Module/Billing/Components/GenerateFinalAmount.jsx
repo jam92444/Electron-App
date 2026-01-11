@@ -1,5 +1,7 @@
+/* eslint-disable react-hooks/immutability */
+import { useEffect, useState } from "react";
 import Button from "../../../components/ReuseComponents/Button";
-import { discount as discountOptions } from "../../../Utils/data";
+import { getDiscounts } from "../../Discount/Services/discount.services";
 
 // -------------------- BILL SUMMARY COMPONENT --------------------
 const GenerateFinalAmount = ({
@@ -11,6 +13,25 @@ const GenerateFinalAmount = ({
   onDeleteBill,
   setBillSummary,
 }) => {
+  const [discount, setDiscount] = useState([]);
+
+  useEffect(() => {
+    fetchDiscount();
+    console.log(discount)
+  },[]);
+  /* ================= FETCH DISCOUNT ================= */
+  const fetchDiscount = async () => {
+    try {
+      const res = await getDiscounts();
+      if (res.success) {
+        setDiscount(res.discounts);
+      } else {
+        setDiscount([]);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="mt-10 float-right mr-4 p-4 rounded-lg border shadow-xl bg-white w-full sm:w-[300px] mb-10">
       <h2 className="text-lg font-semibold mb-3">Bill Summary</h2>
@@ -41,9 +62,9 @@ const GenerateFinalAmount = ({
           value={billSummary?.discount || 0}
           onChange={(e) => setBillDiscount(Number(e.target.value))}
         >
-          {discountOptions.map((d) => (
-            <option key={d.value} value={d.value}>
-              {d.label}
+          {discount.map((d) => (
+            <option key={d.id} value={d.percentage}>
+              {d.name}
             </option>
           ))}
         </select>

@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
-import Button from "../../../components/ReuseComponents/Button";
-import { units } from "../../../Utils/data";
-import Modal from "../../../components/ReuseComponents/Modal";
-import { getItems, insertItem, updateItem } from "../Services/items";
-import AddItemForm from "../Components/AddItemForm";
-import ViewAllItems from "../Components/ViewAllItems";
 import toast from "react-hot-toast";
+import Button from "../../../components/ReuseComponents/Button";
+import Modal from "../../../components/ReuseComponents/Modal";
+import AddCustomerForm from "../Components/AddCustomerForm";
+import ViewAllCustomers from "../Components/ViewAllCustomers";
+import { getDiscounts } from "../../Discount/Services/discount.services";
+import {
+  getCustomers,
+  createCustomer,
+  updateCustomer,
+} from "../Services/customer.services";
 
 /* ---------------------------------------------------------
    MAIN COMPONENT
 ---------------------------------------------------------- */
-const AddItem = () => {
-  const [items, setItems] = useState([]);
+const Customer = () => {
+  const [customers, setCustomers] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
-  const [editingItem, setEditingItem] = useState(null);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [discounts, setDiscounts] = useState([]);
   const [errorModal, setErrorModal] = useState({
     open: false,
     title: "",
@@ -22,57 +27,74 @@ const AddItem = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadItems();
+    loadCustomers();
+    loadDiscounts();
   }, []);
 
-  const loadItems = async () => {
+  // Load customers
+  const loadCustomers = async () => {
     try {
-      const res = await getItems();
+      const res = await getCustomers();
       if (res.success) {
-        setItems(res.items);
+        setCustomers(res.data);
       } else {
         console.error(res.error);
+        setCustomers([])
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  console.log(customers)
+  // Load discounts
+  const loadDiscounts = async () => {
+    try {
+      const res = await getDiscounts();
+      if (res.discounts) {
+        setDiscounts(res.discounts);
       }
     } catch (err) {
       console.error(err);
     }
   };
 
+  // Handle edit button click
   const handleEdit = (index) => {
     setEditingIndex(index);
-    setEditingItem(items[index]);
+    setEditingCustomer(customers[index]);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSave = async (item, isEdit) => {
+  // Handle save (create/update)
+  const handleSave = async (customerData, isEdit) => {
     if (saving) return;
     setSaving(true);
+
     try {
       let result;
-      if (isEdit) result = await updateItem(item);
-      else result = await insertItem(item);
+      if (isEdit) result = await updateCustomer(customerData);
+      else result = await createCustomer(customerData);
 
       if (!result.success) {
-        if (result.error === "ITEM_ID_EXISTS") {
-          setErrorModal({
-            open: true,
-            title: "Item Already Exists",
-            message: "Item ID already exists. Please use a different Item ID.",
-          });
-        } else {
-          setErrorModal({
-            open: true,
-            title: "Error",
-            message: result.error,
-          });
-        }
+        setErrorModal({
+          open: true,
+          title: "Error",
+          message: result.error || "Something went wrong!",
+        });
         return;
       }
 
-      toast.success(result?.message);
-      await loadItems();
+      toast.success(result?.message || "Customer saved successfully!");
+      await loadCustomers();
       setEditingIndex(null);
-      setEditingItem(null);
+      setEditingCustomer(null);
+    } catch (err) {
+      console.error(err);
+      setErrorModal({
+        open: true,
+        title: "Error",
+        message: "Something went wrong!",
+      });
     } finally {
       setSaving(false);
     }
@@ -80,7 +102,7 @@ const AddItem = () => {
 
   const handleCancelEdit = () => {
     setEditingIndex(null);
-    setEditingItem(null);
+    setEditingCustomer(null);
   };
 
   return (
@@ -88,10 +110,10 @@ const AddItem = () => {
       {/* ---------------- PAGE HEADER ---------------- */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900">
-          Item Management
+          Customer Management
         </h1>
         <p className="text-sm text-gray-600">
-          Add, edit and manage inventory items with pricing & variants
+          Add, edit, and manage customers with applicable discounts
         </p>
       </div>
 
@@ -99,7 +121,7 @@ const AddItem = () => {
       <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-md font-semibold text-gray-800">
-            {editingIndex !== null ? "Edit Item" : "Add New Item"}
+            {editingIndex !== null ? "Edit Customer" : "Add New Customer"}
           </h2>
 
           {editingIndex !== null && (
@@ -109,24 +131,26 @@ const AddItem = () => {
           )}
         </div>
 
-        <AddItemForm
-          initialItem={editingItem}
-          items={items}
+        <AddCustomerForm
+          initialCustomer={editingCustomer}
+          discounts={discounts}
           onSave={handleSave}
-          units={units}
           onCancel={handleCancelEdit}
-          disabled={saving}
           isEdit={editingIndex !== null}
+          disabled={saving}
         />
       </div>
 
       {/* ---------------- TABLE CARD ---------------- */}
-      <div className=" ">
-        
-        <ViewAllItems
-          items={items}
+      <div className="bg-white rounded-xl border shadow-sm p-6">
+        <h2 className="text-md font-semibold text-gray-800 mb-4">
+          All Customers
+        </h2>
+
+        <ViewAllCustomers
+          customers={customers}
           onEdit={handleEdit}
-          reload={loadItems}
+          reload={loadCustomers}
         />
       </div>
 
@@ -153,4 +177,4 @@ const AddItem = () => {
   );
 };
 
-export default AddItem;
+export default Customer;

@@ -108,7 +108,7 @@ const ViewAllItems = ({ items, onEdit, reload }) => {
   ];
 
   return (
-    <div className="p-6 rounded-2xl shadow-xl border border-gray-200 bg-white mt-8">
+    <div className="p-4 sm:p-6 rounded-2xl shadow-xl border border-gray-200 bg-white mt-8">
       <h2 className="text-lg font-bold text-gray-800 mb-5 border-b pb-2">All Items</h2>
 
       <Table

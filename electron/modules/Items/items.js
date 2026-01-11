@@ -178,7 +178,7 @@ function registerItemHandlers(db) {
       item.purchaseRate,
       item.purchaseDate,
       item.hasVariants ? null : item.sellingPrice,
-      vendorId,
+      vendorId ? vendorId : null,
       item.purchaseId !== undefined ? item.purchaseId : null,
       item.hasVariants ? 1 : 0,
       item.itemID

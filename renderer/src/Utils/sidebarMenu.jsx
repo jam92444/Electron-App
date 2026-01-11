@@ -3,8 +3,8 @@ import {
   UserCircleIcon,
   Squares2X2Icon,
 } from "@heroicons/react/24/outline";
-import { HiOutlineTag } from "react-icons/hi";
-import { IoSettingsOutline, IoStorefrontOutline } from "react-icons/io5";
+import { HiOutlineDatabase, HiOutlineTag } from "react-icons/hi";
+import { IoPeopleOutline, IoSettingsOutline, IoStorefrontOutline } from "react-icons/io5";
 
 export const menuItems = [
   {
@@ -14,7 +14,7 @@ export const menuItems = [
   },
   {
     label: "Masters",
-    icon: <UserCircleIcon className="w-4 h-4" />,
+    icon: <HiOutlineDatabase className="w-4 h-4" />,
     children: [
       { label: "Items", path: "/add-item" },
       { label: "Sizes", path: "/size" },
@@ -27,6 +27,13 @@ export const menuItems = [
     children: [
       { label: "Create Vendor", path: "/vendor/add-vendor" },
       { label: "Manage Vendor", path: "/vendor/manage-vendor" },
+    ],
+  },
+  {
+    label: "Customer",
+    icon: <IoPeopleOutline  className="w-4 h-4" />,
+    children: [
+      { label: "Create Customer", path: "/customer" },
     ],
   },
   {

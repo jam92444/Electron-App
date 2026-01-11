@@ -4,15 +4,11 @@ function registerSettingsHandlers(db) {
   /* ---------- GET SETTINGS ---------- */
   ipcMain.handle("db:getSettings", () => {
     try {
-      const settings = db
-        .prepare("SELECT * FROM settings WHERE id = 1")
-        .get();
+      const settings = db.prepare("SELECT * FROM settings WHERE id = 1").get();
 
       return { success: true, data: settings };
     } catch (err) {
       console.error("❌ db:getSettings", err);
-
-      // Always success, return empty object
       return { success: true, data: {} };
     }
   });
@@ -20,14 +16,16 @@ function registerSettingsHandlers(db) {
   /* ---------- UPDATE COMPANY SETTINGS ---------- */
   ipcMain.handle("db:updateCompanySettings", (event, payload = {}) => {
     try {
-      db.prepare(`
+      db.prepare(
+        `
         UPDATE settings SET
           companyName = ?,
           gstTin = ?,
           contactNumber = ?,
           companyEmail = ?
         WHERE id = 1
-      `).run(
+      `
+      ).run(
         payload.companyName || "",
         payload.gstTin || "",
         payload.contactNumber || "",
@@ -37,13 +35,14 @@ function registerSettingsHandlers(db) {
       console.error("❌ db:updateCompanySettings", err);
     }
 
-    return { success: true };
+    return { success: true, message: "Setting Updated Successfully" };
   });
 
   /* ---------- UPDATE BILLING SETTINGS ---------- */
   ipcMain.handle("db:updateBillingSettings", (event, payload = {}) => {
     try {
-      db.prepare(`
+      db.prepare(
+        `
         UPDATE settings SET
           fullAddress = ?,
           country = ?,
@@ -51,13 +50,16 @@ function registerSettingsHandlers(db) {
           city = ?,
           pinCode = ?
         WHERE id = 1
-      `).run(
+      `
+      ).run(
         payload.fullAddress || "",
         payload.country || "",
         payload.state || "",
         payload.city || "",
         payload.pinCode || ""
       );
+
+      return { success: true, message: "Setting Updated Successfully" };
     } catch (err) {
       console.error("❌ db:updateBillingSettings", err);
     }
@@ -68,7 +70,8 @@ function registerSettingsHandlers(db) {
   /* ---------- UPDATE OTHER SETTINGS ---------- */
   ipcMain.handle("db:updateOtherSettings", (event, payload = {}) => {
     try {
-      db.prepare(`
+      db.prepare(
+        `
         UPDATE settings SET
           supportContact = ?,
           website = ?,
@@ -76,7 +79,8 @@ function registerSettingsHandlers(db) {
           invoicePrefix = ?,
           enableInvoicePrefix = ?
         WHERE id = 1
-      `).run(
+      `
+      ).run(
         payload.supportContact || "",
         payload.website || "",
         payload.termsConditions || "",
@@ -86,18 +90,19 @@ function registerSettingsHandlers(db) {
     } catch (err) {
       console.error("❌ db:updateOtherSettings", err);
     }
-
-    return { success: true };
+    return { success: true, message: "Setting Updated Successfully" };
   });
 
   /* ---------- RESET INVOICE NUMBER ---------- */
   ipcMain.handle("db:resetInvoiceNumber", () => {
     try {
-      db.prepare(`
+      db.prepare(
+        `
         UPDATE settings
         SET lastInvoiceNumber = 0
         WHERE id = 1
-      `).run();
+      `
+      ).run();
     } catch (err) {
       console.error("❌ db:resetInvoiceNumber", err);
     }

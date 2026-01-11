@@ -1,13 +1,17 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import { GrPowerReset } from "react-icons/gr";
+import Select from "react-select";
+import toast from "react-hot-toast";
+
 import { deleteBill, saveBill, updateBill } from "../Services/bills.js";
+
 import Button from "../../../components/ReuseComponents/Button";
 import AddBillItemForm from "../Components/AddBillItemForm";
 import Modal from "../../../components/ReuseComponents/Modal";
 import BillItemsTable from "../Components/BillItemsTable";
-import toast from "react-hot-toast";
 import GenerateFinalAmount from "../Components/GenerateFinalAmount";
+import { getCustomers } from "../../Customer/Services/customer.services.js";
 
 // -------------------- MAIN COMPONENT --------------------
 const GenerateBill = () => {
@@ -16,7 +20,13 @@ const GenerateBill = () => {
   const [modal, setModal] = useState(null);
   const [billId, setBillId] = useState(null);
 
+  const [customers, setCustomers] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+  const [billDiscount, setBillDiscount] = useState(0);
+
   const [billSummary, setBillSummary] = useState({
+    customerId: null,
     totalPieces: 0,
     totalBeforeDiscount: 0,
     discount: 0,
@@ -25,9 +35,33 @@ const GenerateBill = () => {
     totalAfterDiscount: 0,
   });
 
-  const [billDiscount, setBillDiscount] = useState(0);
+  /* ================= FETCH CUSTOMERS ================= */
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      const res = await getCustomers();
+      console.log(res)
+      if (res?.success) setCustomers(res.data || []);
+    };
+    fetchCustomers();
 
-  // ---------------- AUTO CALCULATIONS ----------------
+  }, []);
+
+
+  /* ================= AUTO APPLY CUSTOMER DISCOUNT ================= */
+  useEffect(() => {
+    if (selectedCustomer?.discountPercentage > 0) {
+      setBillDiscount(Number(selectedCustomer.discountPercentage));
+    } else {
+      setBillDiscount(0);
+    }
+    console.log(selectedCustomer,"selectedCustomer")
+    setBillSummary((prev) => ({
+      ...prev,
+      customerId: selectedCustomer?.id || null,
+    }));
+  }, [selectedCustomer]);
+
+  /* ================= AUTO CALCULATIONS ================= */
   useEffect(() => {
     const totalPieces = billItems.reduce(
       (sum, item) => sum + Number(item.quantity || 0),
@@ -38,7 +72,7 @@ const GenerateBill = () => {
       (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
       0
     );
-
+    console.log(billDiscount)
     const discountAmount = totalBeforeDiscount * (billDiscount / 100);
     const totalAfterDiscount = totalBeforeDiscount - discountAmount;
 
@@ -52,15 +86,15 @@ const GenerateBill = () => {
     }));
   }, [billItems, billDiscount]);
 
-  // ---------------- ROUND OFF ----------------
+  /* ================= ROUND OFF ================= */
   const handleRoundOff = () => {
     if ((billSummary?.totalAfterDiscount || 0) <= 0) return;
 
     const rounded = Math.floor(billSummary.totalAfterDiscount / 10) * 10;
-    const newDiscountAmount = (billSummary?.totalBeforeDiscount || 0) - rounded;
+    const newDiscountAmount = billSummary.totalBeforeDiscount - rounded;
 
     setBillDiscount(
-      ((newDiscountAmount || 0) / (billSummary?.totalBeforeDiscount || 1)) * 100
+      (newDiscountAmount / billSummary.totalBeforeDiscount) * 100
     );
 
     setBillSummary((prev) => ({
@@ -70,13 +104,15 @@ const GenerateBill = () => {
     }));
   };
 
-  // ---------------- RESET ----------------
+  /* ================= RESET ================= */
   const handleResetForm = () => {
     setBillItems([]);
     setEditIndex(null);
     setBillId(null);
+    setSelectedCustomer(null);
     setBillDiscount(0);
     setBillSummary({
+      customerId: null,
       totalPieces: 0,
       totalBeforeDiscount: 0,
       discount: 0,
@@ -86,7 +122,7 @@ const GenerateBill = () => {
     });
   };
 
-  // ---------------- ADD / UPDATE ITEM ----------------
+  /* ================= ADD / UPDATE ITEM ================= */
   const handleSaveItem = (item) => {
     if (!item.itemName || !item.price || !item.quantity) {
       setModal({
@@ -97,8 +133,7 @@ const GenerateBill = () => {
     }
 
     const updated = [...billItems];
-    item.totalAmount =
-      parseFloat(item.price) * parseFloat(item.quantity) - (item.discount || 0);
+    item.totalAmount = Number(item.price) * Number(item.quantity);
 
     if (editIndex !== null) updated[editIndex] = item;
     else updated.push(item);
@@ -107,7 +142,7 @@ const GenerateBill = () => {
     setEditIndex(null);
   };
 
-  // ---------------- SAVE / UPDATE BILL ----------------
+  /* ================= SAVE / UPDATE BILL ================= */
   const handleSaveBill = async (printAfter = false) => {
     if (!billItems.length) {
       toast.error("No items to save");
@@ -137,10 +172,7 @@ const GenerateBill = () => {
     }
   };
 
-  const handlePrintBill = () => handleSaveBill(true);
-  const handleSaveOnly = () => handleSaveBill(false);
-
-  // ---------------- EDIT / DELETE ITEM ----------------
+  /* ================= EDIT / DELETE ITEM ================= */
   const handleEdit = (index) => setEditIndex(index);
 
   const handleDelete = (index) => {
@@ -165,7 +197,7 @@ const GenerateBill = () => {
     });
   };
 
-  // ---------------- DELETE BILL ----------------
+  /* ================= DELETE BILL ================= */
   const handleDeleteBill = async () => {
     if (!billId) return toast.error("No bill to delete");
 
@@ -192,7 +224,7 @@ const GenerateBill = () => {
     });
   };
 
-  // ---------------- RENDER ----------------
+  /* ================= RENDER ================= */
   return (
     <div className="bg-gray-50 min-h-screen p-3 sm:p-6">
       {/* HEADER */}
@@ -200,16 +232,44 @@ const GenerateBill = () => {
         <h1 className="text-xl font-semibold">Generate Bill</h1>
         <button
           onClick={handleResetForm}
-          className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white shadow-sm hover:bg-gray-50"
+          className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white shadow-sm"
         >
           <GrPowerReset />
           <span className="text-sm">Reset</span>
         </button>
       </div>
 
-      {/* MAIN GRID */}
+      {/* CUSTOMER */}
+      <div className="bg-white rounded-xl shadow-sm border p-4 mb-4">
+        <label className="text-sm font-medium block mb-1">
+          Customer (Optional)
+        </label>
+        <Select
+          options={customers.map((c) => ({
+            label: `${c.name} (${c.phone})`,
+            value: c.id,
+          }))}
+          value={
+            selectedCustomer
+              ? {
+                  label: `${selectedCustomer.name} (${selectedCustomer.phone})`,
+                  value: selectedCustomer.id,
+                }
+              : null
+          }
+          isClearable
+          onChange={(selected) => {
+            if (!selected) return setSelectedCustomer(null);
+            const customer = customers.find((c) => c.id === selected.value);
+            setSelectedCustomer(customer);
+          }}
+          placeholder="Select customer"
+          className="max-w-sm"
+        />
+      </div>
+
+      {/* ITEMS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* LEFT SIDE */}
         <div className="lg:col-span-3 space-y-4">
           <div className="bg-white rounded-xl shadow-sm border p-4">
             <AddBillItemForm
@@ -227,151 +287,130 @@ const GenerateBill = () => {
             />
           </div>
         </div>
-
-          {/* RIGHT SIDE: Bill Summary
-          <GenerateFinalAmount
-            billSummary={billSummary}
-            setBillDiscount={setBillDiscount}
-            setBillSummary={setBillSummary}
-            onPrint={handlePrintBill}
-            onSaveOnly={handleSaveOnly}
-            onRoundOff={handleRoundOff}
-            onDeleteBill={handleDeleteBill}
-          /> */}
       </div>
 
-      {/* POS PRINT TEMPLATE */}
-      <div id="pos-receipt" className="hidden print:block">
+      {/* SUMMARY */}
+      <GenerateFinalAmount
+        billSummary={billSummary}
+        setBillDiscount={setBillDiscount}
+        setBillSummary={setBillSummary}
+        onPrint={() => handleSaveBill(true)}
+        onSaveOnly={() => handleSaveBill(false)}
+        onRoundOff={handleRoundOff}
+        onDeleteBill={handleDeleteBill}
+      />
+
+      {/* POS PRINT */}
+      <div id="pos-receipt" className="hidden print:block p-4 text-xs">
         <div id="pos-receipt" className="hidden print:block p-4 text-xs">
-          {" "}
-          {/* <div className="print:block p-4 text-xs"> */}{" "}
           <p className="flex items-start flex-col text-center text-[8px]">
-            {" "}
-            GST:- 123456789012{" "}
-          </p>{" "}
-          <h2 className="text-center font-bold ">ACKIDS WEAR</h2>{" "}
+            GST:- 123456789012
+          </p>
+          <h2 className="text-center font-bold ">ACKIDS WEAR</h2>
           <p className="text-center text-[8px] -mt-2">
-            {" "}
-            No 6 fathima nagar, 3rd St near saramedu, Coimbatore-641008{" "}
-          </p>{" "}
+            No 6 fathima nagar, 3rd St near saramedu, Coimbatore-641008
+          </p>
           <div className="flex justify-between mb-2">
-            {" "}
             <span className="text-[8px]">
-              {" "}
-              Date:{" "}
+              Date:
               {new Date().toLocaleString("en-IN", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
-              })}{" "}
-            </span>{" "}
+              })}
+            </span>
             <span className="text-[8px]">
-              {" "}
-              Time:{" "}
+              Time:
               {new Date().toLocaleString("en-IN", {
                 hour: "2-digit",
                 minute: "2-digit",
                 second: "2-digit",
-              })}{" "}
-            </span>{" "}
-          </div>{" "}
+              })}
+            </span>
+          </div>
+          {selectedCustomer?.name && (
+            <p className="text-center text-[9px] font-semibold">
+              Customer: {selectedCustomer.name}
+            </p>
+          )}
           <div className="text-nowrap overflow-x-hidden -mb-1">
-            {" "}
-            ----------------------------------------------------------------------------------------------{" "}
-          </div>{" "}
+            ----------------------------------------------------------------------------------------------
+          </div>
           <div className="grid grid-cols-4 text-start text-[9px]">
-            {" "}
-            <span className="w-full text-wrap col-span-2">Item</span>{" "}
-            <span>Size</span> <span>Price</span>{" "}
-          </div>{" "}
+            <span className="w-full text-wrap col-span-2">Item</span>
+            <span>Size</span> <span>Price</span>
+          </div>
           <div className="text-nowrap overflow-x-hidden -mt-1">
-            {" "}
-            ----------------------------------------------------------------------------------------------{" "}
-          </div>{" "}
-          {/* Items */}{" "}
+            ----------------------------------------------------------------------------------------------
+          </div>
+          {/* Items */}
           {billItems.map((item, index) => (
             <div key={index} className="grid grid-cols-4 text-start text-[8px]">
-              {" "}
               <p className="w-full flex flex-col text-wrap col-span-2">
-                {" "}
                 <span>
-                  {" "}
-                  {item.itemCode} x {item.quantity}{" "}
-                </span>{" "}
+                  {item.itemCode} x {item.quantity}
+                </span>
                 <span className="text-wrap text-[6px] -mt-1">
-                  {" "}
-                  ( {item.itemName} ){" "}
-                </span>{" "}
-              </p>{" "}
-              <span className="">{item.size ? item.size : "-"}</span>{" "}
-              <span className="">₹{Number(item.totalAmount).toFixed(2)}</span>{" "}
+                  ( {item.itemName} )
+                </span>
+              </p>
+              <span className="">{item.size ? item.size : "-"}</span>
+              <span className="">₹{Number(item.totalAmount).toFixed(2)}</span>
             </div>
-          ))}{" "}
+          ))}
           <div className="text-nowrap overflow-x-hidden -mb-1">
-            {" "}
-            ----------------------------------------------------------------------------------------------{" "}
-          </div>{" "}
+            ----------------------------------------------------------------------------------------------
+          </div>
           <div className="grid grid-cols-4 text-start text-[9px] font-semibold">
-            {" "}
-            <span className="w-full text-wrap col-span-2">Total:</span>{" "}
-            <span className=""></span>{" "}
+            <span className="w-full text-wrap col-span-2">Total:</span>
+            <span className=""></span>
             <span className="">
-              {" "}
-              ₹{billSummary.totalBeforeDiscount.toFixed(2)}{" "}
-            </span>{" "}
-          </div>{" "}
+              ₹{billSummary.totalBeforeDiscount.toFixed(2)}
+            </span>
+          </div>
           <div className="text-nowrap overflow-x-hidden -mt-1">
-            {" "}
-            ----------------------------------------------------------------------------------------------{" "}
-          </div>{" "}
+            ----------------------------------------------------------------------------------------------
+          </div>
           <div className="grid grid-cols-3 text-end text-[8px] mt-3">
-            {" "}
-            <span className=""></span>{" "}
-            <span className="w-full text-wrap">Total Pcs:</span>{" "}
-            <span className="">{billSummary.totalPieces} pcs </span>{" "}
-          </div>{" "}
+            <span className=""></span>
+            <span className="w-full text-wrap">Total Pcs:</span>
+            <span className="">{billSummary.totalPieces} pcs </span>
+          </div>
           {billSummary.discountAmount > 0 &&
             billSummary.discountAmount !== null && (
               <div className="grid grid-cols-3 text-end text-[8px]">
-                {" "}
-                <span className=""></span>{" "}
-                <span className="w-full text-wrap">Discount:</span>{" "}
+                <span className=""></span>
+                <span className="w-full text-wrap">Discount:</span>
                 <span className="">
-                  {" "}
-                  ₹{billSummary.discountAmount.toFixed(2)}{" "}
-                </span>{" "}
+                  ₹{billSummary.discountAmount.toFixed(2)}
+                </span>
               </div>
-            )}{" "}
+            )}
           {billSummary.discountAmount > 0 &&
             billSummary.discountAmount !== null && (
               <div className="grid grid-cols-3 text-end text-[8px] font-semibold">
-                {" "}
-                <span className="w-full text-wrap "></span>{" "}
-                <span className="">You save</span>{" "}
+                <span className="w-full text-wrap "></span>
+                <span className="">You save</span>
                 <span className="">
                   ₹{billSummary.discountAmount.toFixed(2)}
-                </span>{" "}
+                </span>
               </div>
-            )}{" "}
+            )}
           <div className="grid grid-cols-3 text-end text-[8px] font-semibold">
-            {" "}
-            <span className="w-full text-wrap "></span>{" "}
-            <span className="">Grand Total:</span>{" "}
+            <span className="w-full text-wrap "></span>
+            <span className="">Grand Total:</span>
             <span className="">
               ₹{billSummary.totalAfterDiscount.toFixed(2)}
-            </span>{" "}
-          </div>{" "}
+            </span>
+          </div>
           <p className="text-center text-[7px] mt-2">
-            {" "}
-            Ph:- 9244437480, 8248114687{" "}
-          </p>{" "}
-          <p className="text-center text-[7px]"> </p>{" "}
+            Ph:- 9244437480, 8248114687
+          </p>
+          <p className="text-center text-[7px]"> </p>
           <div className="text-center mt-1 text-[9px]">
-            {" "}
-            <p>----- Thank you for shopping ! -----</p>{" "}
-          </div>{" "}
+            <p>----- Thank you for shopping ! -----</p>
+          </div>
         </div>
-        
       </div>
 
       {modal && <Modal {...modal} onClose={() => setModal(null)} />}

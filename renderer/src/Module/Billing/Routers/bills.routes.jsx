@@ -8,3 +8,4 @@ export const BillingRoutes = [
   },
   { path: "billing/sales-bill", element: withSuspense(<SalesBill />) },
 ];
+  

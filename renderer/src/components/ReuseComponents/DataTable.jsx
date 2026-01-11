@@ -6,20 +6,13 @@ const DataTable = ({
   data,
   onEdit,
   onDelete,
-  onSearch,
   emptyMessage = "No records found.",
 }) => {
   return (
     <div>
-      <div className="">
-        <h2 className="text-md font-semibold text-gray-800  mb-3">
-          All {columns[0]?.label?.replace(/Name/i, "") || "Items"}
-        </h2>
-        <CommonSearch placeholder="Search sizes..." onChange={onSearch} />
-      </div>
-
+     
       {data?.length === 0 ? (
-        <p className="text-gray-500 ">{emptyMessage}</p>
+        <p className="text-gray-500">{emptyMessage}</p>
       ) : (
         <div className="overflow-x-auto rounded-md w-full">
           <table className="min-w-[400px] w-fit sm:w-full text-sm border-collapse">
@@ -37,14 +30,14 @@ const DataTable = ({
               {data.map((row, i) => (
                 <tr
                   key={i}
-                  className="border-b border-gray-200  hover:bg-gray-50  transition-colors"
+                  className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                 >
                   <td className="p-2 text-start">
-                    <div className="flex pl-3  gap-4">
+                    <div className="flex pl-3 gap-4">
                       {onEdit && (
                         <button
                           onClick={() => onEdit(i)}
-                          className="text-blue-500 hover:text-blue-700 transition-colors"
+                          className="text-blue-500 hover:text-blue-700"
                           title="Edit"
                         >
                           <FaPen />
@@ -53,7 +46,7 @@ const DataTable = ({
                       {onDelete && (
                         <button
                           onClick={() => onDelete(i)}
-                          className="text-red-500 hover:text-red-700 transition-colors"
+                          className="text-red-500 hover:text-red-700"
                           title="Delete"
                         >
                           <FaTrashCan />
@@ -61,12 +54,13 @@ const DataTable = ({
                       )}
                     </div>
                   </td>
+
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className="p-2 whitespace-nowrap text-gray-800 "
+                      className="p-2 whitespace-nowrap text-gray-800"
                     >
-                      {row[col.key]}
+                      {col.render ? col.render(row) : row[col.key]}
                     </td>
                   ))}
                 </tr>

@@ -16,7 +16,8 @@ function initDatabase() {
   db.pragma("foreign_keys = ON");
 
   /* ---------------- SETTINGS TABLE ---------------- */
-  db.prepare(`
+  db.prepare(
+    `
     CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       companyName TEXT,
@@ -35,13 +36,15 @@ function initDatabase() {
       enableInvoicePrefix INTEGER DEFAULT 0,
       lastInvoiceNumber INTEGER DEFAULT 0
     );
-  `).run();
+  `
+  ).run();
 
   // ---- Ensure SINGLE settings row exists ----
   db.prepare("INSERT OR IGNORE INTO settings (id) VALUES (1)").run();
 
   /* ---------------- ITEMS ---------------- */
-  db.prepare(`
+  db.prepare(
+    `
     CREATE TABLE IF NOT EXISTS items (
       itemID TEXT PRIMARY KEY,
       itemName TEXT NOT NULL,
@@ -49,16 +52,18 @@ function initDatabase() {
       purchaseRate REAL NOT NULL,
       purchaseDate TEXT NOT NULL,
       sellingPrice REAL,
-      vendorId INTEGER NOT NULL,
+      vendorId INTEGER,
       purchaseId INTEGER,
       hasVariants INTEGER NOT NULL,
       FOREIGN KEY (vendorId) REFERENCES vendors(id) ON DELETE CASCADE,
       FOREIGN KEY (purchaseId) REFERENCES purchases(id) ON DELETE CASCADE
     );
-  `).run();
+  `
+  ).run();
 
   /* ---------------- ITEM VARIANTS ---------------- */
-  db.prepare(`
+  db.prepare(
+    `
     CREATE TABLE IF NOT EXISTS item_variants (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       itemID TEXT NOT NULL,
@@ -68,33 +73,42 @@ function initDatabase() {
       FOREIGN KEY (itemID) REFERENCES items(itemID) ON DELETE CASCADE,
       FOREIGN KEY (purchaseId) REFERENCES purchases(id) ON DELETE CASCADE
     );
-  `).run();
+  `
+  ).run();
 
   /* ---------------- SIZES ---------------- */
-  db.prepare(`
+  db.prepare(
+    `
     CREATE TABLE IF NOT EXISTS sizes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       size TEXT UNIQUE
     );
-  `).run();
+  `
+  ).run();
 
   /* ---------------- BILLS ---------------- */
-  db.prepare(`
-    CREATE TABLE IF NOT EXISTS bills (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      invoice_number TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      total_pieces INTEGER,
-      total_before_discount REAL,
-      discount REAL,
-      discount_amount REAL,
-      total_after_discount REAL,
-      payment_mode TEXT
-    );
-  `).run();
+  db.prepare(
+    `
+   CREATE TABLE IF NOT EXISTS bills (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  invoice_number TEXT,
+  customer_id INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  total_pieces INTEGER,
+  total_before_discount REAL,
+  discount REAL,
+  discount_amount REAL,
+  total_after_discount REAL,
+  payment_mode TEXT,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+);
+
+  `
+  ).run();
 
   /* ---------------- BILL ITEMS ---------------- */
-  db.prepare(`
+  db.prepare(
+    `
     CREATE TABLE IF NOT EXISTS bill_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       bill_id INTEGER NOT NULL,
@@ -106,17 +120,19 @@ function initDatabase() {
       total_amount REAL,
       FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE
     );
-  `).run();
+  `
+  ).run();
 
   /* ---------------- VENDORS ---------------- */
-  db.prepare(`
+  db.prepare(
+    `
     CREATE TABLE IF NOT EXISTS vendors (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       vendorName TEXT NOT NULL,
       contactPerson TEXT,
       phone TEXT NOT NULL,
       whatsapp TEXT,
-      email TEXT NOT NULL,
+      email TEXT,
       address1 TEXT NOT NULL,
       address2 TEXT,
       city TEXT NOT NULL,
@@ -132,10 +148,12 @@ function initDatabase() {
       paymentTerms TEXT DEFAULT '30 Days',
       status TEXT DEFAULT 'Active'
     );
-  `).run();
+  `
+  ).run();
 
   /* ---------------- PURCHASES ---------------- */
-  db.prepare(`
+  db.prepare(
+    `
     CREATE TABLE IF NOT EXISTS purchases (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       purchaseDate TEXT NOT NULL,
@@ -146,8 +164,39 @@ function initDatabase() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (vendorId) REFERENCES vendors(id) ON DELETE CASCADE
     );
-  `).run();
+  `
+  ).run();
 
+  /* ---------------- DISCOUNTS ---------------- */
+  db.prepare(
+    `
+  CREATE TABLE IF NOT EXISTS discounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    percentage REAL NOT NULL CHECK (percentage > 0 AND percentage <= 100),
+    valid_days INTEGER NOT NULL,          -- total validity duration (in days)
+    is_active INTEGER DEFAULT 1,           -- 1 = active, 0 = inactive
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`
+  ).run();
+
+  /* ---------------- CUSTOMER ---------------- */
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS customers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      discountId INTEGER,
+      discountPercentage REAL DEFAULT 0,
+      discountStartDate TEXT,
+      discountEndDate TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(discountId) REFERENCES discounts(id) ON DELETE SET NULL
+    ); `
+  ).run();
   console.log("✅ Database initialized successfully");
 
   return db;

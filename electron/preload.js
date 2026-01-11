@@ -25,6 +25,17 @@ contextBridge.exposeInMainWorld("api", {
   deleteBill: (billId) => ipcRenderer.invoke("db:deleteBill", billId),
   filterBills: (filters) => ipcRenderer.invoke("db:filterBills", filters),
 
+  /* ----------------- Customers ----------------- */
+  createCustomer: (customer) =>
+    ipcRenderer.invoke("db:createCustomer", customer),
+
+  getCustomers: () => ipcRenderer.invoke("db:getCustomers"),
+
+  updateCustomer: (customer) =>
+    ipcRenderer.invoke("db:updateCustomer", customer),
+
+  deleteCustomer: (id) => ipcRenderer.invoke("db:deleteCustomer", id),
+
   /* ----------------- Vendors ----------------- */
   getVendors: () => ipcRenderer.invoke("db:getVendors"),
   insertVendor: (vendor) => ipcRenderer.invoke("db:insertVendor", vendor),
@@ -43,24 +54,25 @@ contextBridge.exposeInMainWorld("api", {
   getPurchaseById: (purchaseId) =>
     ipcRenderer.invoke("db:getPurchaseById", purchaseId),
 
+  /* ----------------- Discounts ----------------- */
+  getDiscounts: () => ipcRenderer.invoke("db:getDiscounts"),
+  getDiscountById: (discountId) =>
+    ipcRenderer.invoke("db:getDiscountById", discountId),
+  createDiscount: (discount) =>
+    ipcRenderer.invoke("db:createDiscount", discount),
+  updateDiscount: (discountId, discount) =>
+    ipcRenderer.invoke("db:updateDiscount", discountId, discount),
+  deleteDiscount: (discountId) =>
+    ipcRenderer.invoke("db:deleteDiscount", discountId),
+
   /* ================= SETTINGS ================= */
 
-  // Get all settings
   getSettings: () => ipcRenderer.invoke("db:getSettings"),
-
-  // Company details
   updateCompanySettings: (data) =>
     ipcRenderer.invoke("db:updateCompanySettings", data),
-
-  // Billing details
   updateBillingSettings: (data) =>
     ipcRenderer.invoke("db:updateBillingSettings", data),
-
-  // Other / Invoice settings
   updateOtherSettings: (data) =>
     ipcRenderer.invoke("db:updateOtherSettings", data),
-
-  // Reset invoice counter
-  resetInvoiceNumber: () =>
-    ipcRenderer.invoke("db:resetInvoiceNumber"),
+  resetInvoiceNumber: () => ipcRenderer.invoke("db:resetInvoiceNumber"),
 });

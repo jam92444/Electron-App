@@ -140,7 +140,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
 
         {/* Email */}
         <Input
-          label="Email *"
+          label="Email"
           value={vendorData.email}
           classname="text-normal"
           onChange={(e) => {

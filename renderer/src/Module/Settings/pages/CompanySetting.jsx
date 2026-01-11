@@ -1,20 +1,24 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import * as yup from "yup";
 import toast from "react-hot-toast";
-
 import Input from "../../../components/ReuseComponents/Input";
 import Textarea from "../../../components/ReuseComponents/TextArea";
 import Modal from "../../../components/ReuseComponents/Modal";
 import Button from "../../../components/ReuseComponents/Button";
-
 import { Country, State, City } from "country-state-city";
-
 import {
   getSettings,
   updateCompanySettings,
   updateBillingSettings,
   updateOtherSettings,
 } from "../Services/settingService";
+import { useStateContext } from "../../../context/StateContext";
+import {
+  SET_BILLING_SETTINGS,
+  SET_COMPANY_SETTINGS,
+  SET_OTHER_SETTINGS,
+} from "../../../context/reducer/actionTypes";
 
 /* ================= Editable Field ================= */
 const EditableField = ({
@@ -35,7 +39,9 @@ const EditableField = ({
     return (
       <div>
         <p className="text-xs text-gray-500">{label}</p>
-        <p className="text-sm font-medium text-gray-800 mt-1">{value || "NA"}</p>
+        <p className="text-sm font-medium text-gray-800 mt-1">
+          {value || "NA"}
+        </p>
       </div>
     );
   }
@@ -92,11 +98,23 @@ const Header = ({ title, editMode, setEditMode, onSave }) => (
     <div className="mt-2 sm:mt-0 flex gap-2">
       {editMode ? (
         <>
-          <Button buttonName="Save" onClick={onSave} className="bg-blue-600 text-white px-2 py-1 rounded" />
-          <Button buttonName="Cancel" onClick={() => setEditMode(false)} className="bg-gray-200 px-2 py-1 rounded" />
+          <Button
+            buttonName="Save"
+            onClick={onSave}
+            className="bg-blue-600 text-white px-2 py-1 rounded"
+          />
+          <Button
+            buttonName="Cancel"
+            onClick={() => setEditMode(false)}
+            className="bg-gray-200 px-2 py-1 rounded"
+          />
         </>
       ) : (
-        <Button buttonName="Edit" onClick={() => setEditMode(true)} className="bg-blue-600 text-white px-2 py-1 rounded" />
+        <Button
+          buttonName="Edit"
+          onClick={() => setEditMode(true)}
+          className="bg-blue-600 text-white px-2 py-1 rounded"
+        />
       )}
     </div>
   </div>
@@ -110,10 +128,7 @@ const companySchema = yup.object({
     .string()
     .matches(/^\d{10}$/, "Must be 10 digits")
     .required("Contact number is required"),
-  companyEmail: yup
-    .string()
-    .email("Invalid email")
-    .required("Email is required"),
+  companyEmail: yup.string().email("Invalid email"),
 });
 
 const billingSchema = yup.object({
@@ -194,7 +209,7 @@ const CompanyDetails = () => {
     contactNumber: "",
     companyEmail: "",
   });
-
+  const { dispatch } = useStateContext();
   useEffect(() => {
     getSettings().then((res) => {
       if (res?.success) {
@@ -204,10 +219,21 @@ const CompanyDetails = () => {
           contactNumber: res.data.contactNumber || "",
           companyEmail: res.data.companyEmail || "",
         });
+        const data = res.data;
+        dispatch({
+          type: SET_COMPANY_SETTINGS,
+          payload: {
+            companyName: data.companyName,
+            gstTin: data.gstTin,
+            contactNumber: data.contactNumber,
+            companyEmail: data.companyEmail,
+          },
+        });
+      } else {
+        setFormData({});
       }
     });
   }, []);
-
   const handleSave = async () => {
     try {
       await companySchema.validate(formData, { abortEarly: false });
@@ -222,63 +248,63 @@ const CompanyDetails = () => {
 
   return (
     <div>
-    <section className="bg-white p-4 border rounded">
-      <Header
-        title="Company Details"
-        editMode={editMode}
-        setEditMode={setEditMode}
-        onSave={handleSave}
-      />
-
-      <div className="grid grid-cols-2 gap-4 mt-4">
-        <EditableField
-          label="Company Name"
-          value={formData.companyName}
-          onChange={(v) => setFormData({ ...formData, companyName: v })}
-          isEditing={editMode}
-          error={errors.companyName}
+      <section className="bg-white p-4 border rounded">
+        <Header
+          title="Company Details"
+          editMode={editMode}
+          setEditMode={setEditMode}
+          onSave={handleSave}
         />
 
-        <EditableField
-          label="GST TIN"
-          value={formData.gstTin}
-          onChange={(v) => setFormData({ ...formData, gstTin: v })}
-          isEditing={editMode}
-          error={errors.gstTin}
-        />
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <EditableField
+            label="Company Name"
+            value={formData.companyName}
+            onChange={(v) => setFormData({ ...formData, companyName: v })}
+            isEditing={editMode}
+            error={errors.companyName}
+          />
 
-        <EditableField
-          label="Contact Number"
-          value={formData.contactNumber}
-          maxLength={10}
-          onChange={(v) => setFormData({ ...formData, contactNumber: v })}
-          isEditing={editMode}
-          error={errors.contactNumber}
-        />
+          <EditableField
+            label="GST TIN"
+            value={formData.gstTin}
+            onChange={(v) => setFormData({ ...formData, gstTin: v })}
+            isEditing={editMode}
+            error={errors.gstTin}
+          />
 
-        <EditableField
-          label="Company Email"
-          type="email"
-          value={formData.companyEmail}
-          onChange={(v) => setFormData({ ...formData, companyEmail: v })}
-          isEditing={editMode}
-          error={errors.companyEmail}
-        />
-      </div>
+          <EditableField
+            label="Contact Number"
+            value={formData.contactNumber}
+            maxLength={10}
+            onChange={(v) => setFormData({ ...formData, contactNumber: v })}
+            isEditing={editMode}
+            error={errors.contactNumber}
+          />
 
-      {confirm && (
-        <ConfirmModal
-          message="Save company details?"
-          onCancel={() => setConfirm(false)}
-          onConfirm={async () => {
-            await updateCompanySettings(formData);
-            toast.success("Company details saved");
-            setConfirm(false);
-            setEditMode(false);
-          }}
-        />
-      )}
-    </section></div>
+          <EditableField
+            label="Company Email"
+            type="email"
+            value={formData.companyEmail}
+            onChange={(v) => setFormData({ ...formData, companyEmail: v })}
+            isEditing={editMode}
+            error={errors.companyEmail}
+          />
+        </div>
+        {confirm && (
+          <ConfirmModal
+            message="Save company details?"
+            onCancel={() => setConfirm(false)}
+            onConfirm={async () => {
+              await updateCompanySettings(formData);
+              toast.success("Company details saved");
+              setConfirm(false);
+              setEditMode(false);
+            }}
+          />
+        )}
+      </section>
+    </div>
   );
 };
 
@@ -294,6 +320,7 @@ const BillingDetails = () => {
     city: "",
     pinCode: "",
   });
+  const { dispatch } = useStateContext();
 
   useEffect(() => {
     getSettings().then((res) => {
@@ -304,6 +331,18 @@ const BillingDetails = () => {
           state: res.data.state || "",
           city: res.data.city || "",
           pinCode: res.data.pinCode || "",
+        });
+
+        const data = res.data;
+        dispatch({
+          type: SET_BILLING_SETTINGS,
+          payload: {
+            fullAddress: data.fullAddress,
+            country: data.country,
+            state: data.state,
+            city: data.city,
+            pinCode: data.pinCode,
+          },
         });
       }
     });
@@ -330,82 +369,85 @@ const BillingDetails = () => {
       ? City.getCitiesOfState(formData.country, formData.state)
       : [];
 
-  return (<div>
-    <section className="bg-white p-4 border rounded">
-      <Header
-        title="Billing Details"
-        editMode={editMode}
-        setEditMode={setEditMode}
-        onSave={handleSave}
-      />
-
-      <div className="grid grid-cols-2 gap-4 mt-4">
-        <EditableField
-          label="Full Address"
-          inputType="textarea"
-          value={formData.fullAddress}
-          onChange={(v) => setFormData({ ...formData, fullAddress: v })}
-          isEditing={editMode}
-          error={errors.fullAddress}
+  return (
+    <div>
+      <section className="bg-white p-4 border rounded">
+        <Header
+          title="Billing Details"
+          editMode={editMode}
+          setEditMode={setEditMode}
+          onSave={handleSave}
         />
 
-        <EditableField
-          label="Country"
-          inputType="select"
-          options={countries.map((c) => ({ value: c.isoCode, label: c.name }))}
-          value={formData.country}
-          onChange={(v) =>
-            setFormData({ ...formData, country: v, state: "", city: "" })
-          }
-          isEditing={editMode}
-          error={errors.country}
-        />
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <EditableField
+            label="Full Address"
+            inputType="textarea"
+            value={formData.fullAddress}
+            onChange={(v) => setFormData({ ...formData, fullAddress: v })}
+            isEditing={editMode}
+            error={errors.fullAddress}
+          />
 
-        <EditableField
-          label="State"
-          inputType="select"
-          options={states.map((s) => ({ value: s.isoCode, label: s.name }))}
-          value={formData.state}
-          onChange={(v) =>
-            setFormData({ ...formData, state: v, city: "" })
-          }
-          isEditing={editMode}
-          error={errors.state}
-        />
+          <EditableField
+            label="Country"
+            inputType="select"
+            options={countries.map((c) => ({
+              value: c.isoCode,
+              label: c.name,
+            }))}
+            value={formData.country}
+            onChange={(v) =>
+              setFormData({ ...formData, country: v, state: "", city: "" })
+            }
+            isEditing={editMode}
+            error={errors.country}
+          />
 
-        <EditableField
-          label="City"
-          inputType="select"
-          options={cities.map((c) => ({ value: c.name, label: c.name }))}
-          value={formData.city}
-          onChange={(v) => setFormData({ ...formData, city: v })}
-          isEditing={editMode}
-          error={errors.city}
-        />
+          <EditableField
+            label="State"
+            inputType="select"
+            options={states.map((s) => ({ value: s.isoCode, label: s.name }))}
+            value={formData.state}
+            onChange={(v) => setFormData({ ...formData, state: v, city: "" })}
+            isEditing={editMode}
+            error={errors.state}
+          />
 
-        <EditableField
-          label="Pin Code"
-          value={formData.pinCode}
-          maxLength={6}
-          onChange={(v) => setFormData({ ...formData, pinCode: v })}
-          isEditing={editMode}
-          error={errors.pinCode}
-        />
-      </div>
+          <EditableField
+            label="City"
+            inputType="select"
+            options={cities.map((c) => ({ value: c.name, label: c.name }))}
+            value={formData.city}
+            onChange={(v) => setFormData({ ...formData, city: v })}
+            isEditing={editMode}
+            error={errors.city}
+          />
 
-      {confirm && (
-        <ConfirmModal
-          message="Save billing details?"
-          onCancel={() => setConfirm(false)}
-          onConfirm={async () => {
-            await updateBillingSettings(formData);
-            toast.success("Billing details saved");
-            setConfirm(false);
-            setEditMode(false);
-          }}
-        />
-      )}
-    </section></div>
+          <EditableField
+            label="Pin Code"
+            value={formData.pinCode}
+            maxLength={6}
+            onChange={(v) => setFormData({ ...formData, pinCode: v })}
+            isEditing={editMode}
+            error={errors.pinCode}
+          />
+        </div>
+
+        {confirm && (
+          <ConfirmModal
+            message="Save billing details?"
+            onCancel={() => setConfirm(false)}
+            onConfirm={async () => {
+              await updateBillingSettings(formData);
+              toast.success("Billing details saved");
+              setConfirm(false);
+              setEditMode(false);
+            }}
+          />
+        )}
+      </section>
+    </div>
   );
 };
 
@@ -414,6 +456,7 @@ const OtherDetails = () => {
   const [editMode, setEditMode] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [errors, setErrors] = useState({});
+  const { dispatch } = useStateContext();
   const [formData, setFormData] = useState({
     supportContact: "",
     website: "",
@@ -431,6 +474,19 @@ const OtherDetails = () => {
           termsConditions: res.data.termsConditions || "",
           invoicePrefix: res.data.invoicePrefix || "",
           enableInvoicePrefix: !!res.data.enableInvoicePrefix,
+        });
+
+        const data = res.data;
+        dispatch({
+          type: SET_OTHER_SETTINGS,
+          payload: {
+            supportContact: data.supportContact,
+            website: data.website,
+            termsConditions: data.termsConditions,
+            invoicePrefix: data.invoicePrefix,
+            enableInvoicePrefix: !!data.enableInvoicePrefix,
+            lastInvoiceNumber: data.lastInvoiceNumber,
+          },
         });
       }
     });
@@ -459,78 +515,84 @@ const OtherDetails = () => {
 
   return (
     <div>
-    <section className="bg-white p-4 border rounded">
-      <Header
-        title="Other Details"
-        editMode={editMode}
-        setEditMode={setEditMode}
-        onSave={handleSave}
-      />
-
-      <div className="grid grid-cols-2 gap-4 mt-4">
-        <EditableField
-          label="Support Contact"
-          value={formData.supportContact}
-          maxLength={10}
-          onChange={(v) => setFormData({ ...formData, supportContact: v })}
-          isEditing={editMode}
-          error={errors.supportContact}
+      <section className="bg-white p-4 border rounded">
+        <Header
+          title="Other Details"
+          editMode={editMode}
+          setEditMode={setEditMode}
+          onSave={handleSave}
         />
 
-        <EditableField
-          label="Website"
-          value={formData.website}
-          onChange={(v) => setFormData({ ...formData, website: v })}
-          isEditing={editMode}
-        />
-
-        <EditableField
-          label="Terms & Conditions"
-          inputType="textarea"
-          value={formData.termsConditions}
-          onChange={(v) => setFormData({ ...formData, termsConditions: v })}
-          isEditing={editMode}
-        />
-
-        <div className="flex items-center gap-2 col-span-2">
-          <input
-            type="checkbox"
-            checked={formData.enableInvoicePrefix}
-            disabled={!editMode}
-            onChange={() =>
-              setFormData((p) => ({
-                ...p,
-                enableInvoicePrefix: !p.enableInvoicePrefix,
-                invoicePrefix: p.enableInvoicePrefix ? "" : p.invoicePrefix,
-              }))
-            }
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <EditableField
+            label="Support Contact"
+            value={formData.supportContact}
+            maxLength={10}
+            onChange={(v) => setFormData({ ...formData, supportContact: v })}
+            isEditing={editMode}
+            error={errors.supportContact}
           />
-          <label className="text-sm">Enable Invoice Prefix</label>
+
+          <EditableField
+            label="Website"
+            value={formData.website}
+            onChange={(v) => setFormData({ ...formData, website: v })}
+            isEditing={editMode}
+          />
+
+          <EditableField
+            label="Terms & Conditions"
+            inputType="textarea"
+            value={formData.termsConditions}
+            onChange={(v) => setFormData({ ...formData, termsConditions: v })}
+            isEditing={editMode}
+          />
+
+          <div className="flex items-center gap-2 col-span-2">
+            <input
+              type="checkbox"
+              checked={formData.enableInvoicePrefix}
+              disabled={!editMode}
+              onChange={() =>
+                setFormData((p) => ({
+                  ...p,
+                  enableInvoicePrefix: !p.enableInvoicePrefix,
+                  invoicePrefix: p.enableInvoicePrefix ? "" : p.invoicePrefix,
+                }))
+              }
+            />
+            <label className="text-sm">Enable Invoice Prefix</label>
+          </div>
+
+          <EditableField
+            label="Invoice Prefix"
+            value={formData.invoicePrefix}
+            maxLength={4}
+            onChange={(v) =>
+              setFormData({ ...formData, invoicePrefix: v.toUpperCase() })
+            }
+            isEditing={editMode && formData.enableInvoicePrefix}
+            error={errors.invoicePrefix}
+          />
         </div>
 
-        <EditableField
-          label="Invoice Prefix"
-          value={formData.invoicePrefix}
-          maxLength={4}
-          onChange={(v) => setFormData({ ...formData, invoicePrefix: v.toUpperCase() })}
-          isEditing={editMode && formData.enableInvoicePrefix}
-          error={errors.invoicePrefix}
-        />
-      </div>
-
-      {confirm && (
-        <ConfirmModal
-          message="Save other settings?"
-          onCancel={() => setConfirm(false)}
-          onConfirm={async () => {
-            await updateOtherSettings(formData);
-            toast.success("Other settings saved");
-            setConfirm(false);
-            setEditMode(false);
-          }}
-        />
-      )}
-    </section></div>
+        {confirm && (
+          <ConfirmModal
+            message="Save other settings?"
+            onCancel={() => setConfirm(false)}
+            onConfirm={async () => {
+              await updateOtherSettings({
+                ...formData,
+                enableInvoicePrefix: formData.enableInvoicePrefix ? 1 : 0,
+              });
+              toast.success("Other settings saved");
+              setConfirm(false);
+              setEditMode(false);
+            }}
+          />
+        )}
+      </section>
+    </div>
   );
 };
 
