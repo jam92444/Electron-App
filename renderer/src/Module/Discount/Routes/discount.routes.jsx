@@ -1,6 +1,6 @@
 import { withSuspense } from "../../../Router/withSuspense";
-import { Discounts } from "./discount.lazyimports";
+import Discounts from "../Pages/Discount";
 
 export const discountRoutes = [
-      { path: "discounts", element: withSuspense(<Discounts />) },
-]
+  { path: "discounts", element: withSuspense(<Discounts />) },
+];

@@ -29,7 +29,9 @@ const SalesBill = () => {
   };
 
   const columns = [
-    { title: "Bill #", dataIndex: "id", width: 90 },
+    { title: "Invoice No #", dataIndex: "invoice_number", width: 90 },
+    { title: "Customer Name", dataIndex: "customer_name", width: 100 },
+    { title: "Contact", dataIndex: "customer_phone", width: 100 },
     { title: "Date", dataIndex: "created_at", width: 140 },
     { title: "Pieces", dataIndex: "total_pieces", width: 100 },
     {
@@ -58,9 +60,7 @@ const SalesBill = () => {
     <div className="bg-gray-50 min-h-screen p-4 sm:p-6">
       {/* ---------- HEADER ---------- */}
       <div className="mb-5">
-        <h1 className="text-xl font-semibold text-gray-900">
-          Sales Bills
-        </h1>
+        <h1 className="text-xl font-semibold text-gray-900">Sales Bills</h1>
         <p className="text-sm text-gray-600">
           View and analyze all generated sales bills
         </p>
@@ -98,10 +98,8 @@ const SalesBill = () => {
 
 export default SalesBill;
 
-
 const BillView = ({ bill, items }) => {
   if (!bill) return null;
-
   return (
     <div className="space-y-4 text-sm">
       {/* -------- BILL HEADER -------- */}
@@ -111,8 +109,13 @@ const BillView = ({ bill, items }) => {
             <b>Bill No:</b> #{bill.id}
           </p>
           <p>
-            <b>Date:</b>{" "}
-            {new Date(bill.created_at).toLocaleString("en-IN")}
+            <b>Customer Name:</b> {bill?.customer_name ?? "-"}
+          </p>
+          <p>
+            <b>Contact Number:</b> {bill?.customer_phone ?? "-"}
+          </p>
+          <p>
+            <b>Date:</b> {new Date(bill.created_at).toLocaleString("en-IN")}
           </p>
           <p>
             <b>Payment Mode:</b> {bill.payment_mode || "Cash"}
@@ -147,12 +150,8 @@ const BillView = ({ bill, items }) => {
                       </span>
                     </div>
                   </td>
-                  <td className="border p-2 text-center">
-                    {it.size || "-"}
-                  </td>
-                  <td className="border p-2 text-center">
-                    {it.quantity}
-                  </td>
+                  <td className="border p-2 text-center">{it.size || "-"}</td>
+                  <td className="border p-2 text-center">{it.quantity}</td>
                   <td className="border p-2 text-right">
                     ₹{Number(it.price).toFixed(2)}
                   </td>
@@ -179,28 +178,21 @@ const BillView = ({ bill, items }) => {
       <div className="border rounded-lg p-3 bg-gray-50 space-y-1">
         <div className="flex justify-between">
           <span>Total Amount</span>
-          <span>
-            ₹{Number(bill.total_before_discount).toFixed(2)}
-          </span>
+          <span>₹{Number(bill.total_before_discount).toFixed(2)}</span>
         </div>
 
         {bill.discount_amount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Discount ({bill.discount}%)</span>
-            <span>
-              - ₹{Number(bill.discount_amount).toFixed(2)}
-            </span>
+            <span>- ₹{Number(bill.discount_amount).toFixed(2)}</span>
           </div>
         )}
 
         <div className="flex justify-between font-semibold text-base border-t pt-2">
           <span>Grand Total</span>
-          <span>
-            ₹{Number(bill.total_after_discount).toFixed(2)}
-          </span>
+          <span>₹{Number(bill.total_after_discount).toFixed(2)}</span>
         </div>
       </div>
     </div>
   );
 };
-

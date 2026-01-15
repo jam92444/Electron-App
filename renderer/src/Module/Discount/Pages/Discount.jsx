@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import Button from "../../../components/ReuseComponents/Button";
 import Modal from "../../../components/ReuseComponents/Modal";
-import { AddDiscountForm, ViewAllDiscounts } from "../Routes/discount.lazyimports";
+import {
+  AddDiscountForm,
+  ViewAllDiscounts,
+} from "../Routes/discount.lazyimports";
 import {
   getDiscounts,
   createDiscount,
   updateDiscount,
-  
 } from "../Services/discount.services";
 
 const Discount = () => {
@@ -96,9 +98,7 @@ const Discount = () => {
   return (
     <div aria-hidden="false" className="min-h-[80vh] bg-gray-50 p-4 sm:p-6">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">
-          Discount Management
-        </h1>
+        <h1 className="text-xl font-bold text-gray-900">Discount Management</h1>
         <p className="text-sm text-gray-600">
           Manage percentage-based discounts
         </p>

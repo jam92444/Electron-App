@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../../../components/ReuseComponents/Button";
-import VendorBasicDetails from "../Components/VendorBasicDetails";
-import VendorBankDetails from "../Components/VendorBankDetails";
+import {
+  VendorBasicDetails,
+  VendorBankDetails,
+} from "../Routes/vendor.lazyImports";
 import Spinner from "../../../components/ReuseComponents/Spinner";
 import Modal from "../../../components/ReuseComponents/Modal";
 import { insertVendor, updateVendor } from "../Services/vendors";
@@ -56,9 +58,7 @@ const Vendor = () => {
     "address1",
   ];
 
-  const isFormValid = requiredFields.every(
-    (field) => vendorData[field]
-  );
+  const isFormValid = requiredFields.every((field) => vendorData[field]);
 
   /* ---------------- RESET ---------------- */
   const resetForm = () => {

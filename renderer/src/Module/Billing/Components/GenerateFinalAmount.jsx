@@ -17,8 +17,7 @@ const GenerateFinalAmount = ({
 
   useEffect(() => {
     fetchDiscount();
-    console.log(discount)
-  },[]);
+  }, []);
   /* ================= FETCH DISCOUNT ================= */
   const fetchDiscount = async () => {
     try {
@@ -29,7 +28,7 @@ const GenerateFinalAmount = ({
         setDiscount([]);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
   return (

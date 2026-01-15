@@ -15,7 +15,7 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
   });
   const [AllItems, setAllItems] = useState([]);
   useEffect(() => {
-       // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (initialItem) setItem(initialItem);
   }, [initialItem]);
 
@@ -53,7 +53,6 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
           },
         ]);
       } else {
-        console.log(response.items)
         setAllItems(response.items);
       }
     };
@@ -86,12 +85,14 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
               const selectedItem = AllItems.find(
                 (i) => i.itemName === selected.value
               );
-              console.log(selectedItem)
+              console.log(selectedItem);
               setItem({
                 ...item,
                 itemCode: selectedItem.itemID || "",
                 itemName: selectedItem.itemName,
-                price: selectedItem.hasVariants ? "" : selectedItem.sellingPrice,
+                price: selectedItem.hasVariants
+                  ? ""
+                  : selectedItem.sellingPrice,
                 size: "",
               });
             }}

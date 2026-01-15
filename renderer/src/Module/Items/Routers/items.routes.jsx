@@ -1,5 +1,6 @@
 import { withSuspense } from "../../../Router/withSuspense";
-import { AddItem, Size } from "./items.lazyimports";
+import AddItem from "../Pages/AddItem";
+import Size from "../Pages/Size";
 
 export const ItemsRoutes = [
   // Masters

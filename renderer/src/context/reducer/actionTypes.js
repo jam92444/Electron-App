@@ -25,3 +25,7 @@ export const CREATE_INVOICE = "CREATE_INVOICE";
 export const SET_LOADING = "SET_LOADING";
 export const OPEN_MODAL = "OPEN_MODAL";
 export const CLOSE_MODAL = "CLOSE_MODAL";
+
+// BILLING
+export const GET_BILL_DATA = "GET_BILL_DATA";
+export const SET_BILL_DATA = "SET_BILL_DATA";

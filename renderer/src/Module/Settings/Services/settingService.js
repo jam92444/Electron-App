@@ -3,6 +3,9 @@
 /* -------- Get all settings -------- */
 export const getSettings = () => window.api.getSettings();
 
+/* -------- Get all company details -------- */
+export const getCompanyDetails = () => window.api.getSettings();
+
 /* -------- Company Details -------- */
 export const updateCompanySettings = (data) =>
   window.api.updateCompanySettings(data);
@@ -16,5 +19,4 @@ export const updateOtherSettings = (data) =>
   window.api.updateOtherSettings(data);
 
 /* -------- Invoice Helpers -------- */
-export const resetInvoiceNumber = () =>
-  window.api.resetInvoiceNumber();
+export const resetInvoiceNumber = () => window.api.resetInvoiceNumber();

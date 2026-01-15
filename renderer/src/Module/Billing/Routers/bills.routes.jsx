@@ -1,4 +1,5 @@
-import { GenerateBills, SalesBill } from "./bills.lazyimports";
+import GenerateBills from "../Pages/GenerateBill";
+import SalesBill from "../Pages/SalesBill";
 import { withSuspense } from "../../../Router/withSuspense";
 
 export const BillingRoutes = [
@@ -8,4 +9,3 @@ export const BillingRoutes = [
   },
   { path: "billing/sales-bill", element: withSuspense(<SalesBill />) },
 ];
-  
