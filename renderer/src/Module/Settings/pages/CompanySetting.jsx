@@ -499,8 +499,8 @@ const OtherDetails = () => {
       newErrors.supportContact = "Must be 10 digits";
     }
 
-    if (formData.enableInvoicePrefix && formData.invoicePrefix.length !== 4) {
-      newErrors.invoicePrefix = "Prefix must be 4 characters";
+    if (formData.enableInvoicePrefix && formData.invoicePrefix.length !== 2) {
+      newErrors.invoicePrefix = "Prefix must be atleast 2 characters";
     }
 
     if (Object.keys(newErrors).length) {

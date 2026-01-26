@@ -1,3 +1,5 @@
+// renderer/src/modules/Item/Components/ViewAllItems.js
+
 import { Space, Table, Tag } from "antd";
 import Button from "../../../components/ReuseComponents/Button";
 import Modal from "../../../components/ReuseComponents/Modal";
@@ -5,7 +7,7 @@ import { deleteItem } from "../Services/items";
 import { useState } from "react";
 import { FaPen, FaTrashCan } from "react-icons/fa6";
 
-const ViewAllItems = ({ items, onEdit, reload, mode = "MASTER" }) => {
+const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItemIndex, setSelectedItemIndex] = useState(null);
 
@@ -71,7 +73,7 @@ const ViewAllItems = ({ items, onEdit, reload, mode = "MASTER" }) => {
       render: (_, record) =>
         record.hasVariants ? (
           <div className="flex flex-wrap gap-2">
-            {record.variants.map((v) => (
+            {(record.variants || []).map((v) => (
               <Tag
                 color="blue"
                 key={v.id}
@@ -92,75 +94,47 @@ const ViewAllItems = ({ items, onEdit, reload, mode = "MASTER" }) => {
     },
     {
       title: "Actions",
-      key: "action",
+      key: "actions",
       render: (_, record, index) => (
         <Space size="middle">
-          <span
-            className="text-blue-500 cursor-pointer hover:text-blue-700 transition"
-            onClick={() => onEdit(index)}
-            title="Edit Item"
-          >
-            <FaPen />
-          </span>
-
-          <span
-            className="text-red-500 cursor-pointer hover:text-red-700 transition"
+          <button onClick={() => onEdit(index)}>
+            <FaPen className="text-blue-600 hover:text-blue-800" />
+          </button>
+          <button
             onClick={() => {
               setSelectedItemIndex(index);
               setIsModalOpen(true);
             }}
-            title="Delete Item"
           >
-            <FaTrashCan />
-          </span>
+            <FaTrashCan className="text-red-600 hover:text-red-800" />
+          </button>
         </Space>
       ),
     },
   ];
 
   return (
-    <div className="p-4 sm:p-6 rounded-2xl shadow-xl border border-gray-200 bg-white mt-8">
-      <h2 className="text-lg font-bold text-gray-800 mb-5 border-b pb-2">
-        All Items
-      </h2>
-
+    <div>
       <Table
         columns={columns}
-        dataSource={items.map((item) => ({
-          ...item,
-          key: item.itemID,
-        }))}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: false,
-          responsive: true,
-        }}
-        bordered={false}
-        scroll={{ x: "max-content" }}
-        className="ant-table-striped ant-table-hover ant-table-responsive"
+        dataSource={items.map((i, idx) => ({ ...i, key: idx }))}
+        pagination={{ pageSize: 10 }}
       />
 
       {isModalOpen && (
         <Modal
           title="Confirm Delete"
-          message={`Are you sure you want to delete item "${items[selectedItemIndex]?.itemName}"?`}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedItemIndex(null);
-          }}
+          message={`Are you sure you want to delete "${items[selectedItemIndex].itemName}"?`}
+          onClose={() => setIsModalOpen(false)}
           actions={
-            <div className="flex gap-3 justify-end mt-2">
+            <div className="flex justify-end gap-3">
               <Button
                 buttonName="Cancel"
-                buttonType="normal"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setSelectedItemIndex(null);
-                }}
+                onClick={() => setIsModalOpen(false)}
               />
               <Button
                 buttonName="Delete"
-                buttonType="save"
+                buttonType="delete"
                 onClick={handleDelete}
               />
             </div>

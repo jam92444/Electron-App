@@ -3,7 +3,7 @@ const Input = ({
   label,
   type = "text",
   maxlength,
-  onchange,
+  onChange,
   classname = "",
   error = "",
   ...rest
@@ -26,7 +26,7 @@ const Input = ({
         type={type}
         placeholder={placeholder}
         maxLength={maxlength}
-        onChange={onchange}
+        onChange={onChange}
         aria-invalid={!!error}
         aria-describedby={error ? `${inputId}-error` : undefined}
         {...rest}

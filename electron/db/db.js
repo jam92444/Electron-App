@@ -36,7 +36,7 @@ function initDatabase() {
       enableInvoicePrefix INTEGER DEFAULT 0,
       lastInvoiceNumber INTEGER DEFAULT 0
     );
-  `
+  `,
   ).run();
 
   // ---- Ensure SINGLE settings row exists ----
@@ -45,35 +45,39 @@ function initDatabase() {
   /* ---------------- ITEMS ---------------- */
   db.prepare(
     `
-    CREATE TABLE IF NOT EXISTS items (
-      itemID TEXT PRIMARY KEY,
-      itemName TEXT NOT NULL,
-      unit TEXT NOT NULL,
-      purchaseRate REAL NOT NULL,
-      purchaseDate TEXT NOT NULL,
-      sellingPrice REAL,
-      vendorId INTEGER,
-      purchaseId INTEGER,
-      hasVariants INTEGER NOT NULL,
-      FOREIGN KEY (vendorId) REFERENCES vendors(id) ON DELETE CASCADE,
-      FOREIGN KEY (purchaseId) REFERENCES purchases(id) ON DELETE CASCADE
-    );
-  `
+ CREATE TABLE IF NOT EXISTS items (
+  itemID TEXT PRIMARY KEY,
+  itemName TEXT NOT NULL,
+  unit TEXT NOT NULL,
+  purchaseRate REAL NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,   -- NEW
+  purchaseDate TEXT NOT NULL,
+  sellingPrice REAL,
+  vendorId INTEGER,
+  purchaseId INTEGER,
+  hasVariants INTEGER NOT NULL,
+  FOREIGN KEY (vendorId) REFERENCES vendors(id) ON DELETE CASCADE,
+  FOREIGN KEY (purchaseId) REFERENCES purchases(id) ON DELETE CASCADE
+);
+
+  `,
   ).run();
 
   /* ---------------- ITEM VARIANTS ---------------- */
   db.prepare(
     `
-    CREATE TABLE IF NOT EXISTS item_variants (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      itemID TEXT NOT NULL,
-      size TEXT NOT NULL,
-      sellingPrice REAL NOT NULL,
-      purchaseId INTEGER,
-      FOREIGN KEY (itemID) REFERENCES items(itemID) ON DELETE CASCADE,
-      FOREIGN KEY (purchaseId) REFERENCES purchases(id) ON DELETE CASCADE
-    );
-  `
+   CREATE TABLE IF NOT EXISTS item_variants (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  itemID TEXT NOT NULL,
+  size TEXT NOT NULL,
+  sellingPrice REAL NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,   -- NEW
+  purchaseId INTEGER,
+  FOREIGN KEY (itemID) REFERENCES items(itemID) ON DELETE CASCADE,
+  FOREIGN KEY (purchaseId) REFERENCES purchases(id) ON DELETE CASCADE
+);
+
+  `,
   ).run();
 
   /* ---------------- SIZES ---------------- */
@@ -83,7 +87,7 @@ function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       size TEXT UNIQUE
     );
-  `
+  `,
   ).run();
 
   /* ---------------- BILLS ---------------- */
@@ -103,24 +107,25 @@ function initDatabase() {
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
 );
 
-  `
+  `,
   ).run();
 
   /* ---------------- BILL ITEMS ---------------- */
   db.prepare(
     `
-    CREATE TABLE IF NOT EXISTS bill_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      bill_id INTEGER NOT NULL,
-      item_code TEXT,
-      item_name TEXT,
-      price REAL,
-      size TEXT,
-      quantity INTEGER,
-      total_amount REAL,
-      FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE
-    );
-  `
+  CREATE TABLE IF NOT EXISTS bill_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bill_id INTEGER NOT NULL,
+  item_code TEXT,
+  item_name TEXT,
+  price REAL,
+  size TEXT,
+  quantity INTEGER NOT NULL DEFAULT 1,   -- NEW
+  total_amount REAL,
+  FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE
+);
+
+  `,
   ).run();
 
   /* ---------------- VENDORS ---------------- */
@@ -148,7 +153,7 @@ function initDatabase() {
       paymentTerms TEXT DEFAULT '30 Days',
       status TEXT DEFAULT 'Active'
     );
-  `
+  `,
   ).run();
 
   /* ---------------- PURCHASES ---------------- */
@@ -164,7 +169,7 @@ function initDatabase() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (vendorId) REFERENCES vendors(id) ON DELETE CASCADE
     );
-  `
+  `,
   ).run();
 
   /* ---------------- DISCOUNTS ---------------- */
@@ -179,7 +184,7 @@ function initDatabase() {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
-`
+`,
   ).run();
 
   /* ---------------- CUSTOMER ---------------- */
@@ -195,7 +200,7 @@ function initDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(discountId) REFERENCES discounts(id) ON DELETE SET NULL
-    ); `
+    ); `,
   ).run();
   console.log("✅ Database initialized successfully");
 

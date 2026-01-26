@@ -43,7 +43,7 @@ const Size = () => {
     const duplicate = sizes.some(
       (s, i) =>
         s.sizeName.trim().toLowerCase() === name.toLowerCase() &&
-        i !== editIndex
+        i !== editIndex,
     );
     if (duplicate) {
       setModal({ title: "Alert", message: "Size already exists." });
@@ -85,10 +85,8 @@ const Size = () => {
     <div className="min-h-[80vh] bg-gray-50 p-4 sm:p-6">
       {/* ---------- PAGE HEADER ---------- */}
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">
-          Size Management
-        </h1>
-        <p className="text-sm text-gray-600">
+        <h1 className="text-xl font-bold text-gray-900">Size Management</h1>
+        <p className="text-sm text-gray-600 italic">
           Create, update and manage product sizes
         </p>
       </div>
@@ -108,9 +106,7 @@ const Size = () => {
 
       {/* ---------- TABLE CARD ---------- */}
       <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-        <h2 className="text-md font-semibold text-gray-800 mb-4">
-          All Sizes
-        </h2>
+        <h2 className="text-md font-semibold text-gray-800 mb-4">All Sizes</h2>
 
         <ViewAllSizes
           sizes={sizes}
@@ -132,8 +128,15 @@ const Size = () => {
           onClose={() => setConfirmSave(false)}
           actions={
             <>
-              <Button buttonName="Cancel" onClick={() => setConfirmSave(false)} />
-              <Button buttonName="Confirm" buttonType="save" onClick={handleConfirmSave} />
+              <Button
+                buttonName="Cancel"
+                onClick={() => setConfirmSave(false)}
+              />
+              <Button
+                buttonName="Confirm"
+                buttonType="save"
+                onClick={handleConfirmSave}
+              />
             </>
           }
         />
@@ -146,8 +149,15 @@ const Size = () => {
           onClose={() => setConfirmDelete(null)}
           actions={
             <>
-              <Button buttonName="Cancel" onClick={() => setConfirmDelete(null)} />
-              <Button buttonName="Delete" buttonType="delete" onClick={handleDelete} />
+              <Button
+                buttonName="Cancel"
+                onClick={() => setConfirmDelete(null)}
+              />
+              <Button
+                buttonName="Delete"
+                buttonType="delete"
+                onClick={handleDelete}
+              />
             </>
           }
         />
@@ -185,7 +195,7 @@ const AddSizeForm = ({ initialSize, onSave, onCancel }) => {
           label="Size"
           placeholder="Enter size (eg: 42, XL)"
           value={size.sizeName}
-          onchange={(e) => {
+          onChange={(e) => {
             setSize({ sizeName: e.target.value });
             setError("");
           }}

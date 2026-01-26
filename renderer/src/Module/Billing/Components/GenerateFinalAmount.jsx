@@ -58,9 +58,16 @@ const GenerateFinalAmount = ({
         <span>Discount :</span>
         <select
           className="border px-2 py-1 rounded text-sm"
-          value={billSummary?.discount || 0}
-          onChange={(e) => setBillDiscount(Number(e.target.value))}
+          value={billSummary?.discount ?? ""}
+          onChange={(e) => {
+            const value = e.target.value;
+            setBillDiscount(value === "" ? "" : Number(value));
+          }}
         >
+          <option value="" disabled>
+            Select discount
+          </option>
+
           {discount.map((d) => (
             <option key={d.id} value={d.percentage}>
               {d.name}

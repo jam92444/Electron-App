@@ -42,13 +42,13 @@ const GenerateBill = () => {
     total_after_discount: null,
     payment_mode: null,
   });
-  const [billDiscount, setBillDiscount] = useState(0);
+  const [billDiscount, setBillDiscount] = useState("");
   const printAfterRef = useRef(false);
   const [billSummary, setBillSummary] = useState({
     customerId: null,
     totalPieces: 0,
     totalBeforeDiscount: 0,
-    discount: 0,
+    discount: "",
     discountAmount: 0,
     payment_mode: "Cash",
     totalAfterDiscount: 0,
@@ -79,11 +79,12 @@ const GenerateBill = () => {
 
   /* ================= AUTO APPLY CUSTOMER DISCOUNT ================= */
   useEffect(() => {
-    if (selectedCustomer?.discountPercentage > 0) {
-      setBillDiscount(Number(selectedCustomer.discountPercentage));
-    } else {
-      setBillDiscount(0);
+    if (selectedCustomer) {
+      if (selectedCustomer.discountPercentage > 0) {
+        setBillDiscount(Number(selectedCustomer.discountPercentage));
+      }
     }
+
     setBillSummary((prev) => ({
       ...prev,
       customerId: selectedCustomer?.id || null,
@@ -94,14 +95,15 @@ const GenerateBill = () => {
   useEffect(() => {
     const totalPieces = billItems.reduce(
       (sum, item) => sum + Number(item.quantity || 0),
-      0
+      0,
     );
 
     const totalBeforeDiscount = billItems.reduce(
       (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
-      0
+      0,
     );
-    const discountAmount = totalBeforeDiscount * (billDiscount / 100);
+    const discountAmount =
+      totalBeforeDiscount * ((Number(billDiscount) || 0) / 100);
     const totalAfterDiscount = totalBeforeDiscount - discountAmount;
 
     setBillSummary((prev) => ({
@@ -122,7 +124,7 @@ const GenerateBill = () => {
     const newDiscountAmount = billSummary.totalBeforeDiscount - rounded;
 
     setBillDiscount(
-      (newDiscountAmount / billSummary.totalBeforeDiscount) * 100
+      (newDiscountAmount / billSummary.totalBeforeDiscount) * 100,
     );
 
     setBillSummary((prev) => ({
@@ -138,12 +140,13 @@ const GenerateBill = () => {
     setEditIndex(null);
     setBillId(null);
     setSelectedCustomer(null);
-    setBillDiscount(0);
+
+    setBillDiscount(""); // ✅
     setBillSummary({
       customerId: null,
       totalPieces: 0,
       totalBeforeDiscount: 0,
-      discount: 0,
+      discount: "", // ✅
       discountAmount: 0,
       payment_mode: "Cash",
       totalAfterDiscount: 0,
@@ -175,7 +178,6 @@ const GenerateBill = () => {
     try {
       const res = await getBillById(billId);
       if (!res.success) return false;
-      console.log(res);
       return res;
     } catch (error) {
       toast.error("Something went wrong", error);
@@ -280,7 +282,14 @@ const GenerateBill = () => {
     <div className="bg-gray-50 min-h-screen p-3 sm:p-6">
       {/* HEADER */}
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-semibold">Generate Bill</h1>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">
+            Generate Sales Bill
+          </h1>
+          <p className="text-sm text-gray-600 italic">
+            Quickly generate and track invoices for your customers.
+          </p>
+        </div>
         <button
           onClick={handleResetForm}
           className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white shadow-sm"
@@ -317,6 +326,9 @@ const GenerateBill = () => {
           placeholder="Select customer"
           className="max-w-sm"
         />
+        <span className="text-xs text-green-600">
+          Customer discount applied automatically
+        </span>
       </div>
 
       {/* ITEMS */}

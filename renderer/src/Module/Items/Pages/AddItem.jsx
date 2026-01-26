@@ -45,7 +45,8 @@ const AddItem = () => {
   };
 
   const handleSave = async (item, isEdit) => {
-    if (saving) return;
+    if (saving) return false;
+
     setSaving(true);
     try {
       let result;
@@ -53,26 +54,25 @@ const AddItem = () => {
       else result = await insertItem(item);
 
       if (!result.success) {
-        if (result.error === "ITEM_ID_EXISTS") {
-          setErrorModal({
-            open: true,
-            title: "Item Already Exists",
-            message: "Item ID already exists. Please use a different Item ID.",
-          });
-        } else {
-          setErrorModal({
-            open: true,
-            title: "Error",
-            message: result.error,
-          });
-        }
-        return;
+        setErrorModal({
+          open: true,
+          title: "Error",
+          message:
+            result.error === "ITEM_ID_EXISTS"
+              ? "Item ID already exists. Please use a different Item ID."
+              : result.error,
+        });
+        return false;
       }
 
-      toast.success(result?.message);
+      toast.success(result.message || "Saved successfully!");
       await loadItems();
       setEditingIndex(null);
       setEditingItem(null);
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -87,11 +87,10 @@ const AddItem = () => {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       {/* ---------------- PAGE HEADER ---------------- */}
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">
-          Item Management
-        </h1>
-        <p className="text-sm text-gray-600">
-          Add, edit and manage inventory items with pricing & variants
+        <h1 className="text-xl font-bold text-gray-900">Item Management</h1>
+        <p className="text-sm text-gray-600 italic">
+          Add, edit and manage inventory items with pricing, variants &
+          quantities
         </p>
       </div>
 
@@ -115,19 +114,15 @@ const AddItem = () => {
           onSave={handleSave}
           units={units}
           onCancel={handleCancelEdit}
+          mode="MASTER"
           disabled={saving}
           isEdit={editingIndex !== null}
         />
       </div>
 
       {/* ---------------- TABLE CARD ---------------- */}
-      <div className=" ">
-        
-        <ViewAllItems
-          items={items}
-          onEdit={handleEdit}
-          reload={loadItems}
-        />
+      <div>
+        <ViewAllItems items={items} onEdit={handleEdit} reload={loadItems} />
       </div>
 
       {/* ---------------- ERROR MODAL ---------------- */}
@@ -135,9 +130,7 @@ const AddItem = () => {
         <Modal
           title={errorModal.title}
           message={errorModal.message}
-          onClose={() =>
-            setErrorModal({ open: false, title: "", message: "" })
-          }
+          onClose={() => setErrorModal({ open: false, title: "", message: "" })}
           actions={
             <Button
               buttonName="OK"

@@ -61,7 +61,7 @@ const SalesBill = () => {
       {/* ---------- HEADER ---------- */}
       <div className="mb-5">
         <h1 className="text-xl font-semibold text-gray-900">Sales Bills</h1>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 italic">
           View and analyze all generated sales bills
         </p>
       </div>

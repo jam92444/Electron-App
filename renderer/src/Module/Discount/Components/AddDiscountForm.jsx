@@ -19,7 +19,7 @@ const AddDiscountForm = ({ initialDiscount, onSave, onCancel }) => {
         percentage: "",
         valid_days: "",
         is_active: true,
-      }
+      },
     );
   }, [initialDiscount]);
 
@@ -27,7 +27,12 @@ const AddDiscountForm = ({ initialDiscount, onSave, onCancel }) => {
     e.preventDefault();
     onSave(discount);
     if (!initialDiscount) {
-      setDiscount({ name: "", percentage: "", valid_days: "", is_active: true });
+      setDiscount({
+        name: "",
+        percentage: "",
+        valid_days: "",
+        is_active: true,
+      });
     }
   };
 
@@ -85,6 +90,5 @@ const AddDiscountForm = ({ initialDiscount, onSave, onCancel }) => {
     </form>
   );
 };
-
 
 export default AddDiscountForm;

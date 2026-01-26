@@ -10,8 +10,8 @@ function updatePurchaseTotal(db, purchaseId) {
     SELECT 
       SUM(
         CASE 
-          WHEN i.hasVariants = 1 THEN iv.sellingPrice
-          ELSE i.purchaseRate
+          WHEN i.hasVariants = 1 THEN iv.sellingPrice * iv.quantity
+          ELSE i.purchaseRate * i.quantity
         END
       ) AS total
     FROM items i
@@ -49,7 +49,7 @@ function registerPurchaseHandlers(db) {
           purchase.remarks || "",
         );
       const data = db
-        .prepare(` SELECT * FROM purchases WHERE id=?`)
+        .prepare(`SELECT * FROM purchases WHERE id=?`)
         .get(result.lastInsertRowid);
       return {
         success: true,
@@ -61,13 +61,15 @@ function registerPurchaseHandlers(db) {
     }
   });
 
-  /* -------- ADD PURCHASE ITEM --------- */
+  /** -----------------------
+   * ADD PURCHASE ITEM
+   * ----------------------- */
   const insertItemTx = db.transaction((item) => {
     db.prepare(
       `
       INSERT INTO items 
-      (itemID, itemName, unit, purchaseRate, purchaseDate, sellingPrice, vendorId, purchaseId, hasVariants)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (itemID, itemName, unit, purchaseRate, purchaseDate, sellingPrice, vendorId, purchaseId, hasVariants, quantity)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     ).run(
       item.itemID,
@@ -79,17 +81,27 @@ function registerPurchaseHandlers(db) {
       item.vendorId !== undefined ? parseInt(item.vendorId, 10) : null,
       item.purchaseId !== undefined ? item.purchaseId : null,
       item.hasVariants ? 1 : 0,
+      item.hasVariants ? 0 : item.quantity || 0,
     );
 
     if (item.hasVariants && Array.isArray(item.variants)) {
       const stmt = db.prepare(`
-        INSERT INTO item_variants (itemID, size, sellingPrice, purchaseId)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO item_variants (itemID, size, sellingPrice, quantity, purchaseId)
+        VALUES (?, ?, ?, ?, ?)
       `);
       for (const v of item.variants) {
-        stmt.run(item.itemID, v.size, v.sellingPrice, v.purchaseId || null);
+        stmt.run(
+          item.itemID,
+          v.size,
+          v.sellingPrice,
+          v.quantity || 0,
+          v.purchaseId || null,
+        );
       }
     }
+
+    // Update purchase total after adding item
+    updatePurchaseTotal(db, item.purchaseId);
   });
 
   ipcMain.handle("db:insertPurchaseItem", (e, item) => {
@@ -115,6 +127,63 @@ function registerPurchaseHandlers(db) {
         .all(item.purchaseId);
 
       return { success: true, data: purchaseItemList };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  /** -----------------------
+   * UPDATE PURCHASE ITEM
+   * ----------------------- */
+  const updateItemTx = db.transaction((item) => {
+    db.prepare(
+      `
+      UPDATE items
+      SET itemName = ?, unit = ?, purchaseRate = ?, purchaseDate = ?, sellingPrice = ?, quantity = ?
+      WHERE itemID = ?
+    `,
+    ).run(
+      item.itemName,
+      item.unit,
+      item.purchaseRate,
+      item.purchaseDate,
+      item.hasVariants ? null : item.sellingPrice,
+      item.hasVariants ? 0 : item.quantity || 0,
+      item.itemID,
+    );
+
+    // Update variants if any
+    if (item.hasVariants && Array.isArray(item.variants)) {
+      db.prepare(`DELETE FROM item_variants WHERE itemID = ?`).run(item.itemID);
+      const stmt = db.prepare(`
+        INSERT INTO item_variants (itemID, size, sellingPrice, quantity, purchaseId)
+        VALUES (?, ?, ?, ?, ?)
+      `);
+      for (const v of item.variants) {
+        stmt.run(
+          item.itemID,
+          v.size,
+          v.sellingPrice,
+          v.quantity || 0,
+          v.purchaseId || null,
+        );
+      }
+    }
+
+    // Update purchase total
+    updatePurchaseTotal(db, item.purchaseId);
+  });
+
+  ipcMain.handle("db:updatePurchaseItem", (e, item) => {
+    try {
+      const exists = db
+        .prepare("SELECT 1 FROM items WHERE itemID = ?")
+        .get(item.itemID);
+      if (!exists) return { success: false, error: "ITEM_NOT_FOUND" };
+
+      updateItemTx(item);
+
+      return { success: true, message: "Purchase item updated successfully" };
     } catch (err) {
       return { success: false, error: err.message };
     }
@@ -147,7 +216,8 @@ function registerPurchaseHandlers(db) {
           i.*, 
           iv.id AS variantId,
           iv.size,
-          iv.sellingPrice AS variantSellingPrice
+          iv.sellingPrice AS variantSellingPrice,
+          iv.quantity AS variantQuantity
         FROM items i
         LEFT JOIN item_variants iv ON i.itemID = iv.itemID
         WHERE i.purchaseId = ?
@@ -171,6 +241,7 @@ function registerPurchaseHandlers(db) {
             id: row.variantId,
             size: row.size,
             sellingPrice: row.variantSellingPrice,
+            quantity: row.variantQuantity || 0,
           });
         }
       }
@@ -186,17 +257,18 @@ function registerPurchaseHandlers(db) {
   });
 
   /** -----------------------
-   * GET PURCHASE BY ID
+   * GET PURCHASE LIST
    * ----------------------- */
   ipcMain.handle("db:getPurchaseList", () => {
     try {
       const purchases = db
         .prepare(
           `
-        SELECT *
-        FROM purchases
-        ORDER BY id DESC
-        `,
+        SELECT p.*, v.vendorName
+        FROM purchases p
+        LEFT JOIN vendors v ON v.id = p.vendorId
+        ORDER BY p.id DESC
+      `,
         )
         .all();
 
@@ -208,6 +280,59 @@ function registerPurchaseHandlers(db) {
       return { success: false, error: err.message };
     }
   });
+
+  /** -----------------------
+   * DELETE PURCHASE
+   * ----------------------- */
+  ipcMain.handle("db:deletePurchase", (e, purchaseId) => {
+    try {
+      db.prepare(`DELETE FROM purchases WHERE id = ?`).run(purchaseId);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  /** -----------------------
+   * GET PURCHASE LIST CURSOR (for pagination)
+   * ----------------------- */
+  ipcMain.handle(
+    "db:getPurchaseListCursor",
+    (e, { lastId = Number.MAX_SAFE_INTEGER, pageSize = 20 }) => {
+      try {
+        const purchases = db
+          .prepare(
+            `
+          SELECT 
+            p.id,
+            p.purchaseDate,
+            p.vendorId,
+            p.totalAmount,
+            p.remarks,
+            p.created_at,
+            v.vendorName
+          FROM purchases p
+          LEFT JOIN vendors v ON v.id = p.vendorId
+          WHERE p.id < ?
+          ORDER BY p.id DESC
+          LIMIT ?
+        `,
+          )
+          .all(lastId, pageSize);
+
+        const nextCursor =
+          purchases.length > 0 ? purchases[purchases.length - 1].id : null;
+
+        return {
+          success: true,
+          data: purchases,
+          nextCursor: purchases.length < pageSize ? null : nextCursor,
+        };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
+  );
 
   /** -----------------------
    * UPDATE PURCHASE INFO
@@ -234,16 +359,31 @@ function registerPurchaseHandlers(db) {
   });
 
   /** -----------------------
-   * DELETE PURCHASE
+   * GET ALL PURCHASE ITEM LIST BY ID for LABEL
    * ----------------------- */
-  ipcMain.handle("db:deletePurchase", (e, purchaseId) => {
+  ipcMain.handle("db:getItemsByPurchaseIds", (e, { purchaseIds }) => {
     try {
-      db.prepare(`DELETE FROM purchases WHERE id = ?`).run(purchaseId);
-      return { success: true };
+      if (!purchaseIds || !purchaseIds.length)
+        return { success: true, data: [] };
+
+      // Convert to placeholders for SQL query
+      const placeholders = purchaseIds.map(() => "?").join(",");
+
+      const items = db
+        .prepare(
+          `
+        SELECT *
+        FROM items
+        WHERE purchaseId IN (${placeholders})
+      `,
+        )
+        .all(...purchaseIds);
+
+      return { success: true, data: items };
     } catch (err) {
       return { success: false, error: err.message };
     }
   });
 }
 
-module.exports = { registerPurchaseHandlers, updatePurchaseTotal };
+module.exports = { registerPurchaseHandlers };

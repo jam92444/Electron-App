@@ -15,6 +15,7 @@ function registerItemHandlers(db) {
           iv.id AS variantId,
           iv.size AS variantSize,
           iv.sellingPrice AS variantSellingPrice,
+          iv.quantity AS variantQuantity,
           iv.purchaseId AS variantPurchaseId
         FROM items i
         LEFT JOIN vendors v ON i.vendorId = v.id
@@ -39,75 +40,7 @@ function registerItemHandlers(db) {
             id: row.variantId,
             size: row.variantSize,
             sellingPrice: row.variantSellingPrice,
-            purchaseId: row.variantPurchaseId,
-          });
-        }
-      }
-
-      return { success: true, items: Array.from(itemsMap.values()) };
-    } catch (err) {
-      return { success: false, code: "DB_ERROR", error: err.message };
-    }
-  });
-
-  /** -----------------------
-   * FILTER ITEMS
-   * ----------------------- */
-  ipcMain.handle("db:filterItems", (e, filters) => {
-    try {
-      let query = `
-        SELECT 
-          i.*, 
-          v.vendorName, 
-          iv.id AS variantId,
-          iv.size AS variantSize,
-          iv.sellingPrice AS variantSellingPrice,
-          iv.purchaseId AS variantPurchaseId
-        FROM items i
-        LEFT JOIN vendors v ON i.vendorId = v.id
-        LEFT JOIN item_variants iv ON i.itemID = iv.itemID
-        WHERE 1=1
-      `;
-      const params = [];
-
-      if (filters.itemName) {
-        query += " AND i.itemName LIKE ?";
-        params.push(`%${filters.itemName}%`);
-      }
-      if (filters.unit) {
-        query += " AND i.unit = ?";
-        params.push(filters.unit);
-      }
-      if (filters.hasVariants !== undefined) {
-        query += " AND i.hasVariants = ?";
-        params.push(filters.hasVariants ? 1 : 0);
-      }
-      if (filters.vendorId) {
-        query += " AND i.vendorId = ?";
-        params.push(filters.vendorId);
-      }
-      if (filters.purchaseId) {
-        query += " AND i.purchaseId = ?";
-        params.push(filters.purchaseId);
-      }
-
-      const rows = db.prepare(query).all(...params);
-
-      const itemsMap = new Map();
-      for (const row of rows) {
-        if (!itemsMap.has(row.itemID)) {
-          itemsMap.set(row.itemID, {
-            ...row,
-            hasVariants: Boolean(row.hasVariants),
-            variants: [],
-          });
-        }
-
-        if (row.variantId) {
-          itemsMap.get(row.itemID).variants.push({
-            id: row.variantId,
-            size: row.variantSize,
-            sellingPrice: row.variantSellingPrice,
+            quantity: row.variantQuantity || 0,
             purchaseId: row.variantPurchaseId,
           });
         }
@@ -126,8 +59,8 @@ function registerItemHandlers(db) {
     db.prepare(
       `
       INSERT INTO items 
-      (itemID, itemName, unit, purchaseRate, purchaseDate, sellingPrice, vendorId, purchaseId, hasVariants)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (itemID, itemName, unit, purchaseRate, purchaseDate, sellingPrice, vendorId, purchaseId, hasVariants, quantity)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     ).run(
       item.itemID,
@@ -139,15 +72,22 @@ function registerItemHandlers(db) {
       item.vendorId !== undefined ? parseInt(item.vendorId, 10) : null,
       item.purchaseId !== undefined ? item.purchaseId : null,
       item.hasVariants ? 1 : 0,
+      item.hasVariants ? 0 : item.quantity || 0,
     );
 
     if (item.hasVariants && Array.isArray(item.variants)) {
       const stmt = db.prepare(`
-        INSERT INTO item_variants (itemID, size, sellingPrice, purchaseId)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO item_variants (itemID, size, sellingPrice, quantity, purchaseId)
+        VALUES (?, ?, ?, ?, ?)
       `);
       for (const v of item.variants) {
-        stmt.run(item.itemID, v.size, v.sellingPrice, v.purchaseId || null);
+        stmt.run(
+          item.itemID,
+          v.size,
+          v.sellingPrice,
+          v.quantity || 0,
+          v.purchaseId || null,
+        );
       }
     }
   });
@@ -158,8 +98,10 @@ function registerItemHandlers(db) {
         .prepare("SELECT 1 FROM items WHERE itemID = ?")
         .get(item.itemID);
       if (exists) return { success: false, error: "ITEM_ID_EXISTS" };
-      const itemList = db.prepare("SELECT * FROM items").all();
+
       insertItemTx(item);
+
+      const itemList = db.prepare("SELECT * FROM items").all();
       return {
         success: true,
         message: "Item added successfully",
@@ -183,7 +125,7 @@ function registerItemHandlers(db) {
       `
       UPDATE items
       SET itemName = ?, unit = ?, purchaseRate = ?, purchaseDate = ?,
-          sellingPrice = ?, vendorId = ?, purchaseId = ?, hasVariants = ?
+          sellingPrice = ?, vendorId = ?, purchaseId = ?, hasVariants = ?, quantity = ?
       WHERE itemID = ?
     `,
     ).run(
@@ -195,6 +137,7 @@ function registerItemHandlers(db) {
       vendorId ? vendorId : null,
       item.purchaseId !== undefined ? item.purchaseId : null,
       item.hasVariants ? 1 : 0,
+      item.hasVariants ? 0 : item.quantity || 0,
       item.itemID,
     );
 
@@ -202,11 +145,17 @@ function registerItemHandlers(db) {
 
     if (item.hasVariants && Array.isArray(item.variants)) {
       const stmt = db.prepare(`
-        INSERT INTO item_variants (itemID, size, sellingPrice, purchaseId)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO item_variants (itemID, size, sellingPrice, quantity, purchaseId)
+        VALUES (?, ?, ?, ?, ?)
       `);
       for (const v of item.variants) {
-        stmt.run(item.itemID, v.size, v.sellingPrice, v.purchaseId || null);
+        stmt.run(
+          item.itemID,
+          v.size,
+          v.sellingPrice,
+          v.quantity || 0,
+          v.purchaseId || null,
+        );
       }
     }
   });

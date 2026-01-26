@@ -39,13 +39,13 @@ const Customer = () => {
         setCustomers(res.data);
       } else {
         console.error(res.error);
-        setCustomers([])
+        setCustomers([]);
       }
     } catch (err) {
       console.error(err);
     }
   };
-  console.log(customers)
+  console.log(customers);
   // Load discounts
   const loadDiscounts = async () => {
     try {
@@ -109,10 +109,8 @@ const Customer = () => {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       {/* ---------------- PAGE HEADER ---------------- */}
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">
-          Customer Management
-        </h1>
-        <p className="text-sm text-gray-600">
+        <h1 className="text-xl font-bold text-gray-900">Customer Management</h1>
+        <p className="text-sm text-gray-600 italic">
           Add, edit, and manage customers with applicable discounts
         </p>
       </div>
@@ -159,9 +157,7 @@ const Customer = () => {
         <Modal
           title={errorModal.title}
           message={errorModal.message}
-          onClose={() =>
-            setErrorModal({ open: false, title: "", message: "" })
-          }
+          onClose={() => setErrorModal({ open: false, title: "", message: "" })}
           actions={
             <Button
               buttonName="OK"

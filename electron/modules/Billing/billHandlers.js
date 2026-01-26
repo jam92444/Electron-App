@@ -1,15 +1,57 @@
 const { ipcMain } = require("electron");
 
+/** ---------------- Helper: Reduce/Restore Stock ---------------- */
+function adjustStock(db, items, type = "reduce") {
+  const multiplier = type === "reduce" ? -1 : 1;
+
+  for (const item of items) {
+    if (item.size) {
+      // Variant exists
+      const variant = db
+        .prepare("SELECT * FROM item_variants WHERE itemID = ? AND size = ?")
+        .get(item.itemCode, item.size);
+
+      if (variant) {
+        db.prepare(
+          `
+          UPDATE item_variants
+          SET quantity = quantity + ?
+          WHERE id = ?
+        `,
+        ).run(item.quantity * multiplier, variant.id);
+      }
+    } else {
+      // Normal item
+      const mainItem = db
+        .prepare("SELECT * FROM items WHERE itemID = ?")
+        .get(item.itemCode);
+
+      if (mainItem) {
+        db.prepare(
+          `
+          UPDATE items
+          SET quantity = quantity + ?
+          WHERE itemID = ?
+        `,
+        ).run(item.quantity * multiplier, mainItem.itemID);
+      }
+    }
+  }
+}
+
+/* --------------------- BILL HANDLERS --------------------- */
 function registerBillHandlers(db) {
-  /* ======================================================
-     SAVE BILL
-  ====================================================== */
+  /* ----------------- SAVE BILL ----------------- */
   const insertBillTx = db.transaction((bill, items) => {
-    // 1️⃣ Get invoice settings
-    const settings = db.prepare(`
+    // 1️⃣ Invoice number logic
+    const settings = db
+      .prepare(
+        `
       SELECT invoicePrefix, enableInvoicePrefix, lastInvoiceNumber
       FROM settings WHERE id = 1
-    `).get();
+    `,
+      )
+      .get();
 
     const nextNumber = (settings.lastInvoiceNumber || 0) + 1;
     const paddedNumber = String(nextNumber).padStart(4, "0");
@@ -41,7 +83,7 @@ function registerBillHandlers(db) {
       bill.discount,
       bill.discountAmount,
       bill.totalAfterDiscount,
-      bill.payment_mode || ""
+      bill.payment_mode || "",
     );
 
     const billId = result.lastInsertRowid;
@@ -68,16 +110,21 @@ function registerBillHandlers(db) {
         item.price,
         item.size || "",
         item.quantity,
-        item.totalAmount
+        item.totalAmount,
       );
     }
 
-    // 4️⃣ Update invoice counter
-    db.prepare(`
+    // 4️⃣ Reduce stock
+    adjustStock(db, items, "reduce");
+
+    // 5️⃣ Update invoice counter
+    db.prepare(
+      `
       UPDATE settings
       SET lastInvoiceNumber = ?
       WHERE id = 1
-    `).run(nextNumber);
+    `,
+    ).run(nextNumber);
 
     return { billId, invoiceNumber };
   });
@@ -92,11 +139,17 @@ function registerBillHandlers(db) {
     }
   });
 
-  /* ======================================================
-     UPDATE BILL
-  ====================================================== */
+  /* ----------------- UPDATE BILL ----------------- */
   const updateBillTx = db.transaction((billId, bill, items) => {
-    db.prepare(`
+    // 1️⃣ Restore previous stock
+    const previousItems = db
+      .prepare(`SELECT * FROM bill_items WHERE bill_id = ?`)
+      .all(billId);
+    adjustStock(db, previousItems, "restore");
+
+    // 2️⃣ Update bill info
+    db.prepare(
+      `
       UPDATE bills SET
         customer_id = ?,
         total_pieces = ?,
@@ -106,7 +159,8 @@ function registerBillHandlers(db) {
         total_after_discount = ?,
         payment_mode = ?
       WHERE id = ?
-    `).run(
+    `,
+    ).run(
       bill.customerId || null,
       bill.totalPieces,
       bill.totalBeforeDiscount,
@@ -114,10 +168,10 @@ function registerBillHandlers(db) {
       bill.discountAmount,
       bill.totalAfterDiscount,
       bill.payment_mode || "",
-      billId
+      billId,
     );
 
-    // Replace bill items
+    // 3️⃣ Replace bill items
     db.prepare(`DELETE FROM bill_items WHERE bill_id = ?`).run(billId);
 
     const itemStmt = db.prepare(`
@@ -141,9 +195,12 @@ function registerBillHandlers(db) {
         item.price,
         item.size || "",
         item.quantity,
-        item.totalAmount
+        item.totalAmount,
       );
     }
+
+    // 4️⃣ Reduce stock for new items
+    adjustStock(db, items, "reduce");
   });
 
   ipcMain.handle("db:updateBill", (e, billId, bill, items) => {
@@ -156,63 +213,15 @@ function registerBillHandlers(db) {
     }
   });
 
-  /* ======================================================
-     GET ALL BILLS (WITH CUSTOMER)
-  ====================================================== */
-  ipcMain.handle("db:getBills", () => {
-    try {
-      const bills = db.prepare(`
-        SELECT 
-          b.*,
-          c.name AS customer_name,
-          c.phone AS customer_phone
-        FROM bills b
-        LEFT JOIN customers c ON c.id = b.customer_id
-        ORDER BY b.created_at DESC
-      `).all();
-
-      return { success: true, data: bills };
-    } catch (err) {
-      console.error("❌ db:getBills", err);
-      return { success: false, data: [] };
-    }
-  });
-
-  /* ======================================================
-     GET SINGLE BILL
-  ====================================================== */
-  ipcMain.handle("db:getBillById", (e, billId) => {
-    try {
-      const bill = db.prepare(`
-        SELECT 
-          b.*,
-          c.name AS customer_name,
-          c.phone AS customer_phone
-        FROM bills b
-        LEFT JOIN customers c ON c.id = b.customer_id
-        WHERE b.id = ?
-      `).get(billId);
-
-      if (!bill) {
-        return { success: true, bill: null, items: [] };
-      }
-
-      const items = db
-        .prepare(`SELECT * FROM bill_items WHERE bill_id = ?`)
-        .all(billId);
-
-      return { success: true, bill, items };
-    } catch (err) {
-      console.error("❌ db:getBillById", err);
-      return { success: false, bill: null, items: [] };
-    }
-  });
-
-  /* ======================================================
-     DELETE BILL
-  ====================================================== */
+  /* ----------------- DELETE BILL ----------------- */
   ipcMain.handle("db:deleteBill", (e, billId) => {
     try {
+      // Restore stock before deleting
+      const previousItems = db
+        .prepare(`SELECT * FROM bill_items WHERE bill_id = ?`)
+        .all(billId);
+      adjustStock(db, previousItems, "restore");
+
       db.prepare(`DELETE FROM bills WHERE id = ?`).run(billId);
       return { success: true };
     } catch (err) {
@@ -221,7 +230,7 @@ function registerBillHandlers(db) {
     }
   });
 
-  console.log("✅ Bill IPC handlers updated for new bills schema");
+  console.log("✅ Bill IPC handlers updated with stock adjustment");
 }
 
 module.exports = { registerBillHandlers };

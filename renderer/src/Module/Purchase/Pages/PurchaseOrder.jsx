@@ -7,7 +7,7 @@ import { getVendors } from "../../Vendor/Services/vendors";
 import {
   createPurchase,
   insertPurchaseItem,
-} from "../../Purchase/Services/purchaseService";
+} from "../Services/purchaseService";
 import { useStateContext } from "../../../context/StateContext";
 import {
   RESET_PURCHASE,
@@ -19,8 +19,9 @@ import AddItemForm from "../../Items/Components/AddItemForm";
 import ViewAllItems from "../../Items/Components/ViewAllItems";
 import { FaArrowLeft } from "react-icons/fa6";
 import Modal from "../../../components/ReuseComponents/Modal";
+import PurchasesListTable from "../Components/PurchaseListTable";
 
-/* ----   PURCHASE ORDER (PAGE) ------- */
+/* ---- PURCHASE ORDER PAGE ---- */
 const PurchaseOrder = () => {
   const [activePage, setActivePage] = useState("LIST");
   const { dispatch } = useStateContext();
@@ -28,11 +29,12 @@ const PurchaseOrder = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Purchase Order</h1>
-        <p className="text-sm text-gray-600">
+        <h1 className="text-xl font-bold text-gray-900">Purchase Management</h1>
+        <p className="text-sm text-gray-600 italic">
           Manage and track purchase orders with complete control.
         </p>
       </div>
+
       {activePage === "SUMMARY" && (
         <p
           className="flex gap-2 ml-2 cursor-pointer bg-white border hover:bg-slate-200 w-fit px-3 py-1 rounded-lg hover:scale-105 transition-shadow"
@@ -41,15 +43,21 @@ const PurchaseOrder = () => {
           <FaArrowLeft /> Back
         </p>
       )}
+
       {activePage === "LIST" && (
         <div className="bg-white rounded-xl border shadow-sm p-6">
-          <Button
-            buttonName="+ New Purchase Order"
-            onClick={() => {
-              setActivePage("SUMMARY");
-              dispatch({ type: RESET_PURCHASE });
-            }}
-          />
+          <div className="flex justify-between items-center mb-2 p-4">
+            <h2 className="text-xl font-semibold ">Purchases</h2>
+            <Button
+              buttonName="+ New Purchase Order"
+              classname=""
+              onClick={() => {
+                setActivePage("SUMMARY");
+                dispatch({ type: RESET_PURCHASE });
+              }}
+            />
+          </div>
+          <PurchasesListTable />
         </div>
       )}
 
@@ -60,7 +68,7 @@ const PurchaseOrder = () => {
 
 export default PurchaseOrder;
 
-/* ------ PURCHASE ORDER DETAILS --------- */
+/* ----- PURCHASE ORDER DETAILS ----- */
 const PurchaseOrderSummary = () => {
   const [purchaseDate, setPurchaseDate] = useState("");
   const [remarks, setRemarks] = useState("");
@@ -192,9 +200,7 @@ const PurchaseOrderSummary = () => {
       {purchaseId && items.length > 0 && (
         <ViewAllItems
           items={items}
-          onEdit={(index) => {
-            console.log("Edit item at index:", index);
-          }}
+          onEdit={(index) => console.log("Edit item at index:", index)}
           mode="PURCHASE"
           reload={async () => {
             const res = await insertPurchaseItem({
@@ -227,7 +233,7 @@ const PurchaseOrderSummary = () => {
   );
 };
 
-/* -----   ADD PURCHASE ITEMS ------- */
+/* ----- ADD PURCHASE ITEMS ----- */
 const AddPurchaseOrderItem = ({
   purchaseId,
   vendorId,
@@ -242,8 +248,8 @@ const AddPurchaseOrderItem = ({
     }
     toast.success("Item added to purchase");
     onItemAdded(res.data);
-    console.log(res.data, "Added Item");
   };
+
   const formattedDate = purchaseDate
     ? new Date(purchaseDate).toISOString().slice(0, 10)
     : "";
@@ -257,7 +263,7 @@ const AddPurchaseOrderItem = ({
         mode="PURCHASE"
         purchaseId={purchaseId}
         vendorId={vendorId}
-        purchaseDate={formattedDate} // <-- this works if prop name matches
+        purchaseDate={formattedDate}
         onSave={handleSave}
       />
     </div>

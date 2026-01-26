@@ -72,20 +72,23 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
         <div className="mt-4">
           <Select
             options={AllItems.map((i) => ({
-              label: i.itemName,
-              value: i.itemName,
+              label: `${i.itemID} - ${i.itemName}`, // 👈 show both
+              value: i.itemID, // 👈 use ID as value (best practice)
             }))}
             value={
-              item.itemName
-                ? { label: item.itemName, value: item.itemName }
+              item.itemCode
+                ? {
+                    label: `${item.itemCode} - ${item.itemName}`,
+                    value: item.itemCode,
+                  }
                 : null
             }
             className="text-sm rounded-full"
             onChange={(selected) => {
               const selectedItem = AllItems.find(
-                (i) => i.itemName === selected.value
+                (i) => i.itemID === selected.value,
               );
-              console.log(selectedItem);
+
               setItem({
                 ...item,
                 itemCode: selectedItem.itemID || "",
@@ -116,14 +119,14 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
               <Select
                 className="text-sm"
                 options={AllItems.find(
-                  (i) => i.itemName === item.itemName
+                  (i) => i.itemName === item.itemName,
                 ).variants.map((v) => ({ label: v.size, value: v.size }))}
                 value={
                   item.size ? { label: item.size, value: item.size } : null
                 }
                 onChange={(selected) => {
                   const selectedSize = AllItems.find(
-                    (i) => i.itemName === item.itemName
+                    (i) => i.itemName === item.itemName,
                   ).variants.find((v) => v.size === selected.value);
                   setItem({
                     ...item,
