@@ -4,4 +4,8 @@ export const initialState = {
     billing: {},
     other: {},
   },
+  purchase: {
+    currentPurchaseID: null,
+    items: [],
+  },
 };

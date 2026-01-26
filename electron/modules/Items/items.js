@@ -1,13 +1,14 @@
 const { ipcMain } = require("electron");
 
 function registerItemHandlers(db) {
-
   /** -----------------------
    * GET ALL ITEMS
    * ----------------------- */
   ipcMain.handle("db:getItems", () => {
     try {
-      const rows = db.prepare(`
+      const rows = db
+        .prepare(
+          `
         SELECT 
           i.*, 
           v.vendorName, 
@@ -19,7 +20,9 @@ function registerItemHandlers(db) {
         LEFT JOIN vendors v ON i.vendorId = v.id
         LEFT JOIN item_variants iv ON i.itemID = iv.itemID
         ORDER BY i.itemName
-      `).all();
+      `,
+        )
+        .all();
 
       const itemsMap = new Map();
       for (const row of rows) {
@@ -27,7 +30,7 @@ function registerItemHandlers(db) {
           itemsMap.set(row.itemID, {
             ...row,
             hasVariants: Boolean(row.hasVariants),
-            variants: []
+            variants: [],
           });
         }
 
@@ -36,7 +39,7 @@ function registerItemHandlers(db) {
             id: row.variantId,
             size: row.variantSize,
             sellingPrice: row.variantSellingPrice,
-            purchaseId: row.variantPurchaseId
+            purchaseId: row.variantPurchaseId,
           });
         }
       }
@@ -96,7 +99,7 @@ function registerItemHandlers(db) {
           itemsMap.set(row.itemID, {
             ...row,
             hasVariants: Boolean(row.hasVariants),
-            variants: []
+            variants: [],
           });
         }
 
@@ -105,7 +108,7 @@ function registerItemHandlers(db) {
             id: row.variantId,
             size: row.variantSize,
             sellingPrice: row.variantSellingPrice,
-            purchaseId: row.variantPurchaseId
+            purchaseId: row.variantPurchaseId,
           });
         }
       }
@@ -120,11 +123,13 @@ function registerItemHandlers(db) {
    * INSERT ITEM
    * ----------------------- */
   const insertItemTx = db.transaction((item) => {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO items 
       (itemID, itemName, unit, purchaseRate, purchaseDate, sellingPrice, vendorId, purchaseId, hasVariants)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
+    `,
+    ).run(
       item.itemID,
       item.itemName,
       item.unit,
@@ -133,7 +138,7 @@ function registerItemHandlers(db) {
       item.hasVariants ? null : item.sellingPrice,
       item.vendorId !== undefined ? parseInt(item.vendorId, 10) : null,
       item.purchaseId !== undefined ? item.purchaseId : null,
-      item.hasVariants ? 1 : 0
+      item.hasVariants ? 1 : 0,
     );
 
     if (item.hasVariants && Array.isArray(item.variants)) {
@@ -149,11 +154,17 @@ function registerItemHandlers(db) {
 
   ipcMain.handle("db:insertItem", (e, item) => {
     try {
-      const exists = db.prepare("SELECT 1 FROM items WHERE itemID = ?").get(item.itemID);
+      const exists = db
+        .prepare("SELECT 1 FROM items WHERE itemID = ?")
+        .get(item.itemID);
       if (exists) return { success: false, error: "ITEM_ID_EXISTS" };
-
+      const itemList = db.prepare("SELECT * FROM items").all();
       insertItemTx(item);
-      return { success: true, message: "Item added successfully" };
+      return {
+        success: true,
+        message: "Item added successfully",
+        data: itemList,
+      };
     } catch (err) {
       return { success: false, code: "DB_ERROR", error: err.message };
     }
@@ -163,16 +174,19 @@ function registerItemHandlers(db) {
    * UPDATE ITEM
    * ----------------------- */
   const updateItemTx = db.transaction((item) => {
-    const vendorId = item.vendorId !== undefined && item.vendorId !== null
-      ? parseInt(item.vendorId, 10)
-      : null;
+    const vendorId =
+      item.vendorId !== undefined && item.vendorId !== null
+        ? parseInt(item.vendorId, 10)
+        : null;
 
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE items
       SET itemName = ?, unit = ?, purchaseRate = ?, purchaseDate = ?,
           sellingPrice = ?, vendorId = ?, purchaseId = ?, hasVariants = ?
       WHERE itemID = ?
-    `).run(
+    `,
+    ).run(
       item.itemName,
       item.unit,
       item.purchaseRate,
@@ -181,7 +195,7 @@ function registerItemHandlers(db) {
       vendorId ? vendorId : null,
       item.purchaseId !== undefined ? item.purchaseId : null,
       item.hasVariants ? 1 : 0,
-      item.itemID
+      item.itemID,
     );
 
     db.prepare(`DELETE FROM item_variants WHERE itemID = ?`).run(item.itemID);
@@ -199,7 +213,9 @@ function registerItemHandlers(db) {
 
   ipcMain.handle("db:updateItem", (e, item) => {
     try {
-      const exists = db.prepare("SELECT 1 FROM items WHERE itemID = ?").get(item.itemID);
+      const exists = db
+        .prepare("SELECT 1 FROM items WHERE itemID = ?")
+        .get(item.itemID);
       if (!exists) return { success: false, error: "ITEM_NOT_FOUND" };
 
       updateItemTx(item);
@@ -220,7 +236,6 @@ function registerItemHandlers(db) {
       return { success: false, code: "DB_ERROR", error: err.message };
     }
   });
-
 }
 
 module.exports = { registerItemHandlers };

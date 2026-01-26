@@ -44,16 +44,19 @@ contextBridge.exposeInMainWorld("api", {
   filterVendors: (filters) => ipcRenderer.invoke("db:filterVendors", filters),
 
   /* ----------------- Purchases ----------------- */
-  createPurchase: (purchase, items) =>
-    ipcRenderer.invoke("db:createPurchase", purchase, items),
-  updatePurchase: (purchaseId, purchase, items) =>
-    ipcRenderer.invoke("db:updatePurchase", purchaseId, purchase, items),
-  deletePurchase: (purchaseId) =>
-    ipcRenderer.invoke("db:deletePurchase", purchaseId),
-  getPurchases: () => ipcRenderer.invoke("db:getPurchases"),
+  createPurchase: (purchase) =>
+    ipcRenderer.invoke("db:createPurchase", purchase),
+  getPurchaseList: () => ipcRenderer.invoke("db:getPurchaseList"),
   getPurchaseById: (purchaseId) =>
     ipcRenderer.invoke("db:getPurchaseById", purchaseId),
 
+  updatePurchase: (purchase) =>
+    ipcRenderer.invoke("db:updatePurchase", purchase),
+
+  deletePurchase: (purchaseId) =>
+    ipcRenderer.invoke("db:deletePurchase", purchaseId),
+  insertPurchaseItem: (purchase) =>
+    ipcRenderer.invoke("db:insertPurchaseItem", purchase),
   /* ----------------- Discounts ----------------- */
   getDiscounts: () => ipcRenderer.invoke("db:getDiscounts"),
   getDiscountById: (discountId) =>

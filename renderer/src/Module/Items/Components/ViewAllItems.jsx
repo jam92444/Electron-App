@@ -5,7 +5,7 @@ import { deleteItem } from "../Services/items";
 import { useState } from "react";
 import { FaPen, FaTrashCan } from "react-icons/fa6";
 
-const ViewAllItems = ({ items, onEdit, reload }) => {
+const ViewAllItems = ({ items, onEdit, reload, mode = "MASTER" }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItemIndex, setSelectedItemIndex] = useState(null);
 
@@ -23,7 +23,9 @@ const ViewAllItems = ({ items, onEdit, reload }) => {
       dataIndex: "itemID",
       key: "itemID",
       sorter: (a, b) => a.itemID.localeCompare(b.itemID),
-      render: (text) => <span className="font-medium text-gray-700">{text}</span>,
+      render: (text) => (
+        <span className="font-medium text-gray-700">{text}</span>
+      ),
     },
     {
       title: "Item Name",
@@ -42,15 +44,21 @@ const ViewAllItems = ({ items, onEdit, reload }) => {
       title: "Purchase Price",
       dataIndex: "purchaseRate",
       key: "purchaseRate",
-      render: (price) => <span className="text-green-600 font-semibold">₹{price}</span>,
+      render: (price) => (
+        <span className="text-green-600 font-semibold">₹{price}</span>
+      ),
       sorter: (a, b) => a.purchaseRate - b.purchaseRate,
     },
-    {
-      title: "Vendor",
-      dataIndex: "vendorName",
-      key: "vendorName",
-      render: (text) => <span className="text-gray-700">{text}</span>,
-    },
+    ...(mode === "MASTER"
+      ? [
+          {
+            title: "Vendor",
+            dataIndex: "vendorName",
+            key: "vendorName",
+            render: (text) => <span className="text-gray-700">{text}</span>,
+          },
+        ]
+      : []),
     {
       title: "Purchase Date",
       dataIndex: "purchaseDate",
@@ -63,10 +71,10 @@ const ViewAllItems = ({ items, onEdit, reload }) => {
       render: (_, record) =>
         record.hasVariants ? (
           <div className="flex flex-wrap gap-2">
-            {record.variants.map((v, id) => (
+            {record.variants.map((v) => (
               <Tag
                 color="blue"
-                key={id}
+                key={v.id}
                 className="px-3 py-1 rounded-lg font-medium shadow-sm"
               >
                 {v.size} – ₹{v.sellingPrice}
@@ -74,7 +82,10 @@ const ViewAllItems = ({ items, onEdit, reload }) => {
             ))}
           </div>
         ) : (
-          <Tag color="green" className="px-3 py-1 rounded-lg font-medium shadow-sm">
+          <Tag
+            color="green"
+            className="px-3 py-1 rounded-lg font-medium shadow-sm"
+          >
             ₹{record.sellingPrice}
           </Tag>
         ),
@@ -109,7 +120,9 @@ const ViewAllItems = ({ items, onEdit, reload }) => {
 
   return (
     <div className="p-4 sm:p-6 rounded-2xl shadow-xl border border-gray-200 bg-white mt-8">
-      <h2 className="text-lg font-bold text-gray-800 mb-5 border-b pb-2">All Items</h2>
+      <h2 className="text-lg font-bold text-gray-800 mb-5 border-b pb-2">
+        All Items
+      </h2>
 
       <Table
         columns={columns}
@@ -146,7 +159,7 @@ const ViewAllItems = ({ items, onEdit, reload }) => {
                 }}
               />
               <Button
-                buttonName="Delete" 
+                buttonName="Delete"
                 buttonType="save"
                 onClick={handleDelete}
               />

@@ -1,10 +1,15 @@
+import { HomeIcon } from "@heroicons/react/24/outline";
 import {
-  HomeIcon,
-  UserCircleIcon,
-  Squares2X2Icon,
-} from "@heroicons/react/24/outline";
-import { HiOutlineDatabase, HiOutlineTag } from "react-icons/hi";
-import { IoPeopleOutline, IoSettingsOutline, IoStorefrontOutline } from "react-icons/io5";
+  HiOutlineDatabase,
+  HiOutlineShoppingCart,
+  HiOutlineTag,
+} from "react-icons/hi";
+import {
+  IoPeopleOutline,
+  IoReceiptOutline,
+  IoSettingsOutline,
+  IoStorefrontOutline,
+} from "react-icons/io5";
 
 export const menuItems = [
   {
@@ -31,17 +36,25 @@ export const menuItems = [
   },
   {
     label: "Customer",
-    icon: <IoPeopleOutline  className="w-4 h-4" />,
-    children: [
-      { label: "Create Customer", path: "/customer" },
-    ],
+    icon: <IoPeopleOutline className="w-4 h-4" />,
+    children: [{ label: "Create Customer", path: "/customer" }],
   },
   {
     label: "Sales",
-    icon: <Squares2X2Icon className="w-4 h-4" />,
+    icon: <IoReceiptOutline className="w-4 h-4" />,
     children: [
       { label: "Generate Bill", path: "/billing/generate-bill" },
-      { label: "Sales Bill", path: "billing/sales-bill" },
+      { label: "Sales Bill", path: "/billing/sales-bill" },
+    ],
+  },
+  {
+    label: "Purchase",
+    icon: <HiOutlineShoppingCart className="w-4 h-4" />,
+    children: [
+      {
+        label: "Purchase Management",
+        path: "/purchaseorder",
+      },
     ],
   },
   {
@@ -49,7 +62,6 @@ export const menuItems = [
     icon: <HiOutlineTag className="w-4 h-4" />,
     children: [{ label: "Generate Label", path: "/label/generate-label" }],
   },
-
   {
     label: "Settings",
     icon: <IoSettingsOutline className="w-4 h-4" />,

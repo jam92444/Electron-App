@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import asset from "../Utils/asset";
 import { useEffect, useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { menuItems } from "../Utils/sidebarMenu";
 import { IoIosArrowDown } from "react-icons/io";
 
@@ -29,7 +29,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
           "translate-x-0": isOpen,
           "-translate-x-full": !isOpen,
           "lg:translate-x-0": true,
-        }
+        },
       )}
     >
       <div className="p-3 flex justify-between items-center mb-4">
@@ -53,7 +53,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
                       "flex items-center justify-between w-full cursor-pointer px-2.5 py-2 text-gray-800 rounded-lg hover:bg-orange-100 hover:text-white ",
                       {
                         "bg-orange-100 text-white": openMenu === item.label,
-                      }
+                      },
                     )}
                   >
                     <span className="flex items-center gap-2 text-sm">
@@ -105,20 +105,20 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
 };
 
 const AppLayout = () => {
-  const location = useLocation();
+  // const location = useLocation();
 
-  const getPageTitle = (pathname) => {
-    const pathToTitle = {
-      "/": "Dashboard",
-      "/setting": "Settings",
-      "/profile": "Profile",
-      // Add more routes as needed
-    };
+  // const getPageTitle = (pathname) => {
+  //   const pathToTitle = {
+  //     "/": "Dashboard",
+  //     "/setting": "Settings",
+  //     "/profile": "Profile",
+  //     // Add more routes as needed
+  //   };
 
-    return pathToTitle[pathname] || "Dashboard";
-  };
+  //   return pathToTitle[pathname] || "Dashboard";
+  // };
 
-  const pageTitle = getPageTitle(location.pathname);
+  // const pageTitle = getPageTitle(location.pathname);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   useEffect(() => {
@@ -142,9 +142,7 @@ const AppLayout = () => {
       {/* Main Content */}
       <div className="lg:ml-52 transition-all duration-300 p-4 relative z-30">
         <div className=" px-4 py-3 absolute top-0 left-0 w-full hidden lg:flex items-center justify-end select-none">
-          <p>search Bar</p>
           <div className="flex items-center bg-orange-100 border border-gray-200 rounded-full p-1.5 pe-3   w-fit float-end ">
-            
             <img
               className="ms-1.5 inline-block size-6 rounded-full"
               src="https://images.unsplash.com/photo-1531927557220-a9e23c1e4794?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80"

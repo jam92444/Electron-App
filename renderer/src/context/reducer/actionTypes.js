@@ -29,3 +29,8 @@ export const CLOSE_MODAL = "CLOSE_MODAL";
 // BILLING
 export const GET_BILL_DATA = "GET_BILL_DATA";
 export const SET_BILL_DATA = "SET_BILL_DATA";
+
+// PURCHASE
+export const SET_PURCHASE = "SET_PURCHASE";
+export const SET_PURCHASE_ITEMS = "SET_PURCHASE_ITEMS";
+export const RESET_PURCHASE = "RESET_PURCHASE";
