@@ -6,13 +6,13 @@ import {
 } from "../Services/purchaseService";
 import toast from "react-hot-toast";
 
-const PurchasesListTable = () => {
+const PurchasesListTable = ({ onView }) => {
   const [purchases, setPurchases] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const pageSize = 20;
-
+  // console.log(purchases, "Purchase list");
   const columns = [
     { key: "id", label: "ID" },
     { key: "purchaseDate", label: "Purchase Date" },
@@ -23,6 +23,18 @@ const PurchasesListTable = () => {
       label: "Total Amount",
       render: (val) => (
         <span className="font-medium text-gray-700">₹{val}</span>
+      ),
+    },
+    {
+      key: "actions", // ✅ UNIQUE KEY
+      label: "View Details",
+      render: (_, row) => (
+        <p
+          onClick={() => onView(row)}
+          className="font-medium text-blue-700 cursor-pointer underline"
+        >
+          View details
+        </p>
       ),
     },
   ];
@@ -55,10 +67,10 @@ const PurchasesListTable = () => {
     fetchPurchases();
   }, []);
 
-  const handleEdit = (index) => {
-    const purchase = purchases[index];
-    console.log("Edit purchase:", purchase);
-  };
+  // const handleEdit = (index) => {
+  //   const purchase = purchases[index];
+  //   // console.log("Edit purchase:", purchase);
+  // };
 
   const handleDelete = async (index) => {
     const purchase = purchases[index];
@@ -81,7 +93,7 @@ const PurchasesListTable = () => {
       <DataTable
         columns={columns}
         data={purchases}
-        onEdit={handleEdit}
+        // onEdit={handleEdit}
         onDelete={handleDelete}
       />
 

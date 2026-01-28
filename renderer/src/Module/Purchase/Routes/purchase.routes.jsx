@@ -1,7 +1,11 @@
 import { withSuspense } from "../../../Router/withSuspense";
-import PurchaseOrder from "../Pages/PurchaseOrder";
+import PurchaseCreate from "../Pages/PurchaseCreate";
+import PurchaseDashboard from "../Pages/PurchaseDashboard";
+import PurchaseView from "../Pages/PurchaseView";
 
 export const PurchaseRoutes = [
   // Masters
-  { path: "purchaseorder", element: withSuspense(<PurchaseOrder />) },
+  { path: "purchase", element: withSuspense(<PurchaseDashboard />) },
+  { path: "purchase/new", element: withSuspense(<PurchaseCreate />) },
+  { path: "purchase/:id", element: withSuspense(<PurchaseView />) },
 ];

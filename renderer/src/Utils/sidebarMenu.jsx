@@ -53,7 +53,7 @@ export const menuItems = [
     children: [
       {
         label: "Purchase Management",
-        path: "/purchaseorder",
+        path: "/purchase",
       },
     ],
   },

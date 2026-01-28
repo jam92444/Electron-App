@@ -19,6 +19,8 @@ const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
     setSelectedItemIndex(null);
   };
 
+  console.log(items, "items list");
+
   const columns = [
     {
       title: "Item ID",
@@ -79,7 +81,7 @@ const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
                 key={v.id}
                 className="px-3 py-1 rounded-lg font-medium shadow-sm"
               >
-                {v.size} – ₹{v.sellingPrice}
+                Size -{v.size} / ₹{v.sellingPrice} x {v.quantity} {record.unit}
               </Tag>
             ))}
           </div>
@@ -88,7 +90,7 @@ const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
             color="green"
             className="px-3 py-1 rounded-lg font-medium shadow-sm"
           >
-            ₹{record.sellingPrice}
+            ₹{record.sellingPrice} x {record.quantity} {record.unit}
           </Tag>
         ),
     },

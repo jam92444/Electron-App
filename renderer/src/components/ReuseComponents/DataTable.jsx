@@ -31,7 +31,7 @@ const DataTable = ({
               {data.map((row, i) => (
                 <tr
                   key={row.id ?? i}
-                  className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                  className="border-b border-gray-200 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <td className="p-2 text-start">
                     <div className="flex pl-3 gap-4">
