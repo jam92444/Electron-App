@@ -6,6 +6,7 @@ const DataTable = ({
   onEdit,
   onDelete,
   emptyMessage = "No records found.",
+  action = true,
 }) => {
   return (
     <div>
@@ -16,9 +17,11 @@ const DataTable = ({
           <table className="min-w-[400px] w-fit sm:w-full text-sm border-collapse">
             <thead className="bg-orange-100 text-white">
               <tr>
-                <th className="p-2 pl-4 text-left whitespace-nowrap">
-                  Actions
-                </th>
+                {action && (
+                  <th className="p-2 pl-4 text-left whitespace-nowrap">
+                    Actions
+                  </th>
+                )}
                 {columns.map((col) => (
                   <th key={col.key} className="p-2 text-left whitespace-nowrap">
                     {col.label}
@@ -33,28 +36,30 @@ const DataTable = ({
                   key={row.id ?? i}
                   className="border-b border-gray-200 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                 >
-                  <td className="p-2 text-start">
-                    <div className="flex pl-3 gap-4">
-                      {onEdit && (
-                        <button
-                          onClick={() => onEdit(i)}
-                          className="text-blue-500 hover:text-blue-700"
-                          title="Edit"
-                        >
-                          <FaPen />
-                        </button>
-                      )}
-                      {onDelete && (
-                        <button
-                          onClick={() => onDelete(i)}
-                          className="text-red-500 hover:text-red-700"
-                          title="Delete"
-                        >
-                          <FaTrashCan />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                  {action && (
+                    <td className="p-2 text-start">
+                      <div className="flex pl-3 gap-4">
+                        {onEdit && (
+                          <button
+                            onClick={() => onEdit(i)}
+                            className="text-blue-500 hover:text-blue-700"
+                            title="Edit"
+                          >
+                            <FaPen />
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={() => onDelete(i)}
+                            className="text-red-500 hover:text-red-700"
+                            title="Delete"
+                          >
+                            <FaTrashCan />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
 
                   {columns.map((col) => {
                     const value = row[col.key];

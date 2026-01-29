@@ -204,7 +204,7 @@ const AddItemForm = ({
       <form onSubmit={handleFormSubmit}>
         <h2 className="text-lg font-semibold mb-4">Item Details</h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Input
             label="Item ID"
             value={item.itemID}
@@ -226,15 +226,6 @@ const AddItemForm = ({
             placeholder="Select Unit"
             isClearable
           />
-          {!hasVariants && (
-            <Input
-              label="Quantity"
-              type="number"
-              value={item.quantity}
-              onChange={(e) => handleFieldChange("quantity", e.target.value)}
-              error={errors.quantity}
-            />
-          )}
         </div>
 
         <h2 className="text-lg font-semibold mt-6 mb-4">Purchase Details</h2>
@@ -280,6 +271,8 @@ const AddItemForm = ({
                 <Select
                   value={sizeOptions.find((o) => o.value === v.size) || null}
                   options={sizeOptions}
+                  placeholder="Select Size"
+                  className="mt-4"
                   onChange={(s) =>
                     handleVariantChange(i, "size", s?.value || "")
                   }
@@ -302,7 +295,11 @@ const AddItemForm = ({
                   }
                   error={errors.variants?.[i]?.quantity}
                 />
-                <button type="button" onClick={() => removeVariant(i)}>
+                <button
+                  type="button"
+                  className="bg-red-500 w-fit px-3 mt-4 rounded-full hover:bg-red-300 transition-all "
+                  onClick={() => removeVariant(i)}
+                >
                   <FaTrashCan />
                 </button>
               </div>
@@ -314,18 +311,29 @@ const AddItemForm = ({
             />
           </div>
         )}
-
-        {!hasVariants && (
-          <Input
-            label="Selling Price"
-            type="number"
-            value={item.sellingPrice}
-            onChange={(e) => handleFieldChange("sellingPrice", e.target.value)}
-            error={errors.sellingPrice}
-            classname="max-w-sm mt-4"
-          />
-        )}
-
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {!hasVariants && (
+            <Input
+              label="Quantity"
+              type="number"
+              value={item.quantity}
+              onChange={(e) => handleFieldChange("quantity", e.target.value)}
+              error={errors.quantity}
+            />
+          )}
+          {!hasVariants && (
+            <Input
+              label="Selling Price"
+              type="number"
+              value={item.sellingPrice}
+              onChange={(e) =>
+                handleFieldChange("sellingPrice", e.target.value)
+              }
+              error={errors.sellingPrice}
+              classname="max-w-sm"
+            />
+          )}
+        </div>
         <div className="mt-6 flex justify-end gap-3">
           <Button
             buttonName="Cancel"

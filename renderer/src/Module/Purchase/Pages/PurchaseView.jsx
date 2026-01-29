@@ -30,10 +30,10 @@ const PurchaseView = () => {
         <h2 className="text-lg font-semibold mb-3">Purchase Summary</h2>
 
         <div className="grid sm:grid-cols-4 gap-4 text-sm">
-          <div>
+          {/* <div>
             <p className="text-gray-500">ID</p>
             <p>{purchase.purchase.id}</p>
-          </div>
+          </div> */}
           <div>
             <p className="text-gray-500">Date</p>
             <p>{purchase.purchase.purchaseDate}</p>

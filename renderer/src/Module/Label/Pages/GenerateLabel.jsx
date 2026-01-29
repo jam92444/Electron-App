@@ -3,6 +3,8 @@ import DataTable from "../../../components/ReuseComponents/DataTable";
 import toast from "react-hot-toast";
 import { getPurchaseListCursor } from "../../Purchase/Services/purchaseService";
 import { getItemsByPurchaseIds } from "../Services/labelServices";
+import { Tag } from "antd";
+import Button from "../../../components/ReuseComponents/Button";
 
 const GenerateLabel = () => {
   const [purchases, setPurchases] = useState([]);
@@ -27,9 +29,37 @@ const GenerateLabel = () => {
   const itemColumns = [
     { key: "itemID", label: "Item ID" },
     { key: "itemName", label: "Item Name" },
-    { key: "size", label: "Size" },
-    { key: "quantity", label: "Quantity" },
-    { key: "sellingPrice", label: "Selling Price", render: (val) => `₹${val}` },
+    {
+      label: "Unit",
+      dataIndex: "unit",
+      key: "unit",
+      render: (text) => <span className="capitalize">{text}</span>,
+    },
+    {
+      label: "Variants / Selling Price",
+      key: "variants",
+      render: (_, record) =>
+        record.hasVariants ? (
+          <div className="flex flex-wrap gap-2 ">
+            {(record.variants || []).map((v) => (
+              <Tag
+                color="blue"
+                key={v.id}
+                className="px-3 py-1 rounded-lg font-medium shadow-sm"
+              >
+                Size -{v.size} / ₹{v.sellingPrice} x {v.quantity} {record.unit}
+              </Tag>
+            ))}
+          </div>
+        ) : (
+          <Tag
+            color="green"
+            className="px-3 py-1 rounded-lg font-medium shadow-sm"
+          >
+            ₹{record.sellingPrice} x {record.quantity} {record.unit}
+          </Tag>
+        ),
+    },
   ];
 
   // --- Fetch purchases (cursor-based) ---
@@ -80,12 +110,28 @@ const GenerateLabel = () => {
 
       if (res.success) {
         setItems(res.data);
+        console.log(res.data);
       } else {
         toast.error(res.error || "Failed to fetch items");
       }
     } catch (err) {
       console.error(err);
       toast.error("API call failed");
+    }
+  };
+
+  const PrintLabel = (items) => {
+    try {
+      console.log("Printing Item List", items);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const DownloadLabel = (items) => {
+    try {
+      console.log("DownloadLabel Item List", items);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -165,7 +211,19 @@ const GenerateLabel = () => {
       {items.length > 0 && (
         <div className="bg-white rounded-xl border shadow-sm p-6 space-y-4">
           <h2 className="font-semibold text-lg">Selected Items</h2>
-          <DataTable columns={itemColumns} data={items} />
+          <DataTable columns={itemColumns} data={items} action={false} />
+          <div className="flex gap-2 items-center justify-end">
+            <Button
+              buttonName={"Print Label"}
+              buttonType="save"
+              onClick={() => PrintLabel(items)}
+            />
+            <Button
+              buttonName={"Download Label"}
+              buttonType="save"
+              onClick={() => DownloadLabel(items)}
+            />
+          </div>
         </div>
       )}
     </div>

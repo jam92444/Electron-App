@@ -106,28 +106,74 @@ function registerPurchaseHandlers(db) {
 
   ipcMain.handle("db:insertPurchaseItem", (e, item) => {
     try {
-      if (item.fetchOnly) {
-        const list = db
-          .prepare("SELECT * FROM items WHERE purchaseID = ?")
-          .all(item.purchaseId);
+      const purchaseId = item.purchaseId;
 
-        return { success: true, data: list };
+      const SQL = `
+      SELECT
+        i.*,
+        v.vendorName,
+        iv.id AS variantId,
+        iv.size AS variantSize,
+        iv.sellingPrice AS variantSellingPrice,
+        iv.quantity AS variantQuantity,
+        iv.purchaseId AS variantPurchaseId
+      FROM items i
+      LEFT JOIN vendors v ON i.vendorId = v.id
+      LEFT JOIN item_variants iv ON i.itemID = iv.itemID
+      WHERE i.purchaseID = ?
+      ORDER BY i.itemName
+    `;
+
+      const fetchPurchaseItems = (purchaseId) => {
+        const rows = db.prepare(SQL).all(purchaseId);
+        const itemsMap = new Map();
+
+        for (const row of rows) {
+          if (!itemsMap.has(row.itemID)) {
+            itemsMap.set(row.itemID, {
+              ...row,
+              hasVariants: row.hasVariants === 1,
+              variants: [],
+            });
+          }
+
+          if (row.variantId) {
+            itemsMap.get(row.itemID).variants.push({
+              id: row.variantId,
+              size: row.variantSize,
+              sellingPrice: row.variantSellingPrice,
+              quantity: row.variantQuantity || 0,
+            });
+          }
+        }
+
+        return Array.from(itemsMap.values());
+      };
+
+      // FETCH ONLY
+      if (item.fetchOnly) {
+        const data = fetchPurchaseItems(purchaseId);
+        return { success: true, data };
       }
 
+      // CHECK ITEM EXISTS
       const exists = db
         .prepare("SELECT 1 FROM items WHERE itemID = ?")
         .get(item.itemID);
 
-      if (exists) return { success: false, error: "ITEM_ID_EXISTS" };
+      if (exists) {
+        return { success: false, error: "ITEM_ID_EXISTS" };
+      }
 
+      // INSERT ITEM (transaction assumed)
       insertItemTx(item);
 
-      const purchaseItemList = db
-        .prepare("SELECT * FROM items WHERE purchaseID = ?")
-        .all(item.purchaseId);
+      // FETCH UPDATED LIST
+      const data = fetchPurchaseItems(purchaseId);
 
-      return { success: true, data: purchaseItemList };
+      return { success: true, data };
     } catch (err) {
+      console.error(err);
       return { success: false, error: err.message };
     }
   });
@@ -363,24 +409,57 @@ function registerPurchaseHandlers(db) {
    * ----------------------- */
   ipcMain.handle("db:getItemsByPurchaseIds", (e, { purchaseIds }) => {
     try {
-      if (!purchaseIds || !purchaseIds.length)
+      if (!purchaseIds || !purchaseIds.length) {
         return { success: true, data: [] };
+      }
 
-      // Convert to placeholders for SQL query
       const placeholders = purchaseIds.map(() => "?").join(",");
 
-      const items = db
-        .prepare(
-          `
-        SELECT *
-        FROM items
-        WHERE purchaseId IN (${placeholders})
-      `,
-        )
-        .all(...purchaseIds);
+      const SQL = `
+      SELECT
+        i.*,
+        v.vendorName,
+        iv.id AS variantId,
+        iv.size AS variantSize,
+        iv.sellingPrice AS variantSellingPrice,
+        iv.quantity AS variantQuantity,
+        iv.purchaseId AS variantPurchaseId
+      FROM items i
+      LEFT JOIN vendors v ON i.vendorId = v.id
+      LEFT JOIN item_variants iv ON i.itemID = iv.itemID
+      WHERE i.purchaseId IN (${placeholders})
+      ORDER BY i.itemName
+    `;
 
-      return { success: true, data: items };
+      const rows = db.prepare(SQL).all(...purchaseIds);
+
+      const itemsMap = new Map();
+
+      for (const row of rows) {
+        if (!itemsMap.has(row.itemID)) {
+          itemsMap.set(row.itemID, {
+            ...row,
+            hasVariants: row.hasVariants === 1,
+            variants: [],
+          });
+        }
+
+        if (row.variantId) {
+          itemsMap.get(row.itemID).variants.push({
+            id: row.variantId,
+            size: row.variantSize,
+            sellingPrice: row.variantSellingPrice,
+            quantity: row.variantQuantity || 0,
+          });
+        }
+      }
+
+      return {
+        success: true,
+        data: Array.from(itemsMap.values()),
+      };
     } catch (err) {
+      console.error(err);
       return { success: false, error: err.message };
     }
   });

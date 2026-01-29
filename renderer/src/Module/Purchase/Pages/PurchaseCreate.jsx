@@ -48,6 +48,7 @@ const PurchaseCreate = () => {
   };
 
   const handleItemAdded = async (payload) => {
+    console.log("Items Payload", payload);
     const res = await insertPurchaseItem(payload);
     if (!res?.success) return;
 

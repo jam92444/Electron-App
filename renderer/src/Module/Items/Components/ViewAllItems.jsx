@@ -19,8 +19,6 @@ const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
     setSelectedItemIndex(null);
   };
 
-  console.log(items, "items list");
-
   const columns = [
     {
       title: "Item ID",
@@ -74,7 +72,7 @@ const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
       key: "variants",
       render: (_, record) =>
         record.hasVariants ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 ">
             {(record.variants || []).map((v) => (
               <Tag
                 color="blue"
@@ -99,16 +97,22 @@ const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
       key: "actions",
       render: (_, record, index) => (
         <Space size="middle">
-          <button onClick={() => onEdit(index)}>
-            <FaPen className="text-blue-600 hover:text-blue-800" />
+          <button
+            onClick={() => onEdit(index)}
+            className="cursor-not-allowed"
+            disabled={true}
+          >
+            <FaPen className="text-gray-300 hover:text-blue-800" />
           </button>
           <button
             onClick={() => {
               setSelectedItemIndex(index);
               setIsModalOpen(true);
             }}
+            className="cursor-not-allowed"
+            disabled={true}
           >
-            <FaTrashCan className="text-red-600 hover:text-red-800" />
+            <FaTrashCan className="text-gray-300 hover:text-red-800" />
           </button>
         </Space>
       ),
