@@ -1,11 +1,13 @@
 import { withSuspense } from "../../../Router/withSuspense";
-import PurchaseCreate from "../Pages/PurchaseCreate";
-import PurchaseDashboard from "../Pages/PurchaseDashboard";
-import PurchaseView from "../Pages/PurchaseView";
+import {
+  PurchaseCreate,
+  PurchaseDashBoard,
+  PurchaseView,
+} from "./purchase.lazy";
 
 export const PurchaseRoutes = [
   // Masters
-  { path: "purchase", element: withSuspense(<PurchaseDashboard />) },
+  { path: "purchase", element: withSuspense(<PurchaseDashBoard />) },
   { path: "purchase/new", element: withSuspense(<PurchaseCreate />) },
   { path: "purchase/:id", element: withSuspense(<PurchaseView />) },
 ];

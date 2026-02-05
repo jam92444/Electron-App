@@ -3,9 +3,9 @@ import Button from "../../../components/ReuseComponents/Button";
 import { units } from "../../../Utils/data";
 import Modal from "../../../components/ReuseComponents/Modal";
 import { getItems, insertItem, updateItem } from "../Services/items";
-import AddItemForm from "../Components/AddItemForm";
-import ViewAllItems from "../Components/ViewAllItems";
 import toast from "react-hot-toast";
+import { AddItemForm } from "../Routers/items.lazyimports";
+import ViewAllItems from "../Components/ViewAllItems";
 
 /* ---------------------------------------------------------
    MAIN COMPONENT

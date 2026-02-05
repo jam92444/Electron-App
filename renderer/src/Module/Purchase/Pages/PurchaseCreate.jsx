@@ -91,10 +91,11 @@ const PurchaseCreate = () => {
               label="Remarks"
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
-            />
+            />  
           </div>
 
           <Button buttonName="Save & Continue" onClick={handleCreatePurchase} />
+          <Button buttonName="Cancel" buttonType="cancel" onClick={()=>navigate('/purchase')} />
         </div>
       )}
 

@@ -28,22 +28,19 @@ contextBridge.exposeInMainWorld("api", {
   /* ----------------- Customers ----------------- */
   createCustomer: (customer) =>
     ipcRenderer.invoke("db:createCustomer", customer),
-
   getCustomers: () => ipcRenderer.invoke("db:getCustomers"),
-
   updateCustomer: (customer) =>
     ipcRenderer.invoke("db:updateCustomer", customer),
-
   deleteCustomer: (id) => ipcRenderer.invoke("db:deleteCustomer", id),
 
   /* ----------------- Vendors ----------------- */
   getVendors: () => ipcRenderer.invoke("db:getVendors"),
+  getNoOfVendorCount: () => ipcRenderer.invoke("db:getNoOfVendorCount"),
   insertVendor: (vendor) => ipcRenderer.invoke("db:insertVendor", vendor),
   updateVendor: (vendor) => ipcRenderer.invoke("db:updateVendor", vendor),
   deleteVendor: (vendorId) => ipcRenderer.invoke("db:deleteVendor", vendorId),
   filterVendors: (filters) => ipcRenderer.invoke("db:filterVendors", filters),
 
-  /* ----------------- Purchases ----------------- */
   /* ----------------- Purchases ----------------- */
   createPurchase: (purchase) =>
     ipcRenderer.invoke("db:createPurchase", purchase),
@@ -64,6 +61,29 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("db:insertPurchaseItem", item),
   getItemsByPurchaseIds: (purchaseIds) =>
     ipcRenderer.invoke("db:getItemsByPurchaseIds", { purchaseIds }),
+
+  /* ================= DASHBOARD ================= */
+
+  getDashboardSummary: () => ipcRenderer.invoke("db:getDashboardSummary"),
+
+  getPurchaseTrend: (days = 7) =>
+    ipcRenderer.invoke("db:getPurchaseTrend", days),
+
+  getTopVendors: () => ipcRenderer.invoke("db:getTopVendors"),
+
+  getRecentPurchases: () => ipcRenderer.invoke("db:getRecentPurchases"),
+
+  getLowStockItems: () => ipcRenderer.invoke("db:getLowStockItems"),
+
+  getVariantStockSummary: () => ipcRenderer.invoke("db:getVariantStockSummary"),
+
+  getMonthlyPurchaseSummary: () =>
+    ipcRenderer.invoke("db:getMonthlyPurchaseSummary"),
+
+  getVendorStatusStats: () => ipcRenderer.invoke("db:getVendorStatusStats"),
+
+  // One-call dashboard loader
+  getDashboardData: () => ipcRenderer.invoke("db:getDashboardData"),
 
   updatePurchaseItem: (
     item, // <-- NEW

@@ -9,6 +9,7 @@ const { registerPurchaseHandlers } = require("./modules/Purchase/Purchase");
 const { registerSettingsHandlers } = require("./modules/Settings/Setting");
 const { registerDiscountHandlers } = require("./modules/Discount/discount");
 const { registerCustomerHandlers } = require("./modules/Customer/customer");
+const { registerDashboardHandlers } = require("./modules/Purchase/Dashboard");
 
 let mainWindow;
 let db;
@@ -37,13 +38,21 @@ app.whenReady().then(() => {
 
   // 🔐 Register IPC handlers ONCE
   registerItemHandlers(db);
+  //  Size
   registerSizeHandlers(db);
+  //  Bill
   registerBillHandlers(db);
+  // Vendor
   registerVendorHandlers(db);
+  // Purchase
   registerPurchaseHandlers(db);
+  registerDashboardHandlers(db);
+  // Setting
   registerSettingsHandlers(db);
+  //  Discount
   registerDiscountHandlers(db);
-  registerCustomerHandlers(db); 
+  // Customer
+  registerCustomerHandlers(db);
   createWindow();
 });
 

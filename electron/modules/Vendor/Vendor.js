@@ -153,6 +153,30 @@ function registerVendorHandlers(db) {
       return { success: false, error: err.message };
     }
   });
+
+  ipcMain.handle("db.getNoOfVendorCount", async () => {
+    try {
+      const query = `
+      SELECT COUNT(*) AS totalVendor
+      FROM vendors
+    `;
+
+      const result = db.prepare(query).get();
+      const totalVendor = result?.totalVendor ?? 0;
+
+      return {
+        success: true,
+        data: totalVendor,
+      };
+    } catch (err) {
+      console.error("db.getNoOfVendorCount error:", err);
+
+      return {
+        success: false,
+        error: "Failed to fetch vendor count",
+      };
+    }
+  });
 }
 
 module.exports = { registerVendorHandlers };
