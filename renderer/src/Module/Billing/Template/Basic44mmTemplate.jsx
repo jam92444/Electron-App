@@ -1,5 +1,5 @@
 const Basic44mmTemplate = ({ billItems, billSummary, companyDetails }) => {
-  console.log("bill summary", billSummary);
+  // console.log("bill summary", billSummary);
   return (
     <div>
       {/* POS PRINT */}

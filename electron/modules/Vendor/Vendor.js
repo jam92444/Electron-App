@@ -177,6 +177,68 @@ function registerVendorHandlers(db) {
       };
     }
   });
+
+  // // Get top vendors
+  // ipcMain.handle("db:getTopVendors", () => {
+  //   try {
+  //     const vendors = db
+  //       .prepare(
+  //         `
+  //     SELECT
+  //       v.vendorName,
+  //       SUM(p.total_amount) AS totalPurchase
+  //     FROM vendors v
+  //     JOIN purchases p ON p.vendor_id = v.id
+  //     GROUP BY v.id
+  //     ORDER BY totalPurchase DESC
+  //     LIMIT 5
+  //   `,
+  //       )
+  //       .all();
+
+  //     return { success: true, data: vendors };
+  //   } catch (err) {
+  //     return { success: false };
+  //   }
+  // });
+
+  // Vendor Dashboard Data
+  ipcMain.handle("db:getVendorDashboard", () => {
+    try {
+      const summary = db
+        .prepare(
+          `
+      SELECT
+        COUNT(*) AS totalVendors,
+        SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) AS activeVendors,
+        SUM(CASE WHEN status = 'Inactive' THEN 1 ELSE 0 END) AS inactiveVendors,
+        SUM(CASE WHEN gstNumber IS NOT NULL THEN 1 ELSE 0 END) AS gstVendors
+      FROM vendors
+    `,
+        )
+        .get();
+
+      const byCity = db
+        .prepare(
+          `
+      SELECT city, COUNT(*) AS count
+      FROM vendors
+      GROUP BY city
+      ORDER BY count DESC
+      LIMIT 5
+    `,
+        )
+        .all();
+
+      return {
+        success: true,
+        summary,
+        byCity,
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
 }
 
 module.exports = { registerVendorHandlers };

@@ -12,7 +12,7 @@ const ViewAllDiscounts = ({ discounts, onEdit, reload }) => {
     setConfirmDelete(null);
     reload();
   };
-  console.log(discounts);
+  // console.log(discounts);
   return (
     <>
       <DataTable

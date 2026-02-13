@@ -1,78 +1,111 @@
 /* eslint-disable react-hooks/immutability */
-import { Space, Table, Tag } from "antd";
+import { Space, Table, Tag, Spin } from "antd";
 import { FaPen, FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
-import { deleteVendor, getVendors } from "../Services/vendors";
+import {
+  deleteVendor,
+  getVendors,
+  getVendorDashboard,
+} from "../Services/vendors";
 import { useEffect, useState } from "react";
 import Modal from "../../../components/ReuseComponents/Modal";
 import Button from "../../../components/ReuseComponents/Button";
 
 const ManageVendor = ({ reload }) => {
   const navigate = useNavigate();
+
+  const [vendors, setVendors] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
-  const [vendors, setVendors] = useState([]);
+
+  // Dashboard data
+  const [dashboard, setDashboard] = useState(null);
+
+  // Pagination
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+
+  /* ---------------- FETCH DATA ---------------- */
 
   useEffect(() => {
-    fetchVendors();
+    fetchDashboard();
+    fetchVendors(1, pagination.pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchVendors = async () => {
-    try {
-      const response = await getVendors();
-      if (response.success) {
-        setVendors(response.data);
-      }
-    } catch (err) {
-      console.error(err);
+  const fetchDashboard = async () => {
+    const res = await getVendorDashboard();
+    if (res?.success) {
+      setDashboard(res.summary);
     }
   };
 
+  const fetchVendors = async (page = 1, pageSize = 10) => {
+    try {
+      setLoading(true);
+      const response = await getVendors();
+
+      if (response.success) {
+        // client-side pagination fallback (upgrade later to DB pagination)
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+
+        setVendors(response.data.slice(start, end));
+        setPagination({
+          current: page,
+          pageSize,
+          total: response.data.length,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ---------------- DELETE ---------------- */
+
   const handleDelete = async () => {
     if (!selectedVendor) return;
+
     await deleteVendor(selectedVendor.id);
     setConfirmDelete(false);
     setSelectedVendor(null);
-    fetchVendors();
+
+    fetchDashboard();
+    fetchVendors(pagination.current, pagination.pageSize);
     reload?.();
   };
+
+  /* ---------------- TABLE COLUMNS ---------------- */
 
   const columns = [
     {
       title: "Vendor Name",
       dataIndex: "vendorName",
       fixed: "left",
-      width: 180,
+      width: 200,
     },
     { title: "Contact Person", dataIndex: "contactPerson", width: 160 },
-    { title: "Phone", dataIndex: "phone", width: 130 },
-    {
-      title: "WhatsApp",
-      dataIndex: "whatsapp",
-      width: 130,
-      render: (w) => w || "-",
-    },
+    { title: "Phone", dataIndex: "phone", width: 140 },
     {
       title: "Email",
       dataIndex: "email",
-      width: 200,
-      render: (email) => (
-        <span className="lowercase">{email?.toLowerCase() || "-"}</span>
-      ),
+      width: 220,
+      render: (email) => <span className="lowercase">{email || "-"}</span>,
     },
-    { title: "City", dataIndex: "city", width: 120 },
-    { title: "State", dataIndex: "state", width: 120 },
-    { title: "Country", dataIndex: "country", width: 100 },
+    { title: "City", dataIndex: "city", width: 130 },
+    { title: "State", dataIndex: "state", width: 130 },
     {
-      title: "GST Type",
+      title: "GST",
       dataIndex: "gstType",
       width: 120,
-      render: (g) => g || "-",
-    },
-    {
-      title: "GST Number",
-      dataIndex: "gstNumber",
-      width: 160,
       render: (g) => g || "-",
     },
     {
@@ -83,11 +116,9 @@ const ManageVendor = ({ reload }) => {
     {
       title: "Status",
       dataIndex: "status",
-      width: 110,
+      width: 120,
       render: (status) => (
-        <Tag color={status === "Active" ? "green" : "red"}>
-          {status}
-        </Tag>
+        <Tag color={status === "Active" ? "green" : "red"}>{status}</Tag>
       ),
     },
     {
@@ -96,18 +127,20 @@ const ManageVendor = ({ reload }) => {
       fixed: "right",
       width: 110,
       render: (_, record) => (
-        <Space size="middle">
+        <Space>
           <span
-            className="text-blue-600 hover:text-blue-800 cursor-pointer"
+            className="text-blue-600 cursor-pointer"
             onClick={() =>
-              navigate("/vendor/add-vendor", { state: { vendor: record } })
+              navigate("/vendor/add-vendor", {
+                state: { vendor: record },
+              })
             }
           >
             <FaPen />
           </span>
 
           <span
-            className="text-red-500 hover:text-red-700 cursor-pointer"
+            className="text-red-600 cursor-pointer"
             onClick={() => {
               setSelectedVendor(record);
               setConfirmDelete(true);
@@ -120,28 +153,54 @@ const ManageVendor = ({ reload }) => {
     },
   ];
 
+  /* ---------------- UI ---------------- */
+
   return (
-    <div className="bg-gray-50 min-h-screen p-4 sm:p-6">
-      {/* ---------- PAGE HEADER ---------- */}
-      <div className="mb-5">
-        <h1 className="text-xl font-semibold text-gray-900">
-          Manage Vendors
-        </h1>
+    <div className="bg-gray-50 min-h-screen p-4 sm:p-6 space-y-6">
+      {/* ---------- HEADER ---------- */}
+      <div>
+        <h1 className="text-xl font-semibold text-gray-900">Manage Vendors</h1>
         <p className="text-sm text-gray-600">
-          View, edit, and manage all registered vendors
+          Centralized vendor records and insights
         </p>
       </div>
 
-      {/* ---------- TABLE CARD ---------- */}
+      {/* ---------- DASHBOARD CARDS ---------- */}
+      {dashboard && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <DashboardCard title="Total Vendors" value={dashboard.totalVendors} />
+          <DashboardCard
+            title="Active Vendors"
+            value={dashboard.activeVendors}
+            color="green"
+          />
+          <DashboardCard
+            title="Inactive Vendors"
+            value={dashboard.inactiveVendors}
+            color="red"
+          />
+        </div>
+      )}
+
+      {/* ---------- TABLE ---------- */}
       <div className="bg-white rounded-xl border shadow-sm p-3 sm:p-4">
         <Table
           columns={columns}
-          dataSource={vendors.map((v, idx) => ({ ...v, key: idx }))}
+          dataSource={vendors.map((v) => ({ ...v, key: v.id }))}
+          loading={loading}
           bordered
           size="middle"
-          pagination={{ pageSize: 10, showSizeChanger: true }}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+          }}
+          onChange={(pag) => fetchVendors(pag.current, pag.pageSize)}
           scroll={{ x: 1400 }}
-          locale={{ emptyText: "No vendors found" }}
+          locale={{
+            emptyText: loading ? <Spin /> : "No vendors found",
+          }}
         />
       </div>
 
@@ -171,3 +230,12 @@ const ManageVendor = ({ reload }) => {
 };
 
 export default ManageVendor;
+
+/* ================= DASHBOARD CARD ================= */
+
+const DashboardCard = ({ title, value, color = "gray" }) => (
+  <div className="bg-white border rounded-xl p-4 shadow-sm">
+    <p className="text-sm text-gray-500">{title}</p>
+    <p className={`text-2xl font-semibold text-${color}-600`}>{value}</p>
+  </div>
+);

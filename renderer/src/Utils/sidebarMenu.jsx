@@ -1,4 +1,4 @@
-import { HomeIcon } from "@heroicons/react/24/outline";
+import { HomeIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import {
   HiOutlineDatabase,
   HiOutlineShoppingCart,
@@ -61,6 +61,16 @@ export const menuItems = [
     label: "Label",
     icon: <HiOutlineTag className="w-4 h-4" />,
     children: [{ label: "Generate Label", path: "/label/generate-label" }],
+  },
+  {
+    label: "Users",
+    icon: <UserCircleIcon className="w-4 h-4" />,
+    children: [
+      {
+        label: "User Management",
+        path: "/users",
+      },
+    ],
   },
   {
     label: "Settings",

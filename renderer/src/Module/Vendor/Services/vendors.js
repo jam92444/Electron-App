@@ -1,6 +1,12 @@
 // ---------- GET ALL VENDORS ----------
 export const getVendors = () => window.api.getVendors();
 
+// ---------- GET TOP  VENDORS ----------
+export const getTopVendors = () => window.api.getTopVendors();
+
+// ---------- GET Dashboard DATA ----------
+export const getVendorDashboard = () => window.api.getVendorDashboard();
+
 // ---------- INSERT VENDOR ----------
 export const insertVendor = (vendorData) => window.api.insertVendor(vendorData);
 

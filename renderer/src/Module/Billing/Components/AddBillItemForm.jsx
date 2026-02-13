@@ -58,6 +58,7 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
     };
     fetchItems();
   }, []);
+  console.log("ALL item", AllItems);
   return (
     <form
       onSubmit={(e) => {
@@ -71,9 +72,16 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
         {/* Item Name */}
         <div className="mt-4">
           <Select
-            options={AllItems.map((i) => ({
-              label: `${i.itemID} - ${i.itemName}`, // 👈 show both
-              value: i.itemID, // 👈 use ID as value (best practice)
+            options={AllItems.filter((i) => {
+              // Only include items with quantity > 0
+              if (i.hasVariants) {
+                // Include if any variant has quantity > 0
+                return i.variants.some((v) => v.quantity > 0);
+              }
+              return i.quantity > 0;
+            }).map((i) => ({
+              label: `${i.itemID} - ${i.itemName}`,
+              value: i.itemID,
             }))}
             value={
               item.itemCode
@@ -91,12 +99,12 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
 
               setItem({
                 ...item,
-                itemCode: selectedItem.itemID || "",
+                itemCode: selectedItem.itemID,
                 itemName: selectedItem.itemName,
                 price: selectedItem.hasVariants
-                  ? ""
+                  ? "" // Let user select variant separately
                   : selectedItem.sellingPrice,
-                size: "",
+                size: "", // Reset size on item change
               });
             }}
             placeholder="Select Item*"
@@ -118,23 +126,29 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
             <div className="mt-4">
               <Select
                 className="text-sm"
-                options={AllItems.find(
-                  (i) => i.itemName === item.itemName,
-                ).variants.map((v) => ({ label: v.size, value: v.size }))}
+                options={AllItems.find((i) => i.itemName === item.itemName)
+                  .variants.filter((v) => v.quantity > 0) // ✅ Only variants with quantity > 0
+                  .map((v) => ({ label: v.size, value: v.size }))}
                 value={
                   item.size ? { label: item.size, value: item.size } : null
                 }
                 onChange={(selected) => {
                   const selectedSize = AllItems.find(
                     (i) => i.itemName === item.itemName,
-                  ).variants.find((v) => v.size === selected.value);
-                  setItem({
-                    ...item,
-                    size: selectedSize.size,
-                    price: selectedSize.sellingPrice,
-                  });
+                  ).variants.find(
+                    (v) => v.size === selected.value && v.quantity > 0, // ✅ Safety check
+                  );
+
+                  if (selectedSize) {
+                    setItem({
+                      ...item,
+                      size: selectedSize.size,
+                      price: selectedSize.sellingPrice,
+                    });
+                  }
                 }}
                 placeholder="Select Size*"
+                isSearchable
               />
             </div>
           )}
@@ -156,7 +170,30 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
           type="number"
           placeholder="Enter Quantity"
           value={item.quantity}
-          onChange={(e) => setItem({ ...item, quantity: e.target.value })}
+          onChange={(e) => {
+            const value = Number(e.target.value);
+
+            // Find the selected item
+            const selectedItem = AllItems.find(
+              (i) => i.itemID === item.itemCode,
+            );
+            if (!selectedItem) return;
+
+            // Determine max available quantity
+            const maxQty = selectedItem.hasVariants
+              ? selectedItem.variants.find((v) => v.size === item.size)
+                  ?.quantity || 0
+              : selectedItem.quantity;
+
+            if (value > maxQty) {
+              alert(`Maximum available quantity is ${maxQty}`); // <-- alert
+              setItem({ ...item, quantity: maxQty });
+            } else if (value < 1) {
+              setItem({ ...item, quantity: 1 });
+            } else {
+              setItem({ ...item, quantity: value });
+            }
+          }}
         />
 
         {/* Total */}

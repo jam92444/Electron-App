@@ -17,13 +17,25 @@ contextBridge.exposeInMainWorld("api", {
   filterSizes: (filters) => ipcRenderer.invoke("db:filterSizes", filters),
 
   /* ----------------- Bills ----------------- */
-  getBills: () => ipcRenderer.invoke("db:getBills"),
+  getBills: ({ page = 1, pageSize = 10 } = {}) =>
+    ipcRenderer.invoke("db:getBills", { page, pageSize }),
+
   getBillById: (billId) => ipcRenderer.invoke("db:getBillById", billId),
+
   saveBill: (bill, items) => ipcRenderer.invoke("db:saveBill", bill, items),
+
   updateBill: (billId, bill, items) =>
     ipcRenderer.invoke("db:updateBill", billId, bill, items),
+
   deleteBill: (billId) => ipcRenderer.invoke("db:deleteBill", billId),
-  filterBills: (filters) => ipcRenderer.invoke("db:filterBills", filters),
+
+  filterBills: (filters = {}, pagination = { page: 1, pageSize: 10 }) =>
+    ipcRenderer.invoke("db:filterBills", {
+      ...filters,
+      ...pagination,
+    }),
+  getSalesDashboard: (from, to) =>
+    ipcRenderer.invoke("db:getSalesDashboard", { fromDate: from, toDate: to }),
 
   /* ----------------- Customers ----------------- */
   createCustomer: (customer) =>
@@ -36,6 +48,8 @@ contextBridge.exposeInMainWorld("api", {
   /* ----------------- Vendors ----------------- */
   getVendors: () => ipcRenderer.invoke("db:getVendors"),
   getNoOfVendorCount: () => ipcRenderer.invoke("db:getNoOfVendorCount"),
+  getVendorDashboard: () => ipcRenderer.invoke("db:getVendorDashboard"),
+  // getTopVendors: () => ipcRenderer.invoke("db:getTopVendors"),
   insertVendor: (vendor) => ipcRenderer.invoke("db:insertVendor", vendor),
   updateVendor: (vendor) => ipcRenderer.invoke("db:updateVendor", vendor),
   deleteVendor: (vendorId) => ipcRenderer.invoke("db:deleteVendor", vendorId),

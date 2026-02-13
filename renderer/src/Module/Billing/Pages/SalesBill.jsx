@@ -3,6 +3,7 @@ import { Table, Tag } from "antd";
 import { useEffect, useState } from "react";
 import { getBills, getBillById } from "../Services/bills";
 import Modal from "../../../components/ReuseComponents/Modal";
+import SalesDashboard from "./SalesDashboard";
 
 const SalesBill = () => {
   const [bills, setBills] = useState([]);
@@ -10,48 +11,91 @@ const SalesBill = () => {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
 
+  // ✅ Pagination state
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+
+  // ✅ Initial load
   useEffect(() => {
-    fetchBills();
+    fetchBills(1, pagination.pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchBills = async () => {
-    const res = await getBills();
-    if (res.success) setBills(res.data);
+  // ✅ Fetch bills from DB (paginated)
+  const fetchBills = async (page = 1, pageSize = 10) => {
+    const res = await getBills({ page, pageSize });
+
+    if (res?.success) {
+      setBills(res.data || []);
+      setPagination({
+        current: page,
+        pageSize,
+        total: res.pagination?.total || 0,
+      });
+    }
   };
 
+  // ✅ View single bill
   const viewBill = async (record) => {
     const res = await getBillById(record.id);
-    if (res.success) {
+    if (res?.success) {
       setBillData(res.bill);
       setItems(res.items);
       setOpen(true);
     }
   };
 
+  // ✅ Table columns
   const columns = [
-    { title: "Invoice No #", dataIndex: "invoice_number", width: 90 },
-    { title: "Customer Name", dataIndex: "customer_name", width: 100 },
-    { title: "Contact", dataIndex: "customer_phone", width: 100 },
-    { title: "Date", dataIndex: "created_at", width: 140 },
-    { title: "Pieces", dataIndex: "total_pieces", width: 100 },
+    {
+      title: "Invoice No #",
+      dataIndex: "invoice_number",
+      width: 110,
+    },
+    {
+      title: "Customer Name",
+      dataIndex: "customer_name",
+      width: 150,
+      render: (v) => v || "-",
+    },
+    {
+      title: "Contact",
+      dataIndex: "customer_phone",
+      width: 130,
+      render: (v) => v || "-",
+    },
+    {
+      title: "Date",
+      dataIndex: "created_at",
+      width: 160,
+      render: (d) => new Date(d).toLocaleString("en-IN"),
+    },
+    {
+      title: "Pieces",
+      dataIndex: "total_pieces",
+      width: 90,
+    },
     {
       title: "Amount",
       dataIndex: "total_after_discount",
-      width: 140,
-      render: (a) => <b>₹{a}</b>,
+      width: 130,
+      render: (a) => <b>₹{Number(a).toFixed(2)}</b>,
     },
     {
       title: "Payment",
       dataIndex: "payment_mode",
-      width: 140,
+      width: 120,
       render: (p) => p || "-",
     },
     {
       title: "Discount",
       dataIndex: "discount",
       width: 120,
-      render: (d) => (
-        <Tag color={d > 0 ? "green" : "default"}>{d.toFixed(2) || 0}%</Tag>
+      render: (d = 0) => (
+        <Tag color={d > 0 ? "green" : "default"}>{Number(d).toFixed(2)}%</Tag>
       ),
     },
   ];
@@ -68,13 +112,24 @@ const SalesBill = () => {
 
       {/* ---------- TABLE CARD ---------- */}
       <div className="bg-white rounded-xl border shadow-sm p-3 sm:p-4">
+        <SalesDashboard />
         <Table
           columns={columns}
           dataSource={bills.map((b) => ({ ...b, key: b.id }))}
           bordered
           size="middle"
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          scroll={{ x: 800 }}
+          loading={!bills.length && pagination.current === 1}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} bills`,
+          }}
+          onChange={(pag) => {
+            fetchBills(pag.current, pag.pageSize);
+          }}
+          scroll={{ x: 900 }}
           onRow={(record) => ({
             onClick: () => viewBill(record),
             className: "cursor-pointer hover:bg-gray-50",
@@ -86,7 +141,7 @@ const SalesBill = () => {
       {/* ---------- BILL VIEW MODAL ---------- */}
       {open && billData && (
         <Modal
-          title={`Bill #${billData.id}`}
+          title={`Bill #${billData.invoice_number || billData.id}`}
           onClose={() => setOpen(false)}
           actions={null}
           message={<BillView bill={billData} items={items} />}
@@ -98,21 +153,24 @@ const SalesBill = () => {
 
 export default SalesBill;
 
+/* ================== BILL VIEW ================== */
+
 const BillView = ({ bill, items }) => {
   if (!bill) return null;
+
   return (
     <div className="space-y-4 text-sm">
       {/* -------- BILL HEADER -------- */}
       <div className="border rounded-lg p-3 bg-gray-50">
         <div className="grid grid-cols-2 gap-2">
           <p>
-            <b>Bill No:</b> #{bill.id}
+            <b>Invoice No:</b> {bill.invoice_number || `#${bill.id}`}
           </p>
           <p>
-            <b>Customer Name:</b> {bill?.customer_name ?? "-"}
+            <b>Customer Name:</b> {bill.customer_name || "-"}
           </p>
           <p>
-            <b>Contact Number:</b> {bill?.customer_phone ?? "-"}
+            <b>Contact Number:</b> {bill.customer_phone || "-"}
           </p>
           <p>
             <b>Date:</b> {new Date(bill.created_at).toLocaleString("en-IN")}
@@ -139,7 +197,7 @@ const BillView = ({ bill, items }) => {
             </tr>
           </thead>
           <tbody>
-            {items.length > 0 ? (
+            {items?.length ? (
               items.map((it, idx) => (
                 <tr key={idx}>
                   <td className="border p-2">

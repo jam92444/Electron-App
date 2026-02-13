@@ -1,203 +1,306 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Line, Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import {
+  FaShoppingCart,
+  FaRupeeSign,
+  FaTags,
+  FaBoxes,
+  FaTruck,
+} from "react-icons/fa";
+
+import { getSalesDashboard } from "../../Billing/Services/bills";
+
+import {
+  getDashboardSummary,
+  getPurchaseTrend,
+  getTopVendors,
+  getRecentPurchases,
+  getLowStockItems,
+  getVariantStockSummary,
+  getMonthlyPurchaseSummary,
+  getVendorStatusStats,
+} from "../../Purchase/Services/purchaseService";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Tooltip,
+  Legend,
+);
 
 const Home = () => {
+  const [loading, setLoading] = useState(true);
+
+  // Sales Data
+  const [salesDashboard, setSalesDashboard] = useState(null);
+
+  // Purchase Data
+  const [summary, setSummary] = useState({});
+  const [purchaseTrend, setPurchaseTrend] = useState([]);
+  const [topVendors, setTopVendors] = useState([]);
+  const [recentPurchases, setRecentPurchases] = useState([]);
+  const [lowStock, setLowStock] = useState([]);
+  const [variantStock, setVariantStock] = useState([]);
+  const [monthlySummary, setMonthlySummary] = useState([]);
+  const [vendorStatus, setVendorStatus] = useState([]);
+
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const loadDashboard = async () => {
+      setLoading(true);
+
+      try {
+        const [
+          salesRes,
+          summaryRes,
+          trendRes,
+          topVendorRes,
+          recentPurchasesRes,
+          lowStockRes,
+          variantStockRes,
+          monthlyRes,
+          vendorStatusRes,
+        ] = await Promise.all([
+          getSalesDashboard("2026-02-01", "2026-02-05"),
+          getDashboardSummary(),
+          getPurchaseTrend(30),
+          getTopVendors(),
+          getRecentPurchases(),
+          getLowStockItems(),
+          getVariantStockSummary(),
+          getMonthlyPurchaseSummary(),
+          getVendorStatusStats(),
+        ]);
+
+        if (salesRes?.success) setSalesDashboard(salesRes);
+        if (summaryRes?.success) setSummary(summaryRes.data);
+        if (trendRes?.success) setPurchaseTrend(trendRes.data);
+        if (topVendorRes?.success) setTopVendors(topVendorRes.data);
+        if (recentPurchasesRes?.success)
+          setRecentPurchases(recentPurchasesRes.data);
+        if (lowStockRes?.success) setLowStock(lowStockRes.data);
+        if (variantStockRes?.success) setVariantStock(variantStockRes.data);
+        if (monthlyRes?.success) setMonthlySummary(monthlyRes.data);
+        if (vendorStatusRes?.success) setVendorStatus(vendorStatusRes.data);
+      } catch (err) {
+        console.error("Error loading dashboard:", err);
+      }
+
+      setLoading(false);
+    };
+
+    loadDashboard();
   }, []);
 
-  /* ---------------- DUMMY DATA ---------------- */
-  const stats = [
-    { label: "Total Sales", value: "₹1,24,500" },
-    { label: "Total Purchases", value: "₹82,300" },
-    { label: "Cash Sales", value: "₹64,200" },
-    { label: "Online Sales", value: "₹60,300" },
-    { label: "Pending Invoices", value: "12" },
-  ];
+  if (loading) return <p className="p-6 text-gray-500">Loading dashboard...</p>;
 
-  const monthlySales = [
-    { month: "Jan", amount: 18000 },
-    { month: "Feb", amount: 22000 },
-    { month: "Mar", amount: 19500 },
-    { month: "Apr", amount: 26000 },
-    { month: "May", amount: 30000 },
-    { month: "Jun", amount: 34000 },
-  ];
+  // Prepare chart data
+  const purchaseTrendData = {
+    labels: purchaseTrend.map((p) => p.date),
+    datasets: [
+      {
+        label: "Purchase Amount",
+        data: purchaseTrend.map((p) => p.total),
+        borderColor: "#3b82f6",
+        backgroundColor: "#3b82f6aa",
+        tension: 0.3,
+        fill: true,
+      },
+    ],
+  };
 
-  const invoices = [
-    {
-      invoice: "INV-001",
-      customer: "Rahul Traders",
-      amount: "₹5,200",
-      payment: "Cash",
-      status: "Paid",
-    },
-    {
-      invoice: "INV-002",
-      customer: "Amit Enterprises",
-      amount: "₹8,750",
-      payment: "Online",
-      status: "Paid",
-    },
-    {
-      invoice: "INV-003",
-      customer: "Sharma Stores",
-      amount: "₹3,400",
-      payment: "Cash",
-      status: "Pending",
-    },
-    {
-      invoice: "INV-004",
-      customer: "Kunal Mart",
-      amount: "₹12,900",
-      payment: "Online",
-      status: "Paid",
-    },
-  ];
-
-  const maxSale = Math.max(...monthlySales.map((m) => m.amount));
+  const monthlySalesData = {
+    labels: monthlySummary.map((m) => m.month),
+    datasets: [
+      {
+        label: "Total Amount",
+        data: monthlySummary.map((m) => m.totalAmount),
+        backgroundColor: "#10b981aa",
+      },
+    ],
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* ---------------- HEADER ---------------- */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">
-          Sales, purchases & invoice analytics overview
+      <div>
+        <h1 className="text-3xl font-bold text-gray-800">Home Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Overview of Sales, Purchases, Stock & Vendors
         </p>
       </div>
 
       {/* ---------------- KPI CARDS ---------------- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        {stats.map((s, i) => (
-          <div
-            key={i}
-            className="bg-white rounded-xl shadow-sm border p-4"
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <KpiCard
+          icon={<FaShoppingCart />}
+          label="Total Bills"
+          value={salesDashboard?.totals?.totalBills || 0}
+          color="bg-blue-500"
+        />
+        <KpiCard
+          icon={<FaRupeeSign />}
+          label="Total Sales"
+          value={`₹${salesDashboard?.totals?.totalSales || 0}`}
+          color="bg-green-500"
+        />
+        <KpiCard
+          icon={<FaTags />}
+          label="Total Discount"
+          value={`₹${salesDashboard?.totals?.totalDiscount || 0}`}
+          color="bg-yellow-500"
+        />
+        <KpiCard
+          icon={<FaBoxes />}
+          label="Total Pieces Sold"
+          value={salesDashboard?.totals?.totalPieces || 0}
+          color="bg-purple-500"
+        />
+        <KpiCard
+          icon={<FaTruck />}
+          label="Total Purchases"
+          value={`₹${summary.totalPurchaseAmount || 0}`}
+          color="bg-pink-500"
+        />
+      </div>
+
+      {/* ---------------- CHARTS ---------------- */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartSection title="Purchase Trend (30 Days)">
+          <Line
+            data={purchaseTrendData}
+            options={{ plugins: { legend: { display: false } } }}
+          />
+        </ChartSection>
+
+        <ChartSection title="Monthly Purchase Summary">
+          <Bar
+            data={monthlySalesData}
+            options={{ plugins: { legend: { display: false } } }}
+          />
+        </ChartSection>
+      </div>
+
+      {/* ---------------- TOP SELLERS & VENDORS ---------------- */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ListSection title="Top Selling Items">
+          {salesDashboard?.topItems?.map((item) => (
+            <Row
+              key={item.item_code}
+              left={item.item_name}
+              right={item.totalSold}
+            />
+          ))}
+        </ListSection>
+
+        <ListSection title="Top Vendors">
+          {topVendors.map((v, i) => (
+            <Row key={i} left={v.vendorName} right={`₹ ${v.total}`} />
+          ))}
+        </ListSection>
+      </div>
+
+      {/* ---------------- STOCK ALERTS ---------------- */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ListSection title="Low Stock Items">
+          {lowStock.length ? (
+            lowStock.map((i, idx) => (
+              <Row
+                key={idx}
+                left={`${i.itemName} (${i.vendorName || "—"})`}
+                right={
+                  <span className="text-red-500 font-bold">{i.quantity}</span>
+                }
+              />
+            ))
+          ) : (
+            <Empty />
+          )}
+        </ListSection>
+
+        <ListSection title="Variant Stock">
+          {variantStock.length ? (
+            variantStock.map((v, idx) => (
+              <Row
+                key={idx}
+                left={`${v.itemName} - ${v.size}`}
+                right={`Qty: ${v.quantity}`}
+              />
+            ))
+          ) : (
+            <Empty />
+          )}
+        </ListSection>
+      </div>
+
+      {/* ---------------- PAYMENT MODES ---------------- */}
+      <ListSection title="Payment Modes">
+        {salesDashboard?.paymentModes?.map((pm) => (
+          <span
+            key={pm.payment_mode}
+            className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-2 inline-block"
           >
-            <p className="text-sm text-gray-500">{s.label}</p>
-            <p className="text-xl font-bold text-gray-900 mt-1">{s.value}</p>
-          </div>
+            {pm.payment_mode || "Cash"}: {pm.count} bills
+          </span>
         ))}
-      </div>
+      </ListSection>
 
-      {/* ---------------- ANALYTICS ---------------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* SALES CHART */}
-        <div className="bg-white rounded-xl shadow-sm border p-6 lg:col-span-2">
-          <h2 className="font-semibold text-gray-800 mb-4">
-            Monthly Sales Overview
-          </h2>
-
-          <div className="flex items-end gap-4 h-48">
-            {monthlySales.map((m, i) => (
-              <div key={i} className="flex flex-col items-center w-full">
-                <div
-                  className="w-8 rounded-md bg-blue-600"
-                  style={{
-                    height: `${(m.amount / maxSale) * 100}%`,
-                  }}
-                />
-                <span className="text-xs mt-2 text-gray-600">
-                  {m.month}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* PAYMENT SPLIT */}
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h2 className="font-semibold text-gray-800 mb-4">
-            Payment Breakdown
-          </h2>
-
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-500">Cash Payments</p>
-              <div className="w-full bg-gray-200 rounded-full h-3 mt-1">
-                <div className="bg-green-500 h-3 rounded-full w-[52%]" />
-              </div>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Online Payments</p>
-              <div className="w-full bg-gray-200 rounded-full h-3 mt-1">
-                <div className="bg-blue-500 h-3 rounded-full w-[48%]" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ---------------- RECENT INVOICES ---------------- */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold text-gray-800">
-            Recent Invoices
-          </h2>
-
-          <div className="flex gap-2">
-            <button className="text-sm px-3 py-1 border rounded-md">
-              Today
-            </button>
-            <button className="text-sm px-3 py-1 border rounded-md">
-              This Month
-            </button>
-            <button className="text-sm px-3 py-1 border rounded-md">
-              This Year
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-gray-600">
-              <tr>
-                <th className="text-left p-3">Invoice</th>
-                <th className="text-left p-3">Customer</th>
-                <th className="text-left p-3">Amount</th>
-                <th className="text-left p-3">Payment</th>
-                <th className="text-left p-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoices.map((inv, i) => (
-                <tr
-                  key={i}
-                  className="border-b last:border-none hover:bg-gray-50"
-                >
-                  <td className="p-3 font-medium">{inv.invoice}</td>
-                  <td className="p-3">{inv.customer}</td>
-                  <td className="p-3">{inv.amount}</td>
-                  <td className="p-3">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        inv.payment === "Cash"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}
-                    >
-                      {inv.payment}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        inv.status === "Paid"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {inv.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* ---------------- RECENT PURCHASES ---------------- */}
+      <ListSection title="Recent Purchases">
+        {recentPurchases.map((p) => (
+          <Row key={p.id} left={p.vendorName} right={`₹ ${p.totalAmount}`} />
+        ))}
+      </ListSection>
     </div>
   );
 };
+
+/* ---------------- COMPONENTS ---------------- */
+const KpiCard = ({ icon, label, value, color }) => (
+  <div
+    className={`flex items-center gap-4 p-4 rounded-xl text-white ${color} shadow-lg`}
+  >
+    <div className="text-3xl">{icon}</div>
+    <div>
+      <p className="text-sm">{label}</p>
+      <h2 className="text-xl font-bold">{value}</h2>
+    </div>
+  </div>
+);
+
+const ChartSection = ({ title, children }) => (
+  <div className="bg-white rounded-xl p-5 shadow-md">
+    <h3 className="font-semibold mb-4">{title}</h3>
+    {children}
+  </div>
+);
+
+const ListSection = ({ title, children }) => (
+  <div className="bg-white rounded-xl p-5 shadow-md">
+    <h3 className="font-semibold mb-3">{title}</h3>
+    <div className="space-y-2 text-sm">{children}</div>
+  </div>
+);
+
+const Row = ({ left, right }) => (
+  <div className="flex justify-between py-1">
+    <span className="text-gray-700">{left}</span>
+    <span className="font-medium">{right}</span>
+  </div>
+);
+
+const Empty = () => <p className="text-gray-400 text-sm">No data available</p>;
 
 export default Home;
