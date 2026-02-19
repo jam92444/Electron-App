@@ -116,14 +116,33 @@ function registerDashboardHandlers(db) {
       const rows = db
         .prepare(
           `
-        SELECT 
-          i.itemName,
-          i.quantity,
-          v.vendorName
-        FROM items i
-        LEFT JOIN vendors v ON v.id = i.vendorId
-        WHERE i.hasVariants = 0 AND i.quantity <= 5
-        ORDER BY i.quantity ASC
+       -- Low stock items including variants
+SELECT *
+FROM (
+    -- Items without variants
+    SELECT 
+        i.itemName AS itemName,
+        i.quantity AS quantity,
+        v.vendorName
+    FROM items i
+    LEFT JOIN vendors v ON v.id = i.vendorId
+    WHERE i.hasVariants = 0 AND i.quantity <= 2
+
+    UNION ALL
+
+    -- Items with variants
+    SELECT 
+        i.itemName || ' - ' || iv.size AS itemName, -- include variant size
+        iv.quantity AS quantity,
+        v.vendorName
+    FROM item_variants iv
+    JOIN items i ON i.itemID = iv.itemID
+    LEFT JOIN vendors v ON v.id = i.vendorId
+    WHERE iv.quantity <= 2
+)
+ORDER BY quantity ASC
+LIMIT 10;
+
       `,
         )
         .all();
@@ -142,13 +161,13 @@ function registerDashboardHandlers(db) {
       const rows = db
         .prepare(
           `
-        SELECT 
+        SELECT
           i.itemName,
           iv.size,
           iv.quantity
         FROM item_variants iv
         JOIN items i ON i.itemID = iv.itemID
-        ORDER BY iv.quantity ASC
+        ORDER BY iv.quantity DESC LIMIT 10
       `,
         )
         .all();
@@ -270,7 +289,7 @@ function registerDashboardHandlers(db) {
             SELECT i.itemName, i.quantity, v.vendorName
             FROM items i
             LEFT JOIN vendors v ON v.id = i.vendorId
-            WHERE i.hasVariants = 0 AND i.quantity <= 5
+            WHERE i.hasVariants = 0 AND i.quantity <= 1 
           `,
             )
             .all(),

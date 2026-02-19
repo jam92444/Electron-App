@@ -1,0 +1,47 @@
+  CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      password TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS roles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS modules (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        module_key TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXIST forms (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      module_id Number,
+      form_key TEXT NOT NULL UNIQUE,
+      FOREIGN KEY(module_id) REFERENCES modules(id) ON DELETE SET NULL
+    )
+
+    INSERT OR IGNORE INTO forms (name,module_id,form_key) VALUES ('')
+
+
+
+    CREATE TABLE IF NOT EXISTS permissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      module_id INTEGER,
+      action TEXT,
+      UNIQUE(module_id, action)
+    );
+
+    CREATE TABLE IF NOT EXISTS role_permissions (
+      role_id INTEGER,
+      permission_id INTEGER,
+      UNIQUE(role_id, permission_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS user_roles (
+      user_id INTEGER,
+      role_id INTEGER,
+      UNIQUE(user_id, role_id)
+    );

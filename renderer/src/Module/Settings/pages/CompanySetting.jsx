@@ -6,7 +6,6 @@ import Input from "../../../components/ReuseComponents/Input";
 import Textarea from "../../../components/ReuseComponents/TextArea";
 import Modal from "../../../components/ReuseComponents/Modal";
 import Button from "../../../components/ReuseComponents/Button";
-import { Country, State, City } from "country-state-city";
 import {
   getSettings,
   updateCompanySettings,
@@ -20,7 +19,28 @@ import {
   SET_OTHER_SETTINGS,
 } from "../../../context/reducer/actionTypes";
 
+const INDIA_COUNTRY = [{ value: "IN", label: "India" }];
+
+const INDIA_STATES = [
+  { value: "MH", label: "Maharashtra" },
+  { value: "DL", label: "Delhi" },
+  { value: "KA", label: "Karnataka" },
+  { value: "TN", label: "Tamil Nadu" },
+  { value: "GJ", label: "Gujarat" },
+  { value: "RJ", label: "Rajasthan" },
+  { value: "UP", label: "Uttar Pradesh" },
+  { value: "MP", label: "Madhya Pradesh" },
+  { value: "WB", label: "West Bengal" },
+  { value: "PB", label: "Punjab" },
+  { value: "HR", label: "Haryana" },
+  { value: "BR", label: "Bihar" },
+  { value: "TS", label: "Telangana" },
+  { value: "AP", label: "Andhra Pradesh" },
+  { value: "KL", label: "Kerala" },
+];
+
 /* ================= Editable Field ================= */
+
 const EditableField = ({
   label,
   value,
@@ -212,21 +232,22 @@ const CompanyDetails = () => {
   const { dispatch } = useStateContext();
   useEffect(() => {
     getSettings().then((res) => {
+      // console.log("Response of the Company setting", res);
       if (res?.success) {
         setFormData({
-          companyName: res.data.companyName || "",
-          gstTin: res.data.gstTin || "",
-          contactNumber: res.data.contactNumber || "",
-          companyEmail: res.data.companyEmail || "",
+          companyName: res.data?.companyName || "",
+          gstTin: res.data?.gstTin || "",
+          contactNumber: res.data?.contactNumber || "",
+          companyEmail: res.data?.companyEmail || "",
         });
         const data = res.data;
         dispatch({
           type: SET_COMPANY_SETTINGS,
           payload: {
-            companyName: data.companyName,
-            gstTin: data.gstTin,
-            contactNumber: data.contactNumber,
-            companyEmail: data.companyEmail,
+            companyName: data?.companyName || "",
+            gstTin: data?.gstTin || "",
+            contactNumber: data?.contactNumber || "",
+            companyEmail: data?.companyEmail || "",
           },
         });
       } else {
@@ -297,6 +318,7 @@ const CompanyDetails = () => {
             onCancel={() => setConfirm(false)}
             onConfirm={async () => {
               await updateCompanySettings(formData);
+              // console.log("saved company data response", data);
               toast.success("Company details saved");
               setConfirm(false);
               setEditMode(false);
@@ -313,36 +335,32 @@ const BillingDetails = () => {
   const [editMode, setEditMode] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [errors, setErrors] = useState({});
+  const { dispatch } = useStateContext();
+
   const [formData, setFormData] = useState({
     fullAddress: "",
-    country: "",
+    country: "IN",
     state: "",
     city: "",
     pinCode: "",
   });
-  const { dispatch } = useStateContext();
 
   useEffect(() => {
     getSettings().then((res) => {
       if (res?.success) {
+        const data = res.data;
+
         setFormData({
-          fullAddress: res.data.fullAddress || "",
-          country: res.data.country || "",
-          state: res.data.state || "",
-          city: res.data.city || "",
-          pinCode: res.data.pinCode || "",
+          fullAddress: data.fullAddress || "",
+          country: "IN",
+          state: data.state || "",
+          city: data.city || "",
+          pinCode: data.pinCode || "",
         });
 
-        const data = res.data;
         dispatch({
           type: SET_BILLING_SETTINGS,
-          payload: {
-            fullAddress: data.fullAddress,
-            country: data.country,
-            state: data.state,
-            city: data.city,
-            pinCode: data.pinCode,
-          },
+          payload: data,
         });
       }
     });
@@ -360,94 +378,91 @@ const BillingDetails = () => {
     }
   };
 
-  const countries = Country.getAllCountries();
-  const states = formData.country
-    ? State.getStatesOfCountry(formData.country)
-    : [];
-  const cities =
-    formData.country && formData.state
-      ? City.getCitiesOfState(formData.country, formData.state)
-      : [];
-
   return (
-    <div>
-      <section className="bg-white p-4 border rounded">
-        <Header
-          title="Billing Details"
-          editMode={editMode}
-          setEditMode={setEditMode}
-          onSave={handleSave}
+    <section className="bg-white p-4 border rounded">
+      <h2 className="font-semibold text-lg text-gray-900">Billing Details</h2>
+
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <EditableField
+          label="Full Address"
+          inputType="textarea"
+          value={formData.fullAddress}
+          onChange={(v) => setFormData({ ...formData, fullAddress: v })}
+          isEditing={editMode}
+          error={errors.fullAddress}
         />
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <EditableField
-            label="Full Address"
-            inputType="textarea"
-            value={formData.fullAddress}
-            onChange={(v) => setFormData({ ...formData, fullAddress: v })}
-            isEditing={editMode}
-            error={errors.fullAddress}
-          />
+        <EditableField
+          label="Country"
+          inputType="select"
+          options={INDIA_COUNTRY}
+          value="IN"
+          isEditing={false}
+        />
 
-          <EditableField
-            label="Country"
-            inputType="select"
-            options={countries.map((c) => ({
-              value: c.isoCode,
-              label: c.name,
-            }))}
-            value={formData.country}
-            onChange={(v) =>
-              setFormData({ ...formData, country: v, state: "", city: "" })
-            }
-            isEditing={editMode}
-            error={errors.country}
-          />
+        <EditableField
+          label="State"
+          inputType="select"
+          options={INDIA_STATES}
+          value={formData.state}
+          onChange={(v) => setFormData({ ...formData, state: v })}
+          isEditing={editMode}
+          error={errors.state}
+        />
 
-          <EditableField
-            label="State"
-            inputType="select"
-            options={states.map((s) => ({ value: s.isoCode, label: s.name }))}
-            value={formData.state}
-            onChange={(v) => setFormData({ ...formData, state: v, city: "" })}
-            isEditing={editMode}
-            error={errors.state}
-          />
+        <EditableField
+          label="City"
+          value={formData.city}
+          onChange={(v) => setFormData({ ...formData, city: v })}
+          isEditing={editMode}
+          error={errors.city}
+        />
 
-          <EditableField
-            label="City"
-            inputType="select"
-            options={cities.map((c) => ({ value: c.name, label: c.name }))}
-            value={formData.city}
-            onChange={(v) => setFormData({ ...formData, city: v })}
-            isEditing={editMode}
-            error={errors.city}
-          />
+        <EditableField
+          label="Pin Code"
+          value={formData.pinCode}
+          maxLength={6}
+          onChange={(v) => setFormData({ ...formData, pinCode: v })}
+          isEditing={editMode}
+          error={errors.pinCode}
+        />
+      </div>
 
-          <EditableField
-            label="Pin Code"
-            value={formData.pinCode}
-            maxLength={6}
-            onChange={(v) => setFormData({ ...formData, pinCode: v })}
-            isEditing={editMode}
-            error={errors.pinCode}
-          />
+      {editMode ? (
+        <div className="mt-4 flex gap-2">
+          <Button buttonName="Save" onClick={handleSave} />
+          <Button buttonName="Cancel" onClick={() => setEditMode(false)} />
         </div>
+      ) : (
+        <Button
+          buttonName="Edit"
+          onClick={() => setEditMode(true)}
+          className="mt-4"
+        />
+      )}
 
-        {confirm && (
-          <ConfirmModal
-            message="Save billing details?"
-            onCancel={() => setConfirm(false)}
-            onConfirm={async () => {
-              await updateBillingSettings(formData);
-              toast.success("Billing details saved");
-              setConfirm(false);
-              setEditMode(false);
-            }}
-          />
-        )}
-      </section>
-    </div>
+      {confirm && (
+        <Modal
+          title="Confirm"
+          message="Save billing details?"
+          onClose={() => setConfirm(false)}
+          actions={
+            <div className="flex gap-2 justify-end">
+              <Button buttonName="Cancel" onClick={() => setConfirm(false)} />
+              <Button
+                buttonName="Save"
+                onClick={async () => {
+                  await updateBillingSettings(formData);
+                  toast.success("Billing details saved");
+                  setConfirm(false);
+                  setEditMode(false);
+                }}
+              />
+            </div>
+          }
+        />
+      )}
+    </section>
   );
 };
 

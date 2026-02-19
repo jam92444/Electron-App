@@ -4,8 +4,7 @@ import { units } from "../../../Utils/data";
 import Modal from "../../../components/ReuseComponents/Modal";
 import { getItems, insertItem, updateItem } from "../Services/items";
 import toast from "react-hot-toast";
-import { AddItemForm } from "../Routers/items.lazyimports";
-import ViewAllItems from "../Components/ViewAllItems";
+import { AddItemForm, ViewAllItems } from "../Routers/items.lazyimports";
 
 /* ---------------------------------------------------------
    MAIN COMPONENT

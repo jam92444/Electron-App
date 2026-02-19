@@ -37,7 +37,7 @@ export const menuItems = [
   {
     label: "Customer",
     icon: <IoPeopleOutline className="w-4 h-4" />,
-    children: [{ label: "Create Customer", path: "/customer" }],
+    children: [{ label: "Manage Customer", path: "/customer" }],
   },
   {
     label: "Sales",

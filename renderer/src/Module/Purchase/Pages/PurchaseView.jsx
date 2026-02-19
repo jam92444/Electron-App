@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getPurchaseById } from "../Services/purchaseService";
-import ViewAllItems from "../../Items/Components/ViewAllItems";
 import { FaArrowLeft } from "react-icons/fa6";
+import { ViewAllItems } from "../../Items/Routers/items.lazyimports";
 
 const PurchaseView = () => {
   const { id } = useParams();

@@ -10,7 +10,7 @@ function updatePurchaseTotal(db, purchaseId) {
     SELECT 
       SUM(
         CASE 
-          WHEN i.hasVariants = 1 THEN iv.sellingPrice * iv.quantity
+          WHEN i.hasVariants = 1 THEN iv.purchaseRate * iv.quantity
           ELSE i.purchaseRate * i.quantity
         END
       ) AS total
@@ -428,7 +428,7 @@ function registerPurchaseHandlers(db) {
       LEFT JOIN vendors v ON i.vendorId = v.id
       LEFT JOIN item_variants iv ON i.itemID = iv.itemID
       WHERE i.purchaseId IN (${placeholders})
-      ORDER BY i.itemName
+      ORDER BY i.itemID
     `;
 
       const rows = db.prepare(SQL).all(...purchaseIds);

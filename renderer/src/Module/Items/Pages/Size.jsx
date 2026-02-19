@@ -60,10 +60,10 @@ const Size = () => {
 
   const handleConfirmSave = async () => {
     if (editIndex !== null) {
-      const res = await updateSize(sizeToSave.id, Number(sizeToSave.sizeName));
+      const res = await updateSize(sizeToSave.id, sizeToSave.sizeName);
       if (!res.success) return alert(res.message);
     } else {
-      const res = await insertSize(Number(sizeToSave.sizeName));
+      const res = await insertSize(sizeToSave.sizeName);
       if (!res.success) return alert(res.message);
     }
     await loadSizes();

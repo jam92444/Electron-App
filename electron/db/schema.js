@@ -183,6 +183,37 @@ const permissionSchema = `
     description TEXT
   );
 `;
+
+const moduleSchema = `
+  CREATE TABLE IF NOT EXISTS modules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    module_key TEXT NOT NULL UNIQUE
+  );
+
+    INSERT OR IGNORE INTO modules (name, module_key)
+    VALUES 
+    ('Master', 'MASTER'),
+    ('Vendor', 'VENDOR'),
+    ('Customer', 'CUSTOMER'),
+    ('Sales', 'SALES'),
+    ('Purchase','PURCHASE'),
+    ('Label','LABEL'),
+    ('User','USER'),
+    ('Setting','SETTING');
+    `;
+
+const formSchema = `
+  CREATE TABLE IF NOT EXISTS forms (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    module_id INTEGER,
+    form_key TEXT NOT NULL UNIQUE,
+    FOREIGN KEY(module_id) REFERENCES modules(id) ON DELETE SET NULL
+  );
+`;
+
+// const roleSchema =
 module.exports = {
   purchaseSchema,
   discountSchema,
@@ -194,6 +225,8 @@ module.exports = {
   itemVariantSchema,
   settingSchema,
   customerSchema,
+  formSchema,
+  moduleSchema,
   userSchema,
   roleSchema,
   permissionSchema,

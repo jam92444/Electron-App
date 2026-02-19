@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import { Line, Bar } from "react-chartjs-2";
 import {
@@ -94,6 +95,7 @@ const Home = () => {
         if (variantStockRes?.success) setVariantStock(variantStockRes.data);
         if (monthlyRes?.success) setMonthlySummary(monthlyRes.data);
         if (vendorStatusRes?.success) setVendorStatus(vendorStatusRes.data);
+        console.log(lowStockRes);
       } catch (err) {
         console.error("Error loading dashboard:", err);
       }
@@ -230,7 +232,7 @@ const Home = () => {
           )}
         </ListSection>
 
-        <ListSection title="Variant Stock">
+        <ListSection title="Latest Variant">
           {variantStock.length ? (
             variantStock.map((v, idx) => (
               <Row

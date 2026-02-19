@@ -5,11 +5,10 @@ function registerSettingsHandlers(db) {
   ipcMain.handle("db:getSettings", () => {
     try {
       const settings = db.prepare("SELECT * FROM settings WHERE id = 1").get();
-
-      return { success: true, data: settings };
+      return { success: true, data: settings || {} };
     } catch (err) {
       console.error("❌ db:getSettings", err);
-      return { success: true, data: {} };
+      return { success: false, data: {} };
     }
   });
 
@@ -18,24 +17,29 @@ function registerSettingsHandlers(db) {
     try {
       db.prepare(
         `
-        UPDATE settings SET
-          companyName = ?,
-          gstTin = ?,
-          contactNumber = ?,
-          companyEmail = ?
-        WHERE id = 1
-      `
+        INSERT INTO settings (id, companyName, gstTin, contactNumber, companyEmail)
+        VALUES (1, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          companyName = excluded.companyName,
+          gstTin = excluded.gstTin,
+          contactNumber = excluded.contactNumber,
+          companyEmail = excluded.companyEmail
+      `,
       ).run(
         payload.companyName || "",
         payload.gstTin || "",
         payload.contactNumber || "",
-        payload.companyEmail || ""
+        payload.companyEmail || "",
       );
+
+      return {
+        success: true,
+        message: "Company settings updated successfully",
+      };
     } catch (err) {
       console.error("❌ db:updateCompanySettings", err);
+      return { success: false, message: "Failed to update company settings" };
     }
-
-    return { success: true, message: "Setting Updated Successfully" };
   });
 
   /* ---------- UPDATE BILLING SETTINGS ---------- */
@@ -43,28 +47,31 @@ function registerSettingsHandlers(db) {
     try {
       db.prepare(
         `
-        UPDATE settings SET
-          fullAddress = ?,
-          country = ?,
-          state = ?,
-          city = ?,
-          pinCode = ?
-        WHERE id = 1
-      `
+        INSERT INTO settings (id, fullAddress, country, state, city, pinCode)
+        VALUES (1, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          fullAddress = excluded.fullAddress,
+          country = excluded.country,
+          state = excluded.state,
+          city = excluded.city,
+          pinCode = excluded.pinCode
+      `,
       ).run(
         payload.fullAddress || "",
         payload.country || "",
         payload.state || "",
         payload.city || "",
-        payload.pinCode || ""
+        payload.pinCode || "",
       );
 
-      return { success: true, message: "Setting Updated Successfully" };
+      return {
+        success: true,
+        message: "Billing settings updated successfully",
+      };
     } catch (err) {
       console.error("❌ db:updateBillingSettings", err);
+      return { success: false, message: "Failed to update billing settings" };
     }
-
-    return { success: true };
   });
 
   /* ---------- UPDATE OTHER SETTINGS ---------- */
@@ -72,25 +79,28 @@ function registerSettingsHandlers(db) {
     try {
       db.prepare(
         `
-        UPDATE settings SET
-          supportContact = ?,
-          website = ?,
-          termsConditions = ?,
-          invoicePrefix = ?,
-          enableInvoicePrefix = ?
-        WHERE id = 1
-      `
+        INSERT INTO settings (id, supportContact, website, termsConditions, invoicePrefix, enableInvoicePrefix)
+        VALUES (1, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          supportContact = excluded.supportContact,
+          website = excluded.website,
+          termsConditions = excluded.termsConditions,
+          invoicePrefix = excluded.invoicePrefix,
+          enableInvoicePrefix = excluded.enableInvoicePrefix
+      `,
       ).run(
         payload.supportContact || "",
         payload.website || "",
         payload.termsConditions || "",
         payload.invoicePrefix || "",
-        payload.enableInvoicePrefix ? 1 : 0
+        payload.enableInvoicePrefix ? 1 : 0,
       );
+
+      return { success: true, message: "Other settings updated successfully" };
     } catch (err) {
       console.error("❌ db:updateOtherSettings", err);
+      return { success: false, message: "Failed to update other settings" };
     }
-    return { success: true, message: "Setting Updated Successfully" };
   });
 
   /* ---------- RESET INVOICE NUMBER ---------- */
@@ -98,19 +108,20 @@ function registerSettingsHandlers(db) {
     try {
       db.prepare(
         `
-        UPDATE settings
-        SET lastInvoiceNumber = 0
-        WHERE id = 1
-      `
+        INSERT INTO settings (id, lastInvoiceNumber)
+        VALUES (1, 0)
+        ON CONFLICT(id) DO UPDATE SET lastInvoiceNumber = 0
+      `,
       ).run();
+
+      return { success: true, message: "Invoice number reset successfully" };
     } catch (err) {
       console.error("❌ db:resetInvoiceNumber", err);
+      return { success: false, message: "Failed to reset invoice number" };
     }
-
-    return { success: true };
   });
 
-  console.log("✅ Settings IPC handlers registered (always success)");
+  console.log("✅ Settings IPC handlers registered (safe for missing row)");
 }
 
 module.exports = { registerSettingsHandlers };

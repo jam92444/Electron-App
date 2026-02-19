@@ -9,6 +9,25 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "build": {
+    "chunkSizeWarningLimit": 1200,
+    "rollupOptions": {
+      "output": {
+        "manualChunks": {
+          "vendor": [
+            "react",
+            "react-dom"
+          ],
+          "select": [
+            "react-select"
+          ],
+          "locationData": [
+            "country-state-city"
+          ]
+        }
+      }
+    }
+  },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@react-oauth/google": "^0.12.2",

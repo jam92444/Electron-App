@@ -35,7 +35,9 @@ function registerSizeHandlers(db) {
   ----------------------------- */
   ipcMain.handle("db:getSizes", () => {
     try {
-      const sizes = db.prepare(`SELECT * FROM sizes ORDER BY size ASC`).all();
+      const sizes = db
+        .prepare(`SELECT s.* FROM sizes s ORDER BY s.id DESC`)
+        .all();
       return { success: true, sizes };
     } catch (err) {
       return { success: false, error: "DB_ERROR", message: err.message };
@@ -68,10 +70,9 @@ function registerSizeHandlers(db) {
         };
       }
 
-      const result = db.prepare(`UPDATE sizes SET size = ? WHERE id = ?`).run(
-        size,
-        id
-      );
+      const result = db
+        .prepare(`UPDATE sizes SET size = ? WHERE id = ?`)
+        .run(size, id);
 
       if (result.changes === 0) {
         return {

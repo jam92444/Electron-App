@@ -15,6 +15,8 @@ const {
   userSchema,
   roleSchema,
   permissionSchema,
+  moduleSchema,
+  formSchema,
 } = require("./schema");
 
 let db;
@@ -69,6 +71,12 @@ function initDatabase() {
 
   /* ---------------- Permission ---------------- */
   db.prepare(permissionSchema).run();
+
+  /* ---------------- moduleSchema ---------------- */
+  db.exec(moduleSchema);
+
+  /* ---------------- formSchema ---------------- */
+  db.prepare(formSchema).run();
 
   console.log("✅ Database initialized successfully");
 

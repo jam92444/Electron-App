@@ -1,14 +1,38 @@
 import Select from "react-select";
 import Input from "../../../components/ReuseComponents/Input";
-import { Country, State, City } from "country-state-city";
 import { useState } from "react";
 
-// Utility function to capitalize each word
+/* ================= INDIA STATIC DATA ================= */
+
+const COUNTRY_OPTIONS = [{ label: "India", value: "IN" }];
+
+const STATE_OPTIONS = [
+  { label: "Maharashtra", value: "MH" },
+  { label: "Delhi", value: "DL" },
+  { label: "Karnataka", value: "KA" },
+  { label: "Tamil Nadu", value: "TN" },
+  { label: "Gujarat", value: "GJ" },
+  { label: "Rajasthan", value: "RJ" },
+  { label: "Uttar Pradesh", value: "UP" },
+  { label: "Madhya Pradesh", value: "MP" },
+  { label: "West Bengal", value: "WB" },
+  { label: "Punjab", value: "PB" },
+  { label: "Haryana", value: "HR" },
+  { label: "Bihar", value: "BR" },
+  { label: "Telangana", value: "TS" },
+  { label: "Andhra Pradesh", value: "AP" },
+  { label: "Kerala", value: "KL" },
+];
+
+/* ================= Utility ================= */
+
 const capitalizeWords = (str) =>
   str
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+
+/* ================= Component ================= */
 
 const VendorBasicDetails = ({ vendorData, setVendorData }) => {
   const [errors, setErrors] = useState({});
@@ -39,7 +63,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
         break;
 
       case "city":
-        if (!value) error = "City is required";
+        if (!value.trim()) error = "City is required";
         break;
 
       case "address1":
@@ -50,7 +74,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
         if (
           value &&
           !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(
-            value.toUpperCase()
+            value.toUpperCase(),
           )
         ) {
           error = "Invalid GST number";
@@ -63,29 +87,6 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
 
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
-
-  // ----- Data -----
-  const countryOptions = Country.getAllCountries().map((c) => ({
-    label: c.name,
-    value: c.isoCode,
-  }));
-
-  const stateOptions = vendorData.country
-    ? State.getStatesOfCountry(vendorData.country).map((s) => ({
-        label: s.name,
-        value: s.isoCode,
-      }))
-    : [];
-
-  const cityOptions =
-    vendorData.country && vendorData.state
-      ? City.getCitiesOfState(vendorData.country, vendorData.state).map(
-          (c) => ({
-            label: c.name,
-            value: c.name,
-          })
-        )
-      : [];
 
   return (
     <div className="mb-8 p-4 rounded-lg">
@@ -116,7 +117,6 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
               contactPerson: capitalizeWords(e.target.value),
             })
           }
-          error={errors.contactPerson}
         />
 
         {/* Phone */}
@@ -129,6 +129,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
           }}
           error={errors.phone}
         />
+
         {/* WhatsApp */}
         <Input
           label="WhatsApp"
@@ -142,7 +143,6 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
         <Input
           label="Email"
           value={vendorData.email}
-          classname="text-normal"
           onChange={(e) => {
             setVendorData({ ...vendorData, email: e.target.value });
             validateField("email", e.target.value);
@@ -150,28 +150,16 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
           error={errors.email}
         />
 
-        {/* Country */}
+        {/* Country (Fixed to India) */}
         <div className="relative mt-4">
           <label className="text-xs font-medium absolute bg-white -top-2 left-4 px-1 text-gray-100 z-20">
             Country *
           </label>
           <Select
-            options={countryOptions}
-            value={countryOptions.find((c) => c.value === vendorData.country)}
-            onChange={(selected) => {
-              setVendorData({
-                ...vendorData,
-                country: selected.value,
-                state: "",
-                city: "",
-              });
-              validateField("country", selected.value);
-            }}
-            placeholder="Select Country"
+            options={COUNTRY_OPTIONS}
+            value={COUNTRY_OPTIONS[0]}
+            isDisabled
           />
-          {errors.country && (
-            <p className="text-red-500 text-xs mt-1">{errors.country}</p>
-          )}
         </div>
 
         {/* State */}
@@ -180,43 +168,33 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
             State *
           </label>
           <Select
-            options={stateOptions}
-            value={stateOptions.find((s) => s.value === vendorData.state)}
+            options={STATE_OPTIONS}
+            value={STATE_OPTIONS.find((s) => s.value === vendorData.state)}
             onChange={(selected) => {
               setVendorData({
                 ...vendorData,
+                country: "IN",
                 state: selected.value,
-                city: "",
               });
               validateField("state", selected.value);
             }}
             placeholder="Select State"
-            isDisabled={!vendorData.country}
           />
           {errors.state && (
             <p className="text-red-500 text-xs mt-1">{errors.state}</p>
           )}
         </div>
 
-        {/* City */}
-        <div className="relative mt-4">
-          <label className="text-xs font-medium absolute bg-white -top-2 left-4 px-1 text-gray-100 z-20">
-            City *
-          </label>
-          <Select
-            options={cityOptions}
-            value={cityOptions.find((c) => c.value === vendorData.city)}
-            onChange={(selected) => {
-              setVendorData({ ...vendorData, city: selected.value });
-              validateField("city", selected.value);
-            }}
-            placeholder="Select City"
-            isDisabled={!vendorData.state}
-          />
-          {errors.city && (
-            <p className="text-red-500 text-xs mt-1">{errors.city}</p>
-          )}
-        </div>
+        {/* City (Manual Input Now) */}
+        <Input
+          label="City *"
+          value={vendorData.city}
+          onChange={(e) => {
+            setVendorData({ ...vendorData, city: e.target.value });
+            validateField("city", e.target.value);
+          }}
+          error={errors.city}
+        />
 
         {/* GST Number */}
         <Input
@@ -229,6 +207,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
           }}
           error={errors.gstNumber}
         />
+
         {/* Address */}
         <Input
           label="Address Line 1 *"
@@ -236,6 +215,7 @@ const VendorBasicDetails = ({ vendorData, setVendorData }) => {
           onChange={(e) =>
             setVendorData({ ...vendorData, address1: e.target.value })
           }
+          error={errors.address1}
         />
 
         <Input

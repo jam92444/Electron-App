@@ -97,22 +97,17 @@ const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
       key: "actions",
       render: (_, record, index) => (
         <Space size="middle">
-          <button
-            onClick={() => onEdit(index)}
-            className="cursor-not-allowed"
-            disabled={true}
-          >
-            <FaPen className="text-gray-300 hover:text-blue-800" />
+          <button onClick={() => onEdit(index)} className="cursor-pointer">
+            <FaPen className="text-blue-800" />
           </button>
           <button
             onClick={() => {
               setSelectedItemIndex(index);
               setIsModalOpen(true);
             }}
-            className="cursor-not-allowed"
-            disabled={true}
+            className="cursor-pointer"
           >
-            <FaTrashCan className="text-gray-300 hover:text-red-800" />
+            <FaTrashCan className="text-red-800" />
           </button>
         </Space>
       ),

@@ -11,10 +11,12 @@ import {
   insertPurchaseItem,
 } from "../Services/purchaseService";
 
-import AddItemForm from "../../Items/Components/AddItemForm";
-import ViewAllItems from "../../Items/Components/ViewAllItems";
 import { units } from "../../../Utils/data";
 import { useNavigate } from "react-router-dom";
+import {
+  AddItemForm,
+  ViewAllItems,
+} from "../../Items/Routers/items.lazyimports";
 
 const PurchaseCreate = () => {
   const navigate = useNavigate();
@@ -91,11 +93,15 @@ const PurchaseCreate = () => {
               label="Remarks"
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
-            />  
+            />
           </div>
 
           <Button buttonName="Save & Continue" onClick={handleCreatePurchase} />
-          <Button buttonName="Cancel" buttonType="cancel" onClick={()=>navigate('/purchase')} />
+          <Button
+            buttonName="Cancel"
+            buttonType="cancel"
+            onClick={() => navigate("/purchase")}
+          />
         </div>
       )}
 
