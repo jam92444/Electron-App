@@ -211,6 +211,23 @@ const formSchema = `
     form_key TEXT NOT NULL UNIQUE,
     FOREIGN KEY(module_id) REFERENCES modules(id) ON DELETE SET NULL
   );
+
+  INSERT OR IGNORE INTO forms (name, module_id, form_key) 
+VALUES 
+    ('Items', 1, 'ITEMS'),
+    ('Size', 1, 'SIZE'),
+    ('Discount', 1, 'DISCOUNT'),
+    ('CreateVendor', 2, 'CREATE_VENDOR'),
+    ('ManageVendor', 2, 'MANAGE_VENDOR'),
+    ('Customer', 3, 'MANAGE_CUSTOMER'),
+    ('Salesbill', 4, 'SALES_BILL'),
+    ('Generatebill', 4, 'GENERATE_BILL'),
+    ('Purchase_Management', 5, 'PURCHASE_MANAGEMENT'),
+    ('GenerateLabel', 6, 'GENERATE_LABEL'),
+    ('UsersManagement', 7, 'USERS_MANAGEMENT'),
+    ('CompanySetting', 8, 'COMPANY_SETTING'),
+    ('UserProfile', 8, 'USER_PROFILE');
+
 `;
 
 // const roleSchema =

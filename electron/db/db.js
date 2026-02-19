@@ -76,7 +76,7 @@ function initDatabase() {
   db.exec(moduleSchema);
 
   /* ---------------- formSchema ---------------- */
-  db.prepare(formSchema).run();
+  db.exec(formSchema);
 
   console.log("✅ Database initialized successfully");
 
