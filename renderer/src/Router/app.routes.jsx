@@ -8,6 +8,7 @@ import { VendorRoutes } from "../Module/Vendor/Routes/vendor.routes";
 import { discountRoutes } from "../Module/Discount/Routes/discount.routes";
 import { CustomerRoutes } from "../Module/Customer/Routes/customer.routes";
 import { PurchaseRoutes } from "../Module/Purchase/Routes/purchase.routes";
+import { userRoutes } from "../Module/User/Routes/user.routes";
 
 export const appRoutes = [
   {
@@ -40,6 +41,9 @@ export const appRoutes = [
 
       // Purchase Module Routes
       ...PurchaseRoutes,
+
+      // User Module Routes
+      ...userRoutes,
     ],
   },
 ];

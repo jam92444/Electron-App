@@ -95,7 +95,7 @@ const Home = () => {
         if (variantStockRes?.success) setVariantStock(variantStockRes.data);
         if (monthlyRes?.success) setMonthlySummary(monthlyRes.data);
         if (vendorStatusRes?.success) setVendorStatus(vendorStatusRes.data);
-        console.log(lowStockRes);
+        // console.log(lowStockRes);
       } catch (err) {
         console.error("Error loading dashboard:", err);
       }

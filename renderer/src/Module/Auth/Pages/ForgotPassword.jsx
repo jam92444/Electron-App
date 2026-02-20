@@ -12,7 +12,7 @@ const ForgotPassword = () => {
     try {
       const { data } = await axios.post(
         "http://localhost:5000/api/auth/google",
-        { idToken }
+        { idToken },
       );
 
       console.log("Logged in:", data);
@@ -30,14 +30,13 @@ const ForgotPassword = () => {
         className="fixed inset-0 w-full h-full object-cover z-0 "
         alt="Background"
       />
-     
 
       {/* Main Content */}
       <main className="relative z-10 flex flex-col lg:flex-row items-center justify-center w-full min-h-screen px-4 sm:px-16">
         {/* Text Side */}
         <section className="hidden md:flex lg:w-1/2 flex-col justify-start gap-4 -mt-10">
           <img src={asset.logo} className="w-[50%] " alt="Logo" />
-          
+
           <h1 className="text-3xl sm:text-5xl font-extrabold text-orange-100 mb-2 leading-tight">
             Need help keeping your account secure?
           </h1>
@@ -50,7 +49,6 @@ const ForgotPassword = () => {
         {/* Logo for mobile */}
         <div className="w-full mt-10 sm:hidden flex justify-center">
           <img src={asset.logo} className="w-[50%] " alt="Logo" />
-         
         </div>
 
         {/* Form Side */}
@@ -71,6 +69,7 @@ const ForgotPassword = () => {
             <Button
               buttonType="save"
               buttonName="Send Reset Email"
+              onClick={handleForgotPassword}
               classname="w-full font-semibold text-lg p-4"
             />
           </form>

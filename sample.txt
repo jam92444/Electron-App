@@ -42,12 +42,6 @@
 
 
 
-    CREATE TABLE IF NOT EXISTS permissions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      module_id INTEGER,
-      action TEXT,
-      UNIQUE(module_id, action)
-    );
 
     CREATE TABLE IF NOT EXISTS role_permissions (
       role_id INTEGER,
