@@ -25,6 +25,7 @@
     "wait-on": "^9.0.3"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.5.0",
     "react-chartjs-2": "^5.3.1"
   },

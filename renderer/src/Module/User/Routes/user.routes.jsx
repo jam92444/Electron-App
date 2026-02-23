@@ -1,7 +1,7 @@
 import { lazy } from "react";
 import { withSuspense } from "../../../Router/withSuspense";
 
-const UserManagement = lazy(() => import("../Pages/User"));
+const UserManagement = lazy(() => import("../Pages/AddUser"));
 
 export const userRoutes = [
   {

@@ -116,7 +116,7 @@ AND p.permission_key = '*.*';
 INSERT OR IGNORE INTO users 
 (username, password_hash, full_name, email, status)
 VALUES 
-('superadmin', '$2b$10$REPLACE_WITH_REAL_HASH', 'Super Admin', 'superadmin@gmail.com', 'Active');
+('superadmin', 'jamal@1231', 'Super Admin', 'superadmin@gmail.com', 'Active');
 
 -- Assign super_admin role to superadmin user
 INSERT OR IGNORE INTO user_roles (user_id, role_id)

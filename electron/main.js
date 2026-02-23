@@ -10,6 +10,8 @@ const { registerSettingsHandlers } = require("./modules/Settings/Setting");
 const { registerDiscountHandlers } = require("./modules/Discount/discount");
 const { registerCustomerHandlers } = require("./modules/Customer/customer");
 const { registerDashboardHandlers } = require("./modules/Purchase/Dashboard");
+const registerUserHandlers = require("./modules/Users/user");
+const registerRoleHandlers = require("./modules/Items/role");
 
 let mainWindow;
 let db;
@@ -53,6 +55,10 @@ app.whenReady().then(() => {
   registerDiscountHandlers(db);
   // Customer
   registerCustomerHandlers(db);
+  // User
+  registerUserHandlers(db);
+  // Role
+  registerRoleHandlers(db);
   createWindow();
 });
 

@@ -124,4 +124,21 @@ contextBridge.exposeInMainWorld("api", {
   updateOtherSettings: (data) =>
     ipcRenderer.invoke("db:updateOtherSettings", data),
   resetInvoiceNumber: () => ipcRenderer.invoke("db:resetInvoiceNumber"),
+
+  /*================= USERS ====================== */
+  getUsers: () => ipcRenderer.invoke("db:getUsers"),
+  insertUser: (user) => ipcRenderer.invoke("db:insertUser", user),
+  updateUser: (user) => ipcRenderer.invoke("db:updateUser", user),
+  deleteUser: (userId) => ipcRenderer.invoke("db:deleteUser", userId),
+
+  /* ----------------- Roles ----------------- */
+  getRoles: () => ipcRenderer.invoke("db:getRoles"),
+  getPermissions: () => ipcRenderer.invoke("db:getPermissions"),
+  createRole: (role) => ipcRenderer.invoke("db:createRole", role),
+  updateRole: (role) => ipcRenderer.invoke("db:updateRole", role),
+  deleteRole: (roleId) => ipcRenderer.invoke("db:deleteRole", roleId),
+  getRolePermissions: (roleId) =>
+    ipcRenderer.invoke("db:getRolePermissions", roleId),
+  setRolePermissions: (roleId, permissionIds) =>
+    ipcRenderer.invoke("db:setRolePermissions", roleId, permissionIds),
 });

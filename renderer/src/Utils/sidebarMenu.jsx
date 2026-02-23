@@ -24,6 +24,7 @@ export const menuItems = [
       { label: "Items", path: "/add-item" },
       { label: "Sizes", path: "/size" },
       { label: "Discounts", path: "/discounts" },
+      { label: "Role", path: "/role" },
     ],
   },
   {
@@ -78,8 +79,8 @@ export const menuItems = [
     children: [
       { label: "Company Details", path: "/setting/company-details" },
       { label: "User Profile", path: "/projects/link2" },
-      { label: "Users Setting", path: "/projects/link3" },
-      { label: "Document Settings", path: "/projects/link3" },
+      // { label: "Document Settings", path: "/projects/link3" },
+      { label: "Config Permission", path: "/setting/config-permission" },
     ],
   },
 ];

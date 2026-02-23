@@ -20,3 +20,12 @@ export const updateOtherSettings = (data) =>
 
 /* -------- Invoice Helpers -------- */
 export const resetInvoiceNumber = () => window.api.resetInvoiceNumber();
+
+export const getRoles = () => window.api.getRoles();
+export const getPermissions = () => window.api.getPermissions();
+export const createRole = (role) => window.api.createRole(role);
+export const updateRole = (role) => window.api.updateRole(role);
+export const deleteRole = (id) => window.api.deleteRole(id);
+export const getRolePermissions = (id) => window.api.getRolePermissions(id);
+export const setRolePermissions = (id, permissions) =>
+  window.api.setRolePermissions(id, permissions);
