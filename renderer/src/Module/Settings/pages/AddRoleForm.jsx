@@ -84,7 +84,7 @@ const AddRoleForm = ({
               return acc;
             }, {}),
           ).map(([module, perms]) => {
-            const isWildcard = module === "*";
+            // const isWildcard = module === "*";
             const wildcardPermission = perms.find(
               (p) => p.permission_key === "*.*",
             );

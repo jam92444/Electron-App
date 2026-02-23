@@ -22,6 +22,7 @@ const ViewAllRoles = ({ roles, onEdit, onDelete }) => {
                 <Button
                   buttonName="Edit"
                   buttonType="edit"
+                  classname="bg-orange-100 "
                   onClick={() => onEdit(index)}
                 />
                 {role.name !== "super_admin" && (
