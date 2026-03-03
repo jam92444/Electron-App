@@ -5,12 +5,14 @@ import toast from "react-hot-toast";
 import { getUsers, insertUser, updateUser } from "../Services/user.services";
 import AddUserForm from "./AddUserForm";
 import ViewAllUsers from "./ViewAllUsers";
+import { getRoles } from "../../Settings/Services/settingService";
 
 /* ---------------------------------------------------------
    MAIN COMPONENT
 ---------------------------------------------------------- */
 const AddUser = () => {
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [errorModal, setErrorModal] = useState({
@@ -19,10 +21,6 @@ const AddUser = () => {
     message: "",
   });
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    loadUsers();
-  }, []);
 
   const loadUsers = async () => {
     try {
@@ -65,6 +63,7 @@ const AddUser = () => {
       }
 
       toast.success(result.message || "Saved successfully!");
+      setUsers([]);
       await loadUsers();
       setEditingIndex(null);
       setEditingUser(null);
@@ -82,6 +81,22 @@ const AddUser = () => {
     setEditingUser(null);
   };
 
+  const loadRoles = async () => {
+    try {
+      const res = await getRoles();
+      if (res.success) {
+        setRoles(res.roles);
+        console.log(roles);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+    loadRoles();
+  }, []);
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       {/* ---------------- PAGE HEADER ---------------- */}
@@ -109,6 +124,7 @@ const AddUser = () => {
         <AddUserForm
           initialUser={editingUser}
           users={users}
+          roles={roles}
           onSave={handleSave}
           onCancel={handleCancelEdit}
           disabled={saving}

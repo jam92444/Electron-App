@@ -10,9 +10,12 @@ const { registerSettingsHandlers } = require("./modules/Settings/Setting");
 const { registerDiscountHandlers } = require("./modules/Discount/discount");
 const { registerCustomerHandlers } = require("./modules/Customer/customer");
 const { registerDashboardHandlers } = require("./modules/Purchase/Dashboard");
-const registerUserHandlers = require("./modules/Users/user");
+const {
+  registerUserHandlers,
+  createSuperAdmin,
+} = require("./modules/Users/user");
 const registerRoleHandlers = require("./modules/Items/role");
-
+const registerAuthHandler = require("./modules/Auth/auth");
 let mainWindow;
 let db;
 
@@ -35,9 +38,10 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   db = initDatabase();
-
+  // ✅ Create super admin securely
+  await createSuperAdmin(db);
   // 🔐 Register IPC handlers ONCE
   registerItemHandlers(db);
   //  Size
@@ -59,6 +63,9 @@ app.whenReady().then(() => {
   registerUserHandlers(db);
   // Role
   registerRoleHandlers(db);
+  // Auth
+  registerAuthHandler(db);
+
   createWindow();
 });
 

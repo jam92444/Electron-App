@@ -2,17 +2,33 @@ const { ipcMain } = require("electron");
 const bcrypt = require("bcrypt");
 
 function registerUserHandlers(db) {
-
   /* =====================================================
      GET USERS
   ===================================================== */
+  /* =====================================================
+   GET USERS (WITH ROLE)
+===================================================== */
   ipcMain.handle("db:getUsers", async () => {
     try {
-      const users = db.prepare(`
-        SELECT id, username, full_name, email, status, created_at
-        FROM users
-        ORDER BY created_at DESC
-      `).all();
+      const users = db
+        .prepare(
+          `
+        SELECT 
+          u.id,
+          u.username,
+          u.full_name,
+          u.email,
+          u.status,
+          u.created_at,
+          r.id AS role_id,
+          r.name AS role_name
+        FROM users u
+        LEFT JOIN user_roles ur ON ur.user_id = u.id
+        LEFT JOIN roles r ON r.id = ur.role_id
+        ORDER BY u.created_at DESC
+      `,
+        )
+        .all();
 
       return { success: true, users };
     } catch (error) {
@@ -21,16 +37,15 @@ function registerUserHandlers(db) {
     }
   });
 
-
   /* =====================================================
      INSERT USER
   ===================================================== */
   ipcMain.handle("db:insertUser", async (event, user) => {
     try {
       // Check duplicate username
-      const existing = db.prepare(`
-        SELECT id FROM users WHERE username = ?
-      `).get(user.username);
+      const existing = db
+        .prepare(`SELECT id FROM users WHERE username = ?`)
+        .get(user.username);
 
       if (existing) {
         return { success: false, error: "USERNAME_EXISTS" };
@@ -38,58 +53,106 @@ function registerUserHandlers(db) {
 
       const hashedPassword = await bcrypt.hash(user.password, 10);
 
-      db.prepare(`
+      // Transaction for user + role
+      const trx = db.transaction(() => {
+        const result = db
+          .prepare(
+            `
         INSERT INTO users
         (username, password_hash, full_name, email, status)
         VALUES (?, ?, ?, ?, ?)
-      `).run(
-        user.username,
-        hashedPassword,
-        user.full_name || "",
-        user.email || "",
-        user.status || "Active"
-      );
+      `,
+          )
+          .run(
+            user.username,
+            hashedPassword,
+            user.full_name || "",
+            user.email || "",
+            user.status || "Active",
+          );
+
+        const userId = result.lastInsertRowid;
+
+        // 🚫 Do NOT assign role to superadmin
+        if (user.username !== "superadmin" && user.role_id) {
+          db.prepare(
+            `
+          INSERT INTO user_roles (user_id, role_id)
+          VALUES (?, ?)
+        `,
+          ).run(userId, user.role_id);
+        }
+      });
+
+      trx();
 
       return { success: true, message: "User created successfully" };
-
     } catch (error) {
       console.error("INSERT USER ERROR:", error);
       return { success: false, error: "Failed to create user" };
     }
   });
 
-
   /* =====================================================
      UPDATE USER
   ===================================================== */
   ipcMain.handle("db:updateUser", async (event, user) => {
     try {
-      const existing = db.prepare(`
-        SELECT id FROM users WHERE username = ? AND id != ?
-      `).get(user.username, user.id);
+      const existingUser = db
+        .prepare(
+          `
+      SELECT username FROM users WHERE id = ?
+    `,
+        )
+        .get(user.id);
 
-      if (existing) {
+      if (!existingUser) {
+        return { success: false, error: "USER_NOT_FOUND" };
+      }
+
+      const isSuperAdmin = existingUser.username === "superadmin";
+
+      // 🔒 Prevent renaming superadmin
+      if (isSuperAdmin && user.username !== "superadmin") {
+        return { success: false, error: "Cannot rename superadmin" };
+      }
+
+      // 🔒 Prevent deactivating superadmin
+      if (isSuperAdmin && user.status !== "Active") {
+        return { success: false, error: "Cannot deactivate superadmin" };
+      }
+
+      // Check duplicate username
+      const duplicate = db
+        .prepare(
+          `
+      SELECT id FROM users WHERE username = ? AND id != ?
+    `,
+        )
+        .get(user.username, user.id);
+
+      if (duplicate) {
         return { success: false, error: "USERNAME_EXISTS" };
       }
 
       let query = `
-        UPDATE users
-        SET username = ?,
-            full_name = ?,
-            email = ?,
-            status = ?
-      `;
+      UPDATE users
+      SET username = ?,
+          full_name = ?,
+          email = ?,
+          status = ?
+    `;
 
       const params = [
-        user.username,
+        user.username.trim(),
         user.full_name || "",
         user.email || "",
-        user.status || "Active"
+        user.status || "Active",
       ];
 
-      // If password provided → update
+      // ✅ Allow password change for everyone (including superadmin)
       if (user.password && user.password.trim() !== "") {
-        const hashedPassword = await bcrypt.hash(user.password, 10);
+        const hashedPassword = await bcrypt.hash(user.password.trim(), 10);
         query += `, password_hash = ?`;
         params.push(hashedPassword);
       }
@@ -99,14 +162,23 @@ function registerUserHandlers(db) {
 
       db.prepare(query).run(...params);
 
-      return { success: true, message: "User updated successfully" };
+      // 🔄 Update role if not superadmin
+      if (user.username !== "superadmin" && user.role_id) {
+        db.prepare(`DELETE FROM user_roles WHERE user_id = ?`).run(user.id);
 
+        db.prepare(
+          `
+          INSERT INTO user_roles (user_id, role_id)
+          VALUES (?, ?)
+        `,
+        ).run(user.id, user.role_id);
+      }
+      return { success: true, message: "User updated successfully" };
     } catch (error) {
       console.error("UPDATE USER ERROR:", error);
       return { success: false, error: "Failed to update user" };
     }
   });
-
 
   /* =====================================================
      DELETE USER
@@ -114,27 +186,54 @@ function registerUserHandlers(db) {
   ipcMain.handle("db:deleteUser", async (event, id) => {
     try {
       // Prevent deleting superadmin
-      const user = db.prepare(`
+      const user = db
+        .prepare(
+          `
         SELECT username FROM users WHERE id = ?
-      `).get(id);
+      `,
+        )
+        .get(id);
 
       if (user?.username === "superadmin") {
         return {
           success: false,
-          error: "Cannot delete superadmin user"
+          error: "Cannot delete superadmin user",
         };
       }
 
       db.prepare(`DELETE FROM users WHERE id = ?`).run(id);
 
       return { success: true, message: "User deleted successfully" };
-
     } catch (error) {
       console.error("DELETE USER ERROR:", error);
       return { success: false, error: "Failed to delete user" };
     }
   });
-
 }
 
-module.exports = registerUserHandlers;
+async function createSuperAdmin(db) {
+  const existing = db
+    .prepare("SELECT id FROM users WHERE username = ?")
+    .get("superadmin");
+
+  if (!existing) {
+    const hashedPassword = await bcrypt.hash("jamal@1231", 10);
+
+    db.prepare(
+      `
+      INSERT INTO users (username, password_hash, full_name, email, status)
+      VALUES (?, ?, ?, ?, ?)
+    `,
+    ).run(
+      "superadmin",
+      hashedPassword,
+      "Super Admin",
+      "superadmin@gmail.com",
+      "Active",
+    );
+
+    console.log("✅ Super admin created with hashed password");
+  }
+}
+
+module.exports = { registerUserHandlers, createSuperAdmin };

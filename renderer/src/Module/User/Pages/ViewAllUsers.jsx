@@ -13,6 +13,7 @@ const ViewAllUsers = ({ users, onEdit }) => {
               <th className="border px-3 py-2">Username</th>
               <th className="border px-3 py-2">Full Name</th>
               <th className="border px-3 py-2">Email</th>
+              <th className="border px-3 py-2">Role</th>
               <th className="border px-3 py-2">Status</th>
               <th className="border px-3 py-2">Action</th>
             </tr>
@@ -23,6 +24,9 @@ const ViewAllUsers = ({ users, onEdit }) => {
                 <td className="border px-3 py-2">{user.username}</td>
                 <td className="border px-3 py-2">{user.full_name}</td>
                 <td className="border px-3 py-2">{user.email}</td>
+                <td className="border px-3 py-2 capitalize">
+                  {user.role_name}
+                </td>
                 <td className="border px-3 py-2">{user.status}</td>
                 <td className="border px-3 py-2">
                   <Button

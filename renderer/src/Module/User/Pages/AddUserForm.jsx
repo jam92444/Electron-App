@@ -2,7 +2,14 @@
 import { useEffect, useState } from "react";
 import Button from "../../../components/ReuseComponents/Button";
 
-const AddUserForm = ({ initialUser, onSave, onCancel, disabled, isEdit }) => {
+const AddUserForm = ({
+  initialUser,
+  onSave,
+  onCancel,
+  disabled,
+  isEdit,
+  roles,
+}) => {
   const [formData, setFormData] = useState({
     id: null,
     username: "",
@@ -10,6 +17,7 @@ const AddUserForm = ({ initialUser, onSave, onCancel, disabled, isEdit }) => {
     full_name: "",
     email: "",
     status: "Active",
+    role_id: "",
   });
 
   useEffect(() => {
@@ -34,6 +42,7 @@ const AddUserForm = ({ initialUser, onSave, onCancel, disabled, isEdit }) => {
 
     const success = await onSave(formData, isEdit);
     if (success && !isEdit) {
+      onCancel;
       setFormData({
         id: null,
         username: "",
@@ -43,6 +52,18 @@ const AddUserForm = ({ initialUser, onSave, onCancel, disabled, isEdit }) => {
         status: "Active",
       });
     }
+  };
+
+  const handleCancel = async () => {
+    await onCancel();
+    setFormData({
+      id: null,
+      username: "",
+      password: "",
+      full_name: "",
+      email: "",
+      status: "Active",
+    });
   };
 
   return (
@@ -76,6 +97,7 @@ const AddUserForm = ({ initialUser, onSave, onCancel, disabled, isEdit }) => {
           className="w-full border rounded px-3 py-2 mt-1"
           placeholder={isEdit ? "Leave blank to keep current password" : ""}
         />
+        <small>{formData.password}</small>
       </div>
 
       <div>
@@ -115,7 +137,26 @@ const AddUserForm = ({ initialUser, onSave, onCancel, disabled, isEdit }) => {
           <option value="Inactive">Inactive</option>
         </select>
       </div>
-
+      <div>
+        <label className="text-sm font-medium">Role *</label>
+        <select
+          name="role_id"
+          value={formData.role_id}
+          onChange={handleChange}
+          disabled={disabled || formData.username === "superadmin"}
+          className="w-full border rounded px-3 py-2 mt-1"
+          required
+        >
+          <option value="">Select Role</option>
+          {roles
+            .filter((role) => role.name !== "super_admin") // prevent selecting super_admin role
+            .map((role) => (
+              <option key={role.id} value={role.id}>
+                {role.name}
+              </option>
+            ))}
+        </select>
+      </div>
       <div className="md:col-span-2 flex gap-3 mt-4">
         <Button
           buttonName={isEdit ? "Update User" : "Save User"}
@@ -128,7 +169,7 @@ const AddUserForm = ({ initialUser, onSave, onCancel, disabled, isEdit }) => {
             buttonName="Cancel"
             buttonType="cancel"
             type="button"
-            onClick={onCancel}
+            onClick={handleCancel}
           />
         )}
       </div>

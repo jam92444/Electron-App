@@ -141,4 +141,9 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("db:getRolePermissions", roleId),
   setRolePermissions: (roleId, permissionIds) =>
     ipcRenderer.invoke("db:setRolePermissions", roleId, permissionIds),
+
+  loginUser: (data) => ipcRenderer.invoke("db:loginUser", data),
+  logoutUser: () => ipcRenderer.invoke("db:logout"),
+  getCurrentUser: () => ipcRenderer.invoke("db:getCurrentUser"),
+  restoreSession: () => ipcRenderer.invoke("db:restoreSession"),
 });

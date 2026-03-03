@@ -1,14 +1,46 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import classNames from "classnames";
 import asset from "../Utils/asset";
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { menuItems } from "../Utils/sidebarMenu";
 import { IoIosArrowDown } from "react-icons/io";
+import { RiLogoutCircleLine } from "react-icons/ri";
+import { useStateContext } from "../context/StateContext";
+import { LOGOUT, SET_TOKEN, USER_DATA } from "../context/reducer/actionTypes";
+import {
+  logoutUser,
+  restoreSession,
+} from "../Module/Auth/Services/auth.services";
 
 const AppSidebar = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(null); // store which parent menu is open
+  const { dispatch } = useStateContext();
 
+  const handleLogout = async () => {
+    try {
+      // 🔐 tell main process to clear session
+      await logoutUser();
+
+      // 🧹 clear reducer state
+      dispatch({ type: LOGOUT });
+
+      // 🗑 clear localStorage persistence
+      localStorage.removeItem("auth");
+
+      // 📱 close sidebar if mobile
+      if (window.innerWidth < 1024) {
+        toggleSidebar();
+      }
+
+      // 🚀 navigate to login
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+  // console.log("Hi");
   const handleNavigation = (path) => {
     navigate(path);
     if (window.innerWidth < 1024) {
@@ -98,6 +130,16 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
               )}
             </li>
           ))}
+          <li
+            onClick={() => {
+              handleLogout();
+              console.log("Cllicked");
+            }}
+            className="flex items-center absolute gap-2 mt-2 bottom-4 w-40 cursor-pointer hover:bg-red-500 hover:scale-95 transition-all ml-2 mx-auto my-0 bg-red-600 p-2 rounded text-white"
+          >
+            {" "}
+            <RiLogoutCircleLine /> Logout
+          </li>
         </ul>
       </nav>
     </aside>
@@ -121,9 +163,24 @@ const AppLayout = () => {
   // const pageTitle = getPageTitle(location.pathname);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const { state, dispatch } = useStateContext();
+  const userData = state.user;
+
   useEffect(() => {
+    const restore = async () => {
+      const result = await restoreSession();
+
+      if (result.success) {
+        dispatch({ type: USER_DATA, payload: result.user });
+        dispatch({ type: SET_TOKEN, payload: "logged_in" });
+      }
+    };
+
     window.scrollTo(0, 0);
+    restore();
+    localStorage.removeItem("userData");
   }, []);
+
   return (
     <div className="min-h-screen bg-white ">
       {/* Mobile Toggle Button */}
@@ -149,7 +206,7 @@ const AppLayout = () => {
               alt="Avatar"
             />
             <div className="ml-2 whitespace-nowrap text-sm font-semibold text-white">
-              Hi, Afsal
+              Hi, {userData?.full_name}
             </div>
           </div>
         </div>

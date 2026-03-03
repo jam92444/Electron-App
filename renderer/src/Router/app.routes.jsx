@@ -1,3 +1,4 @@
+// AppRoutes.jsx
 import AppLayout from "../Layout/AppLayout";
 import { labelRoutes } from "../Module/Label/Routes/label.routes";
 import { BillingRoutes } from "../Module/Billing/Routers/bills.routes";
@@ -9,41 +10,43 @@ import { discountRoutes } from "../Module/Discount/Routes/discount.routes";
 import { CustomerRoutes } from "../Module/Customer/Routes/customer.routes";
 import { PurchaseRoutes } from "../Module/Purchase/Routes/purchase.routes";
 import { userRoutes } from "../Module/User/Routes/user.routes";
+// import { authRoutes } from "../Module/Auth/Routes/auth.routes";
+import ProtectedRoute from "./ProtectedRoute";
+import { Login } from "../Module/Auth/Routes/auth.lazyImports";
+
+const protectedModules = [
+  ...DashboardRoutes,
+  ...ItemsRoutes,
+  ...VendorRoutes,
+  ...SettingRoutes,
+  ...BillingRoutes,
+  ...labelRoutes,
+  ...discountRoutes,
+  ...CustomerRoutes,
+  ...PurchaseRoutes,
+  ...userRoutes,
+];
+
+// Wrap each protected route's element with ProtectedRoute
+const wrappedProtectedRoutes = protectedModules.map((route) => ({
+  ...route,
+  element: <ProtectedRoute>{route.element}</ProtectedRoute>,
+}));
 
 export const appRoutes = [
   {
+    path: "/login",
+    element: <Login />, // public route, no sidebar
+  },
+  {
     path: "/",
-    element: <AppLayout />, // layout should NOT be wrapped in suspense
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ), // protected layout
     children: [
-      //Dashboard Module routes
-      ...DashboardRoutes,
-
-      // Items Module Routes
-      ...ItemsRoutes,
-
-      // Vendor Routes
-      ...VendorRoutes,
-
-      // Settings Module Routes
-      ...SettingRoutes,
-
-      // Billing  Module Routes
-      ...BillingRoutes,
-
-      // Label Module Routes
-      ...labelRoutes,
-
-      // Discount Module Routes
-      ...discountRoutes,
-
-      // Customer Module Routes
-      ...CustomerRoutes,
-
-      // Purchase Module Routes
-      ...PurchaseRoutes,
-
-      // User Module Routes
-      ...userRoutes,
+      ...wrappedProtectedRoutes, // protected pages
     ],
   },
 ];

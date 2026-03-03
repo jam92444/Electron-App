@@ -8,4 +8,12 @@ export const initialState = {
     currentPurchaseID: null,
     items: [],
   },
+  token: "",
+  user: {
+    id: null,
+    username: "",
+    full_name: "",
+    roles: {},
+    permissions: [],
+  },
 };

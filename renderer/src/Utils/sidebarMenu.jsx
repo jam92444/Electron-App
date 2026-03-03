@@ -14,7 +14,7 @@ import {
 export const menuItems = [
   {
     label: "Dashboard",
-    path: "/",
+    path: "/dashboard",
     icon: <HomeIcon className="w-4 h-4" />,
   },
   {
@@ -71,6 +71,10 @@ export const menuItems = [
         label: "User Management",
         path: "/users",
       },
+      // {
+      //   label: "Assign Role",
+      //   path: "/users",
+      // },
     ],
   },
   {
@@ -80,7 +84,7 @@ export const menuItems = [
       { label: "Company Details", path: "/setting/company-details" },
       { label: "User Profile", path: "/projects/link2" },
       // { label: "Document Settings", path: "/projects/link3" },
-      { label: "Config Permission", path: "/setting/config-permission" },
+      { label: "Create Role", path: "/setting/config-permission" },
     ],
   },
 ];

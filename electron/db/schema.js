@@ -109,14 +109,6 @@ FROM roles r, permissions p
 WHERE r.name = 'super_admin'
 AND p.permission_key = '*.*';
 
--- =============================
--- SUPER ADMIN USER
--- IMPORTANT: Replace password hash with bcrypt hash
--- =============================
-INSERT OR IGNORE INTO users 
-(username, password_hash, full_name, email, status)
-VALUES 
-('superadmin', 'jamal@1231', 'Super Admin', 'superadmin@gmail.com', 'Active');
 
 -- Assign super_admin role to superadmin user
 INSERT OR IGNORE INTO user_roles (user_id, role_id)

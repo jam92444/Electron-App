@@ -10,4 +10,4 @@ export const VendorRoutes = [
     path: "vendor/manage-vendor",
     element: withSuspense(<ManageVendor />),
   },
-];
+];  

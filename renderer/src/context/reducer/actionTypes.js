@@ -34,3 +34,10 @@ export const SET_BILL_DATA = "SET_BILL_DATA";
 export const SET_PURCHASE = "SET_PURCHASE";
 export const SET_PURCHASE_ITEMS = "SET_PURCHASE_ITEMS";
 export const RESET_PURCHASE = "RESET_PURCHASE";
+
+
+// LOGIN 
+export const USER_DATA = "USER_DATA";
+export const USER_ROLE = "USER_ROLE";
+export const USER_PERMISSION = "USER_PERMISSION";
+export const SET_TOKEN = "SET_TOKEN";
