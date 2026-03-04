@@ -142,6 +142,11 @@ const Home = () => {
         <p className="text-sm text-gray-500 mt-1">
           Overview of Sales, Purchases, Stock & Vendors
         </p>
+        <p className="text-sm text-gray-500 mt-1">Hi, Username !</p>
+      </div>
+      {/* Non dashboard user UI */}
+      <div className=" bg-white rounded-xl p-5 shadow-mde">
+        
       </div>
 
       {/* ---------------- KPI CARDS ---------------- */}

@@ -181,6 +181,8 @@ const AppLayout = () => {
     localStorage.removeItem("userData");
   }, []);
 
+  console.log("User data ", state.user);
+
   return (
     <div className="min-h-screen bg-white ">
       {/* Mobile Toggle Button */}
