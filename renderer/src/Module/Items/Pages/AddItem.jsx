@@ -5,6 +5,7 @@ import Modal from "../../../components/ReuseComponents/Modal";
 import { getItems, insertItem, updateItem } from "../Services/items";
 import toast from "react-hot-toast";
 import { AddItemForm, ViewAllItems } from "../Routers/items.lazyimports";
+import { useStateContext } from "../../../context/StateContext";
 
 /* ---------------------------------------------------------
    MAIN COMPONENT
@@ -13,6 +14,7 @@ const AddItem = () => {
   const [items, setItems] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
+  const { state } = useStateContext();
   const [errorModal, setErrorModal] = useState({
     open: false,
     title: "",
@@ -37,20 +39,32 @@ const AddItem = () => {
     }
   };
 
-  const handleEdit = (index) => {
-    setEditingIndex(index);
-    setEditingItem(items[index]);
+  // ✅ Fix 1: handleEdit takes item object now
+  const handleEdit = (item) => {
+    setEditingItem(item);
+    setEditingIndex(item.itemID); // or just use editingItem !== null as the flag
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // ✅ Fix 2: permission checks corrected
   const handleSave = async (item, isEdit) => {
     if (saving) return false;
 
+    const perms = state.user.permissions;
+    const hasPermission = (key) => perms.includes(key) || perms.includes("*.*");
+
+    if (isEdit && !hasPermission("items.update")) {
+      toast.error("You don't have permission to update items. Contact Admin.");
+      return false;
+    }
+    if (!isEdit && !hasPermission("items.create")) {
+      toast.error("You don't have permission to add new items. Contact Admin.");
+      return false;
+    }
+
     setSaving(true);
     try {
-      let result;
-      if (isEdit) result = await updateItem(item);
-      else result = await insertItem(item);
+      const result = isEdit ? await updateItem(item) : await insertItem(item);
 
       if (!result.success) {
         setErrorModal({
@@ -59,27 +73,27 @@ const AddItem = () => {
           message:
             result.error === "ITEM_ID_EXISTS"
               ? "Item ID already exists. Please use a different Item ID."
-              : result.error,
+              : result.error || "Something went wrong",
         });
         return false;
       }
 
-      toast.success(result.message || "Saved successfully!");
+      toast.success(isEdit ? "Item updated!" : "Item added!");
       await loadItems();
       setEditingIndex(null);
       setEditingItem(null);
       return true;
     } catch (err) {
       console.error(err);
+      toast.error("Something went wrong");
       return false;
     } finally {
       setSaving(false);
     }
   };
-
   const handleCancelEdit = () => {
-    setEditingIndex(null);
     setEditingItem(null);
+    setEditingIndex(null);
   };
 
   return (
@@ -112,7 +126,7 @@ const AddItem = () => {
           items={items}
           onSave={handleSave}
           units={units}
-          onCancel={handleCancelEdit}
+          onCancel={() => handleCancelEdit()}
           mode="MASTER"
           disabled={saving}
           isEdit={editingIndex !== null}

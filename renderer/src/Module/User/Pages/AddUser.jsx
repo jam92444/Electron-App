@@ -63,7 +63,6 @@ const AddUser = () => {
       }
 
       toast.success(result.message || "Saved successfully!");
-      setUsers([]);
       await loadUsers();
       setEditingIndex(null);
       setEditingUser(null);

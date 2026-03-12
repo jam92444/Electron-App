@@ -10,6 +10,7 @@ const AddUserForm = ({
   isEdit,
   roles,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     id: null,
     username: "",
@@ -42,7 +43,7 @@ const AddUserForm = ({
 
     const success = await onSave(formData, isEdit);
     if (success && !isEdit) {
-      onCancel;
+      onCancel();
       setFormData({
         id: null,
         username: "",
@@ -50,6 +51,7 @@ const AddUserForm = ({
         full_name: "",
         email: "",
         status: "Active",
+        role_id: "",
       });
     }
   };
@@ -65,6 +67,25 @@ const AddUserForm = ({
       status: "Active",
     });
   };
+
+  useEffect(() => {
+    if (initialUser) {
+      setFormData({
+        ...initialUser,
+        password: "",
+      });
+    } else {
+      setFormData({
+        id: null,
+        username: "",
+        password: "",
+        full_name: "",
+        email: "",
+        status: "Active",
+        role_id: "",
+      });
+    }
+  }, [initialUser]);
 
   return (
     <form
@@ -88,16 +109,26 @@ const AddUserForm = ({
         <label className="text-sm font-medium">
           {isEdit ? "New Password" : "Password *"}
         </label>
-        <input
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          disabled={disabled}
-          className="w-full border rounded px-3 py-2 mt-1"
-          placeholder={isEdit ? "Leave blank to keep current password" : ""}
-        />
-        <small>{formData.password}</small>
+
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            disabled={disabled}
+            className="w-full border rounded px-3 py-2 mt-1 pr-16"
+            placeholder={isEdit ? "Leave blank to keep current password" : ""}
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-2 top-2 text-xs text-blue-600 pt-2"
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
       </div>
 
       <div>

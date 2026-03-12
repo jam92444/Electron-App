@@ -1,22 +1,32 @@
-// renderer/src/modules/Item/Components/ViewAllItems.js
-
 import { Space, Table, Tag } from "antd";
 import Button from "../../../components/ReuseComponents/Button";
 import Modal from "../../../components/ReuseComponents/Modal";
 import { deleteItem } from "../Services/items";
 import { useState } from "react";
 import { FaPen, FaTrashCan } from "react-icons/fa6";
+import { useStateContext } from "../../../context/StateContext";
 
 const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedItemIndex, setSelectedItemIndex] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null); // ✅ store record object
+  const { state } = useStateContext();
+  const perms = state.user.permissions;
+  const hasPermission = (key) => perms.includes(key) || perms.includes("*.*");
+
+  const canEdit = hasPermission("items.update");
+  const canDelete = hasPermission("items.delete");
+  console.log(canDelete, "delete");
+  console.log(canEdit, "edit");
 
   const handleDelete = async () => {
-    const itemID = items[selectedItemIndex].itemID;
-    await deleteItem(itemID);
+    if (!canDelete) {
+      alert("You don't have permission to delete items. Contact Admin.");
+      return;
+    }
+    await deleteItem(selectedItem.itemID); // ✅ use record directly
     await reload();
     setIsModalOpen(false);
-    setSelectedItemIndex(null);
+    setSelectedItem(null);
   };
 
   const columns = [
@@ -72,11 +82,11 @@ const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
       key: "variants",
       render: (_, record) =>
         record.hasVariants ? (
-          <div className="flex flex-wrap gap-2 ">
+          <div className="flex flex-wrap gap-2">
             {(record.variants || []).map((v) => (
               <Tag
-                color="blue"
                 key={v.id}
+                color="blue"
                 className="px-3 py-1 rounded-lg font-medium shadow-sm"
               >
                 Size -{v.size} / ₹{v.sellingPrice} x {v.quantity} {record.unit}
@@ -92,46 +102,66 @@ const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
           </Tag>
         ),
     },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record, index) => (
-        <Space size="middle">
-          <button onClick={() => onEdit(index)} className="cursor-pointer">
-            <FaPen className="text-blue-800" />
-          </button>
-          <button
-            onClick={() => {
-              setSelectedItemIndex(index);
-              setIsModalOpen(true);
-            }}
-            className="cursor-pointer"
-          >
-            <FaTrashCan className="text-red-800" />
-          </button>
-        </Space>
-      ),
-    },
+    // ✅ Always spread an array — never spread an object or false
+    ...(canEdit || canDelete
+      ? [
+          {
+            title: "Actions",
+            key: "actions",
+            render: (_, record) => (
+              <Space size="middle">
+                {canEdit && (
+                  <button
+                    onClick={() => onEdit(record)}
+                    title="Edit item"
+                    className="cursor-pointer"
+                  >
+                    <FaPen className="text-blue-800" />
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => {
+                      setSelectedItem(record);
+                      setIsModalOpen(true);
+                    }}
+                    title="Delete item"
+                    className="cursor-pointer"
+                  >
+                    <FaTrashCan className="text-red-800" />
+                  </button>
+                )}
+              </Space>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (
     <div>
       <Table
         columns={columns}
-        dataSource={items.map((i, idx) => ({ ...i, key: idx }))}
+        dataSource={items.map((i) => ({ ...i, key: i.itemID }))} // ✅ use itemID not idx
         pagination={{ pageSize: 10 }}
       />
 
-      {isModalOpen && (
+      {isModalOpen && selectedItem && (
         <Modal
           title="Confirm Delete"
-          message={`Are you sure you want to delete "${items[selectedItemIndex].itemName}"?`}
-          onClose={() => setIsModalOpen(false)}
+          message={`Are you sure you want to delete "${selectedItem.itemName}"?`} // ✅ use record
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedItem(null);
+          }}
           actions={
             <div className="flex justify-end gap-3">
               <Button
                 buttonName="Cancel"
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setSelectedItem(null);
+                }}
               />
               <Button
                 buttonName="Delete"

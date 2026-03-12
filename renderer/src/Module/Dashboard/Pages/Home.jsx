@@ -31,6 +31,7 @@ import {
   getMonthlyPurchaseSummary,
   getVendorStatusStats,
 } from "../../Purchase/Services/purchaseService";
+import { useStateContext } from "../../../context/StateContext";
 
 ChartJS.register(
   CategoryScale,
@@ -44,6 +45,7 @@ ChartJS.register(
 
 const Home = () => {
   const [loading, setLoading] = useState(true);
+  const { state } = useStateContext();
 
   // Sales Data
   const [salesDashboard, setSalesDashboard] = useState(null);
@@ -95,7 +97,6 @@ const Home = () => {
         if (variantStockRes?.success) setVariantStock(variantStockRes.data);
         if (monthlyRes?.success) setMonthlySummary(monthlyRes.data);
         if (vendorStatusRes?.success) setVendorStatus(vendorStatusRes.data);
-        // console.log(lowStockRes);
       } catch (err) {
         console.error("Error loading dashboard:", err);
       }
@@ -133,7 +134,6 @@ const Home = () => {
       },
     ],
   };
-
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* ---------------- HEADER ---------------- */}
@@ -142,12 +142,10 @@ const Home = () => {
         <p className="text-sm text-gray-500 mt-1">
           Overview of Sales, Purchases, Stock & Vendors
         </p>
-        <p className="text-sm text-gray-500 mt-1">Hi, Username !</p>
+        {/* <h1 className="text-3xl font-bold text-gray-800">Hi, Username !</h1> */}
       </div>
       {/* Non dashboard user UI */}
-      <div className=" bg-white rounded-xl p-5 shadow-mde">
-        
-      </div>
+      {/* <div className=" bg-white rounded-xl p-5 shadow-mde"></div> */}
 
       {/* ---------------- KPI CARDS ---------------- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">

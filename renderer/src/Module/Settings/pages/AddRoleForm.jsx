@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import Button from "../../../components/ReuseComponents/Button";
 
+const EMPTY_FORM = { id: null, name: "", description: "", permissions: [] };
+
 const AddRoleForm = ({
   initialRole,
   permissions,
@@ -10,17 +12,11 @@ const AddRoleForm = ({
   isEdit,
   onCancel,
 }) => {
-  const [formData, setFormData] = useState({
-    id: null,
-    name: "",
-    description: "",
-    permissions: [],
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
+  // ✅ Sync with initialRole including clearing when it becomes null
   useEffect(() => {
-    if (initialRole) {
-      setFormData(initialRole);
-    }
+    setFormData(initialRole ? { ...initialRole } : EMPTY_FORM);
   }, [initialRole]);
 
   const togglePermission = (id) => {
@@ -32,33 +28,58 @@ const AddRoleForm = ({
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    await onSave(formData, isEdit);
-    setFormData({
-      id: null,
-      name: "",
-      description: "",
-      permissions: [],
-    });
+  // ✅ Toggle all permissions within a single module
+  const toggleModule = (modulePerms) => {
+    const ids = modulePerms.map((p) => p.id);
+    const allSelected = ids.every((id) => formData.permissions.includes(id));
+    setFormData((prev) => ({
+      ...prev,
+      permissions: allSelected
+        ? prev.permissions.filter((id) => !ids.includes(id))
+        : [...new Set([...prev.permissions, ...ids])],
+    }));
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const success = await onSave(formData, isEdit);
+    // ✅ Only reset if save succeeded
+    if (success) setFormData(EMPTY_FORM);
+  };
+
+  // Group permissions by module
+  const grouped = permissions.reduce((acc, perm) => {
+    const [module] = perm.permission_key.split(".");
+    if (!acc[module]) acc[module] = [];
+    acc[module].push({ ...perm, action: perm.permission_key.split(".")[1] });
+    return acc;
+  }, {});
+
+  const isWildcardActive = permissions
+    .filter((p) => p.permission_key === "*.*")
+    .some((p) => formData.permissions.includes(p.id));
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Role Name */}
       <div>
-        <label className="text-sm font-medium">Role Name *</label>
+        <label className="text-sm font-medium text-gray-700">
+          Role Name <span className="text-red-500">*</span>
+        </label>
         <input
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           disabled={disabled}
           required
-          className="w-full border rounded px-3 py-2 mt-1"
+          placeholder="e.g. Sales Manager"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
       </div>
 
+      {/* Description */}
       <div>
-        <label className="text-sm font-medium">Description</label>
+        <label className="text-sm font-medium text-gray-700">Description</label>
         <input
           type="text"
           value={formData.description}
@@ -66,82 +87,125 @@ const AddRoleForm = ({
             setFormData({ ...formData, description: e.target.value })
           }
           disabled={disabled}
-          className="w-full border rounded px-3 py-2 mt-1"
+          placeholder="Brief description of this role"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
       </div>
 
+      {/* Permissions */}
       <div>
-        <label className="text-sm font-medium">Permissions</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-sm font-medium text-gray-700">
+            Permissions
+          </label>
+          <span className="text-xs text-gray-400">
+            {formData.permissions.length} selected
+          </span>
+        </div>
 
-        <div className="mt-3 space-y-4 border rounded p-4 max-h-80 overflow-y-auto">
-          {Object.entries(
-            permissions.reduce((acc, perm) => {
-              const [module, action] = perm.permission_key.split(".");
-
-              if (!acc[module]) acc[module] = [];
-              acc[module].push({ ...perm, action });
-
-              return acc;
-            }, {}),
-          ).map(([module, perms]) => {
-            // const isWildcard = module === "*";
-            const wildcardPermission = perms.find(
-              (p) => p.permission_key === "*.*",
+        <div className="border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto space-y-4 bg-gray-50">
+          {Object.entries(grouped).map(([module, perms]) => {
+            const isFullAccess = module === "*";
+            const moduleIds = perms.map((p) => p.id);
+            const allModuleSelected = moduleIds.every(
+              (id) => isWildcardActive || formData.permissions.includes(id),
             );
 
-            const isWildcardChecked =
-              wildcardPermission &&
-              formData.permissions.includes(wildcardPermission.id);
-
             return (
-              <div key={module} className="border-b pb-3">
-                {/* Module Title */}
-                <div className="font-semibold text-gray-700 capitalize mb-2">
-                  {module === "*" ? "Full Access" : module.replace("_", " ")}
+              <div
+                key={module}
+                className="bg-white rounded-lg border border-gray-100 p-3"
+              >
+                {/* Module header with select-all toggle */}
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    {isFullAccess
+                      ? "⚡ Full Access"
+                      : module.replace(/_/g, " ")}
+                  </span>
+                  {/* ✅ Per-module select all */}
+                  {!isFullAccess && (
+                    <button
+                      type="button"
+                      onClick={() => toggleModule(perms)}
+                      className="text-xs text-blue-500 hover:underline"
+                    >
+                      {allModuleSelected ? "Deselect all" : "Select all"}
+                    </button>
+                  )}
                 </div>
 
-                <div className="flex flex-wrap gap-6">
-                  {perms.map((perm) => (
-                    <label
-                      key={perm.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={
-                          isWildcardChecked ||
-                          formData.permissions.includes(perm.id)
-                        }
-                        onChange={() => {
-                          if (perm.permission_key === "*.*") {
-                            // Toggle full access
-                            if (formData.permissions.includes(perm.id)) {
-                              setFormData({ ...formData, permissions: [] });
-                            } else {
+                <div className="flex flex-wrap gap-3">
+                  {perms.map((perm) => {
+                    const checked =
+                      isWildcardActive ||
+                      formData.permissions.includes(perm.id);
+                    return (
+                      <label
+                        key={perm.id}
+                        className={`flex items-center gap-2 text-sm px-2 py-1 rounded cursor-pointer transition-colors ${
+                          checked
+                            ? "text-blue-700 bg-blue-50"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          // ✅ Allow unchecking individual when wildcard is active
+                          onChange={() => {
+                            if (perm.permission_key === "*.*") {
                               setFormData({
                                 ...formData,
-                                permissions: permissions.map((p) => p.id),
+                                permissions: formData.permissions.includes(
+                                  perm.id,
+                                )
+                                  ? []
+                                  : permissions.map((p) => p.id),
                               });
+                            } else {
+                              // If wildcard was active, deactivate it and select all except this
+                              if (isWildcardActive) {
+                                const wildcardId = permissions.find(
+                                  (p) => p.permission_key === "*.*",
+                                )?.id;
+                                setFormData({
+                                  ...formData,
+                                  permissions: permissions
+                                    .map((p) => p.id)
+                                    .filter(
+                                      (id) =>
+                                        id !== wildcardId && id !== perm.id,
+                                    ),
+                                });
+                              } else {
+                                togglePermission(perm.id);
+                              }
                             }
-                          } else {
-                            togglePermission(perm.id);
-                          }
-                        }}
-                      />
-                      {perm.permission_key === "*.*"
-                        ? "All Permissions"
-                        : perm.action}
-                    </label>
-                  ))}
+                          }}
+                          className="accent-blue-500"
+                        />
+                        <span className="capitalize">
+                          {perm.permission_key === "*.*"
+                            ? "All Permissions"
+                            : perm.action}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             );
           })}
         </div>
       </div>
-      <div className="flex gap-3 pt-4">
+
+      {/* Actions */}
+      <div className="flex gap-3 pt-2">
         <Button
-          buttonName={isEdit ? "Update Role" : "Save Role"}
+          buttonName={
+            disabled ? "Saving..." : isEdit ? "Update Role" : "Save Role"
+          }
           buttonType="save"
           type="submit"
           disabled={disabled}

@@ -78,26 +78,36 @@ contextBridge.exposeInMainWorld("api", {
 
   /* ================= DASHBOARD ================= */
 
-  getDashboardSummary: () => ipcRenderer.invoke("db:getDashboardSummary"),
+  getDashboardSummary: ({ startDate, endDate } = {}) =>
+    ipcRenderer.invoke("db:getDashboardSummary", { startDate, endDate }),
 
-  getPurchaseTrend: (days = 7) =>
-    ipcRenderer.invoke("db:getPurchaseTrend", days),
+  getPurchaseTrend: ({ days = 30, startDate, endDate } = {}) =>
+    ipcRenderer.invoke("db:getPurchaseTrend", { days, startDate, endDate }),
 
-  getTopVendors: () => ipcRenderer.invoke("db:getTopVendors"),
+  getTopVendors: ({ startDate, endDate, limit = 5 } = {}) =>
+    ipcRenderer.invoke("db:getTopVendors", { startDate, endDate, limit }),
 
-  getRecentPurchases: () => ipcRenderer.invoke("db:getRecentPurchases"),
+  getRecentPurchases: ({ startDate, endDate, limit = 10 } = {}) =>
+    ipcRenderer.invoke("db:getRecentPurchases", { startDate, endDate, limit }),
 
-  getLowStockItems: () => ipcRenderer.invoke("db:getLowStockItems"),
+  getLowStockItems: ({ threshold = 2 } = {}) =>
+    ipcRenderer.invoke("db:getLowStockItems", { threshold }),
 
   getVariantStockSummary: () => ipcRenderer.invoke("db:getVariantStockSummary"),
 
-  getMonthlyPurchaseSummary: () =>
-    ipcRenderer.invoke("db:getMonthlyPurchaseSummary"),
+  getMonthlyPurchaseSummary: ({ year, startDate, endDate } = {}) =>
+    ipcRenderer.invoke("db:getMonthlyPurchaseSummary", {
+      year,
+      startDate,
+      endDate,
+    }),
 
   getVendorStatusStats: () => ipcRenderer.invoke("db:getVendorStatusStats"),
+  getPurchaseItems: (purchaseId) => ipcRenderer.invoke("db:getPurchaseItems", purchaseId),
 
   // One-call dashboard loader
-  getDashboardData: () => ipcRenderer.invoke("db:getDashboardData"),
+  getDashboardData: ({ startDate, endDate } = {}) =>
+    ipcRenderer.invoke("db:getDashboardData", { startDate, endDate }),
 
   updatePurchaseItem: (
     item, // <-- NEW

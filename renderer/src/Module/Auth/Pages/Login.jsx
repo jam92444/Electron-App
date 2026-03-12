@@ -4,11 +4,7 @@ import Button from "../../../components/ReuseComponents/Button";
 import { useNavigate } from "react-router-dom";
 import { useStateContext } from "../../../context/StateContext";
 import { loginUser } from "../Services/auth.services";
-import {
-  SET_TOKEN,
-  USER_DATA,
-  USER_ROLE,
-} from "../../../context/reducer/actionTypes";
+import { SET_TOKEN, USER_DATA } from "../../../context/reducer/actionTypes";
 import { useEffect, useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
@@ -20,39 +16,30 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Run when state.user updates after successful login
   useEffect(() => {
-    console.log(state.user, "Reducer data");
-
-    const data = JSON.parse(localStorage.getItem("userData"));
-
-    console.log(data, "local storage");
-
-    if (state.user?.id || data?.id) {
-      console.log("Id is there", state.user.id);
+    if (state.user?.id) {
       navigate("/dashboard");
     }
-  }, [navigate, state.user]);
+  }, [state.user]);
 
-  // Handle login submit
   const handleEmailLogin = async (e) => {
-    console.log("login");
-
     e.preventDefault();
 
     try {
       const response = await loginUser({ username, password });
 
-      console.log("Response", response);
+      // console.log("Response", response);
 
       if (!response.success) {
+        localStorage.removeItem("userData"); // clear any stale data
         alert(response.message);
+        setUsername("");
+        setPassword("");
         return;
       }
 
-      // Save user and token in global state
       dispatch({ type: USER_DATA, payload: response.user });
-
-      // dispatch({ type: USER_ROLE, payload: response.user });
       dispatch({ type: SET_TOKEN, payload: "logged-in" });
 
       localStorage.setItem("userData", JSON.stringify(response.user));
@@ -60,13 +47,15 @@ const Login = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-
+      localStorage.removeItem("userData"); // clear any stale data
       alert("Login failed. Check console for details.");
     }
   };
+
   if (state.user?.id) {
-    return;
+    return null;
   }
+
   return (
     <div className="relative min-h-screen bg-white">
       {/* Background Image */}
@@ -100,10 +89,9 @@ const Login = () => {
             Login
           </h2>
           <p className="mb-4 text-xs text-gray-400">
-            "Don’t count the days, make the days count." <br /> - Muhammed Ali
+            "Don't count the days, make the days count." <br /> - Muhammed Ali
           </p>
 
-          {/* Login Form */}
           <form onSubmit={handleEmailLogin} className="flex flex-col gap-6">
             {/* Username */}
             <div className="relative flex flex-col mt-4">

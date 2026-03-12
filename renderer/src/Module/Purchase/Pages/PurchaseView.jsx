@@ -10,13 +10,17 @@ const PurchaseView = () => {
   const [purchase, setPurchase] = useState(null);
 
   useEffect(() => {
+
+    
     getPurchaseById(id).then((res) => {
       if (res?.success) setPurchase(res);
+      console.log(res);
+      console.log(id);
     });
   }, [id]);
 
   if (!purchase) return null;
-
+  console.log("items", purchase.items);
   return (
     <div className="p-6 space-y-4 bg-gray-50 min-h-screen">
       <div

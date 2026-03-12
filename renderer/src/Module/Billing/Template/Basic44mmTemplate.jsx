@@ -1,5 +1,7 @@
 const Basic44mmTemplate = ({ billItems, billSummary, companyDetails }) => {
   // console.log("bill summary", billSummary);
+  // ✅ Don't render anything if no bill data yet
+  if (!billSummary) return null;
   return (
     <div>
       {/* POS PRINT */}

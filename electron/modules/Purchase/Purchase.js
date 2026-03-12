@@ -10,12 +10,17 @@ function updatePurchaseTotal(db, purchaseId) {
     SELECT 
       SUM(
         CASE 
-          WHEN i.hasVariants = 1 THEN iv.purchaseRate * iv.quantity
-          ELSE i.purchaseRate * i.quantity
+          WHEN i.hasVariants = 1 THEN 
+            i.purchaseRate * (
+              SELECT COALESCE(SUM(iv2.quantity), 0)
+              FROM item_variants iv2 
+              WHERE iv2.itemID = i.itemID
+            )
+          ELSE 
+            i.purchaseRate * i.quantity
         END
       ) AS total
     FROM items i
-    LEFT JOIN item_variants iv ON i.itemID = iv.itemID
     WHERE i.purchaseId = ?
   `,
     )
@@ -31,6 +36,24 @@ function updatePurchaseTotal(db, purchaseId) {
 }
 
 function registerPurchaseHandlers(db) {
+  /** -----------------------
+   * GET PURCHASE ITEMS
+   * ----------------------- */
+  ipcMain.handle("db:getPurchaseItems", (e, purchaseId) => {
+    try {
+      const rows = db
+        .prepare(
+          `
+      SELECT * FROM items WHERE purchase_id = ?
+    `,
+        )
+        .all(purchaseId);
+      return { success: true, data: rows };
+    } catch (err) {
+      console.error("❌ db:getPurchaseItems", err);
+      return { success: false, error: err.message };
+    }
+  });
   /** -----------------------
    * CREATE PURCHASE
    * ----------------------- */

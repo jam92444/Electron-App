@@ -43,17 +43,34 @@ function adjustStock(db, items, type = "reduce") {
 function registerBillHandlers(db) {
   /* ----------------- SAVE BILL ----------------- */
   const insertBillTx = db.transaction((bill, items) => {
-    // 1️⃣ Invoice number logic
+    // ✅ Get last invoice number directly from bills table
     const settings = db
       .prepare(
         `
-      SELECT invoicePrefix, enableInvoicePrefix, lastInvoiceNumber
-      FROM settings WHERE id = 1
-    `,
+    SELECT invoicePrefix, enableInvoicePrefix
+    FROM settings WHERE id = 1
+  `,
+      )
+      .get() || { invoicePrefix: "", enableInvoicePrefix: 0 };
+
+    // Get the last used number from bills table directly
+    const lastBill = db
+      .prepare(
+        `
+    SELECT invoice_number FROM bills ORDER BY id DESC LIMIT 1
+  `,
       )
       .get();
 
-    const nextNumber = (settings.lastInvoiceNumber || 0) + 1;
+    let lastNumber = 0;
+
+    if (lastBill?.invoice_number) {
+      // Strip prefix if any and parse the numeric part
+      const numeric = lastBill.invoice_number.replace(/[^0-9]/g, "");
+      lastNumber = parseInt(numeric) || 0;
+    }
+
+    const nextNumber = lastNumber + 1;
     const paddedNumber = String(nextNumber).padStart(4, "0");
 
     const invoiceNumber = settings.enableInvoicePrefix

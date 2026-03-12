@@ -21,7 +21,8 @@ const SalesBill = () => {
   // ✅ Initial load
   useEffect(() => {
     fetchBills(1, pagination.pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // console.log(object)
   }, []);
 
   // ✅ Fetch bills from DB (paginated)
@@ -36,6 +37,7 @@ const SalesBill = () => {
         total: res.pagination?.total || 0,
       });
     }
+    console.log("called");
   };
 
   // ✅ View single bill
@@ -118,7 +120,7 @@ const SalesBill = () => {
           dataSource={bills.map((b) => ({ ...b, key: b.id }))}
           bordered
           size="middle"
-          loading={!bills.length && pagination.current === 1}
+          // loading={!bills.length && pagination.current === 1}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,

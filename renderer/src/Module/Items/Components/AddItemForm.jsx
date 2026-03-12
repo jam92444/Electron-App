@@ -17,6 +17,7 @@ const AddItemForm = ({
   purchaseId = null,
   vendorId = null,
   purchaseDate = null,
+  onCancel,
 }) => {
   const [sizes, setSizes] = useState([]);
   const [vendors, setVendors] = useState([]);
@@ -198,6 +199,11 @@ const AddItemForm = ({
     setConfirm(false);
   };
 
+  const handleCancel = async () => {
+    setItem(getEmptyItem());
+    await onCancel();
+  };
+
   /* ---------------- RENDER ---------------- */
   return (
     <div className="shadow-lg rounded-xl bg-white p-6 border border-gray-200">
@@ -338,7 +344,7 @@ const AddItemForm = ({
           <Button
             buttonName="Cancel"
             type="button"
-            onClick={() => setItem(getEmptyItem())}
+            onClick={() => handleCancel()}
           />
           <Button
             buttonName={isEdit ? "Update Item" : "Add Item"}
