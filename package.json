@@ -12,6 +12,7 @@
     "dist": "npm run build && electron-builder -c electron-builder.config.js",
     "postinstall": "electron-builder install-app-deps"
   },
+  
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -20,7 +20,6 @@ import {
 } from "react-icons/fa";
 
 import { getSalesDashboard } from "../../Billing/Services/bills";
-
 import {
   getDashboardSummary,
   getPurchaseTrend,
@@ -47,6 +46,15 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const { state } = useStateContext();
 
+  // ── Permissions ──
+  const perms = state.user.permissions;
+  const has = (p) => perms.includes(p) || perms.includes("*.*");
+
+  const canViewBills = has("bill.view");
+  const canViewPurchase = has("purchase.view");
+  const canViewVendor = has("vendor.view");
+  const canViewItems = has("items.view");
+
   // Sales Data
   const [salesDashboard, setSalesDashboard] = useState(null);
 
@@ -63,44 +71,62 @@ const Home = () => {
   useEffect(() => {
     const loadDashboard = async () => {
       setLoading(true);
-
       try {
-        const [
-          salesRes,
-          summaryRes,
-          trendRes,
-          topVendorRes,
-          recentPurchasesRes,
-          lowStockRes,
-          variantStockRes,
-          monthlyRes,
-          vendorStatusRes,
-        ] = await Promise.all([
-          getSalesDashboard("2026-02-01", "2026-02-05"),
-          getDashboardSummary(),
-          getPurchaseTrend(30),
-          getTopVendors(),
-          getRecentPurchases(),
-          getLowStockItems(),
-          getVariantStockSummary(),
-          getMonthlyPurchaseSummary(),
-          getVendorStatusStats(),
-        ]);
+        const tasks = [];
 
-        if (salesRes?.success) setSalesDashboard(salesRes);
-        if (summaryRes?.success) setSummary(summaryRes.data);
-        if (trendRes?.success) setPurchaseTrend(trendRes.data);
-        if (topVendorRes?.success) setTopVendors(topVendorRes.data);
-        if (recentPurchasesRes?.success)
-          setRecentPurchases(recentPurchasesRes.data);
-        if (lowStockRes?.success) setLowStock(lowStockRes.data);
-        if (variantStockRes?.success) setVariantStock(variantStockRes.data);
-        if (monthlyRes?.success) setMonthlySummary(monthlyRes.data);
-        if (vendorStatusRes?.success) setVendorStatus(vendorStatusRes.data);
+        if (canViewBills)
+          tasks.push(
+            getSalesDashboard("2026-02-01", "2026-02-05").then((r) => ({
+              key: "sales",
+              r,
+            })),
+          );
+        if (canViewPurchase)
+          tasks.push(
+            getDashboardSummary().then((r) => ({ key: "summary", r })),
+          );
+        if (canViewPurchase)
+          tasks.push(getPurchaseTrend(30).then((r) => ({ key: "trend", r })));
+        if (canViewVendor)
+          tasks.push(getTopVendors().then((r) => ({ key: "topVendors", r })));
+        if (canViewPurchase)
+          tasks.push(
+            getRecentPurchases().then((r) => ({ key: "recentPurchases", r })),
+          );
+        if (canViewItems)
+          tasks.push(getLowStockItems().then((r) => ({ key: "lowStock", r })));
+        if (canViewItems)
+          tasks.push(
+            getVariantStockSummary().then((r) => ({ key: "variantStock", r })),
+          );
+        if (canViewPurchase)
+          tasks.push(
+            getMonthlyPurchaseSummary().then((r) => ({ key: "monthly", r })),
+          );
+        if (canViewVendor)
+          tasks.push(
+            getVendorStatusStats().then((r) => ({ key: "vendorStatus", r })),
+          );
+
+        const results = await Promise.allSettled(tasks);
+
+        results.forEach((result) => {
+          if (result.status !== "fulfilled") return;
+          const { key, r } = result.value;
+          if (!r?.success) return;
+          if (key === "sales") setSalesDashboard(r);
+          if (key === "summary") setSummary(r.data);
+          if (key === "trend") setPurchaseTrend(r.data);
+          if (key === "topVendors") setTopVendors(r.data);
+          if (key === "recentPurchases") setRecentPurchases(r.data);
+          if (key === "lowStock") setLowStock(r.data);
+          if (key === "variantStock") setVariantStock(r.data);
+          if (key === "monthly") setMonthlySummary(r.data);
+          if (key === "vendorStatus") setVendorStatus(r.data);
+        });
       } catch (err) {
         console.error("Error loading dashboard:", err);
       }
-
       setLoading(false);
     };
 
@@ -109,7 +135,6 @@ const Home = () => {
 
   if (loading) return <p className="p-6 text-gray-500">Loading dashboard...</p>;
 
-  // Prepare chart data
   const purchaseTrendData = {
     labels: purchaseTrend.map((p) => p.date),
     datasets: [
@@ -134,6 +159,7 @@ const Home = () => {
       },
     ],
   };
+
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* ---------------- HEADER ---------------- */}
@@ -142,132 +168,166 @@ const Home = () => {
         <p className="text-sm text-gray-500 mt-1">
           Overview of Sales, Purchases, Stock & Vendors
         </p>
-        {/* <h1 className="text-3xl font-bold text-gray-800">Hi, Username !</h1> */}
       </div>
-      {/* Non dashboard user UI */}
-      {/* <div className=" bg-white rounded-xl p-5 shadow-mde"></div> */}
 
       {/* ---------------- KPI CARDS ---------------- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        <KpiCard
-          icon={<FaShoppingCart />}
-          label="Total Bills"
-          value={salesDashboard?.totals?.totalBills || 0}
-          color="bg-blue-500"
-        />
-        <KpiCard
-          icon={<FaRupeeSign />}
-          label="Total Sales"
-          value={`₹${salesDashboard?.totals?.totalSales || 0}`}
-          color="bg-green-500"
-        />
-        <KpiCard
-          icon={<FaTags />}
-          label="Total Discount"
-          value={`₹${salesDashboard?.totals?.totalDiscount || 0}`}
-          color="bg-yellow-500"
-        />
-        <KpiCard
-          icon={<FaBoxes />}
-          label="Total Pieces Sold"
-          value={salesDashboard?.totals?.totalPieces || 0}
-          color="bg-purple-500"
-        />
-        <KpiCard
-          icon={<FaTruck />}
-          label="Total Purchases"
-          value={`₹${summary.totalPurchaseAmount || 0}`}
-          color="bg-pink-500"
-        />
+        {canViewBills && (
+          <>
+            <KpiCard
+              icon={<FaShoppingCart />}
+              label="Total Bills"
+              value={salesDashboard?.totals?.totalBills || 0}
+              color="bg-blue-500"
+            />
+            <KpiCard
+              icon={<FaRupeeSign />}
+              label="Total Sales"
+              value={`₹${salesDashboard?.totals?.totalSales || 0}`}
+              color="bg-green-500"
+            />
+            <KpiCard
+              icon={<FaTags />}
+              label="Total Discount"
+              value={`₹${salesDashboard?.totals?.totalDiscount || 0}`}
+              color="bg-yellow-500"
+            />
+            <KpiCard
+              icon={<FaBoxes />}
+              label="Total Pieces Sold"
+              value={salesDashboard?.totals?.totalPieces || 0}
+              color="bg-purple-500"
+            />
+          </>
+        )}
+        {canViewPurchase && (
+          <KpiCard
+            icon={<FaTruck />}
+            label="Total Purchases"
+            value={`₹${summary.totalPurchaseAmount || 0}`}
+            color="bg-pink-500"
+          />
+        )}
       </div>
 
-      {/* ---------------- CHARTS ---------------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartSection title="Purchase Trend (30 Days)">
-          <Line
-            data={purchaseTrendData}
-            options={{ plugins: { legend: { display: false } } }}
-          />
-        </ChartSection>
-
-        <ChartSection title="Monthly Purchase Summary">
-          <Bar
-            data={monthlySalesData}
-            options={{ plugins: { legend: { display: false } } }}
-          />
-        </ChartSection>
-      </div>
+      {/* ---------------- CHARTS (purchase.view) ---------------- */}
+      {canViewPurchase && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartSection title="Purchase Trend (30 Days)">
+            <Line
+              data={purchaseTrendData}
+              options={{ plugins: { legend: { display: false } } }}
+            />
+          </ChartSection>
+          <ChartSection title="Monthly Purchase Summary">
+            <Bar
+              data={monthlySalesData}
+              options={{ plugins: { legend: { display: false } } }}
+            />
+          </ChartSection>
+        </div>
+      )}
 
       {/* ---------------- TOP SELLERS & VENDORS ---------------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ListSection title="Top Selling Items">
-          {salesDashboard?.topItems?.map((item) => (
-            <Row
-              key={item.item_code}
-              left={item.item_name}
-              right={item.totalSold}
-            />
-          ))}
-        </ListSection>
+      {(canViewBills || canViewVendor) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {canViewBills && (
+            <ListSection title="Top Selling Items">
+              {salesDashboard?.topItems?.length ? (
+                salesDashboard.topItems.map((item) => (
+                  <Row
+                    key={item.item_code}
+                    left={item.item_name}
+                    right={item.totalSold}
+                  />
+                ))
+              ) : (
+                <Empty />
+              )}
+            </ListSection>
+          )}
+          {canViewVendor && (
+            <ListSection title="Top Vendors">
+              {topVendors.length ? (
+                topVendors.map((v, i) => (
+                  <Row key={i} left={v.vendorName} right={`₹ ${v.total}`} />
+                ))
+              ) : (
+                <Empty />
+              )}
+            </ListSection>
+          )}
+        </div>
+      )}
 
-        <ListSection title="Top Vendors">
-          {topVendors.map((v, i) => (
-            <Row key={i} left={v.vendorName} right={`₹ ${v.total}`} />
-          ))}
-        </ListSection>
-      </div>
+      {/* ---------------- STOCK ALERTS (items.view) ---------------- */}
+      {canViewItems && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ListSection title="Low Stock Items">
+            {lowStock.length ? (
+              lowStock.map((i, idx) => (
+                <Row
+                  key={idx}
+                  left={`${i.itemName} (${i.vendorName || "—"})`}
+                  right={
+                    <span className="text-red-500 font-bold">{i.quantity}</span>
+                  }
+                />
+              ))
+            ) : (
+              <Empty />
+            )}
+          </ListSection>
+          <ListSection title="Latest Variant">
+            {variantStock.length ? (
+              variantStock.map((v, idx) => (
+                <Row
+                  key={idx}
+                  left={`${v.itemName} - ${v.size}`}
+                  right={`Qty: ${v.quantity}`}
+                />
+              ))
+            ) : (
+              <Empty />
+            )}
+          </ListSection>
+        </div>
+      )}
 
-      {/* ---------------- STOCK ALERTS ---------------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ListSection title="Low Stock Items">
-          {lowStock.length ? (
-            lowStock.map((i, idx) => (
+      {/* ---------------- PAYMENT MODES (bill.view) ---------------- */}
+      {canViewBills && (
+        <ListSection title="Payment Modes">
+          {salesDashboard?.paymentModes?.length ? (
+            salesDashboard.paymentModes.map((pm) => (
+              <span
+                key={pm.payment_mode}
+                className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-2 inline-block"
+              >
+                {pm.payment_mode || "Cash"}: {pm.count} bills
+              </span>
+            ))
+          ) : (
+            <Empty />
+          )}
+        </ListSection>
+      )}
+
+      {/* ---------------- RECENT PURCHASES (purchase.view) ---------------- */}
+      {canViewPurchase && (
+        <ListSection title="Recent Purchases">
+          {recentPurchases.length ? (
+            recentPurchases.map((p) => (
               <Row
-                key={idx}
-                left={`${i.itemName} (${i.vendorName || "—"})`}
-                right={
-                  <span className="text-red-500 font-bold">{i.quantity}</span>
-                }
+                key={p.id}
+                left={p.vendorName}
+                right={`₹ ${p.totalAmount}`}
               />
             ))
           ) : (
             <Empty />
           )}
         </ListSection>
-
-        <ListSection title="Latest Variant">
-          {variantStock.length ? (
-            variantStock.map((v, idx) => (
-              <Row
-                key={idx}
-                left={`${v.itemName} - ${v.size}`}
-                right={`Qty: ${v.quantity}`}
-              />
-            ))
-          ) : (
-            <Empty />
-          )}
-        </ListSection>
-      </div>
-
-      {/* ---------------- PAYMENT MODES ---------------- */}
-      <ListSection title="Payment Modes">
-        {salesDashboard?.paymentModes?.map((pm) => (
-          <span
-            key={pm.payment_mode}
-            className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-2 inline-block"
-          >
-            {pm.payment_mode || "Cash"}: {pm.count} bills
-          </span>
-        ))}
-      </ListSection>
-
-      {/* ---------------- RECENT PURCHASES ---------------- */}
-      <ListSection title="Recent Purchases">
-        {recentPurchases.map((p) => (
-          <Row key={p.id} left={p.vendorName} right={`₹ ${p.totalAmount}`} />
-        ))}
-      </ListSection>
+      )}
     </div>
   );
 };

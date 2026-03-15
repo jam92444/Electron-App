@@ -4,8 +4,15 @@ import Modal from "../../../components/ReuseComponents/Modal";
 import DataTable from "../../../components/ReuseComponents/DataTable";
 import { deleteCustomer } from "../Services/customer.services";
 
-const ViewAllCustomers = ({ customers, onEdit, reload }) => {
+const ViewAllCustomers = ({
+  customers,
+  onEdit,
+  reload,
+  canUpdate,
+  canDelete,
+}) => {
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [accessModal, setAccessModal] = useState(null);
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
@@ -13,6 +20,28 @@ const ViewAllCustomers = ({ customers, onEdit, reload }) => {
     await deleteCustomer(confirmDelete.id);
     setConfirmDelete(null);
     reload();
+  };
+
+  const handleEditClick = (i) => {
+    if (!canUpdate) {
+      setAccessModal({
+        title: "Access Denied",
+        message: "You do not have permission to update customers.",
+      });
+      return;
+    }
+    onEdit(i);
+  };
+
+  const handleDeleteClick = (i) => {
+    if (!canDelete) {
+      setAccessModal({
+        title: "Access Denied",
+        message: "You do not have permission to delete customers.",
+      });
+      return;
+    }
+    setConfirmDelete(customers[i]);
   };
 
   return (
@@ -26,8 +55,10 @@ const ViewAllCustomers = ({ customers, onEdit, reload }) => {
           { key: "discountEndDate", label: "End Date" },
         ]}
         data={customers}
-        onEdit={(i) => onEdit(i)}
-        onDelete={(i) => setConfirmDelete(customers[i])}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteClick}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
       />
 
       {confirmDelete && (
@@ -47,6 +78,21 @@ const ViewAllCustomers = ({ customers, onEdit, reload }) => {
                 onClick={handleDelete}
               />
             </>
+          }
+        />
+      )}
+
+      {accessModal && (
+        <Modal
+          title={accessModal.title}
+          message={accessModal.message}
+          onClose={() => setAccessModal(null)}
+          actions={
+            <Button
+              buttonName="OK"
+              buttonType="save"
+              onClick={() => setAccessModal(null)}
+            />
           }
         />
       )}

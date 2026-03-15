@@ -6,6 +6,7 @@ import { getUsers, insertUser, updateUser } from "../Services/user.services";
 import AddUserForm from "./AddUserForm";
 import ViewAllUsers from "./ViewAllUsers";
 import { getRoles } from "../../Settings/Services/settingService";
+import { useStateContext } from "../../../context/StateContext";
 
 /* ---------------------------------------------------------
    MAIN COMPONENT
@@ -22,28 +23,52 @@ const AddUser = () => {
   });
   const [saving, setSaving] = useState(false);
 
+  const { state } = useStateContext();
+  const canCreate =
+    state.user.permissions.includes("user.create") ||
+    state.user.permissions.includes("*.*");
+  const canView =
+    state.user.permissions.includes("user.view") ||
+    state.user.permissions.includes("*.*");
+  const canUpdate =
+    state.user.permissions.includes("user.update") ||
+    state.user.permissions.includes("*.*");
+
   const loadUsers = async () => {
     try {
       const res = await getUsers();
-      if (res.success) {
-        setUsers(res.users);
-      } else {
-        console.error(res.error);
-      }
+      if (res.success) setUsers(res.users);
+      else console.error(res.error);
     } catch (err) {
       console.error(err);
     }
   };
 
   const handleEdit = (index) => {
+    if (!canUpdate) {
+      setErrorModal({
+        open: true,
+        title: "Access Denied",
+        message: "You do not have permission to update users.",
+      });
+      return;
+    }
     setEditingIndex(index);
     setEditingUser(users[index]);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSave = async (user, isEdit) => {
-    if (saving) return false;
+    if (!isEdit && !canCreate) {
+      setErrorModal({
+        open: true,
+        title: "Access Denied",
+        message: "You do not have permission to create users.",
+      });
+      return false;
+    }
 
+    if (saving) return false;
     setSaving(true);
     try {
       let result;
@@ -83,19 +108,17 @@ const AddUser = () => {
   const loadRoles = async () => {
     try {
       const res = await getRoles();
-      if (res.success) {
-        setRoles(res.roles);
-        console.log(roles);
-      }
+      if (res.success) setRoles(res.roles);
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    loadUsers();
+    if (canView) loadUsers();
     loadRoles();
   }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       {/* ---------------- PAGE HEADER ---------------- */}
@@ -107,34 +130,43 @@ const AddUser = () => {
       </div>
 
       {/* ---------------- FORM CARD ---------------- */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-md font-semibold text-gray-800">
-            {editingIndex !== null ? "Edit User" : "Add New User"}
-          </h2>
+      {(canCreate || canUpdate) && (
+        <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-md font-semibold text-gray-800">
+              {editingIndex !== null ? "Edit User" : "Add New User"}
+            </h2>
 
-          {editingIndex !== null && (
-            <span className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">
-              Editing Mode
-            </span>
-          )}
+            {editingIndex !== null && (
+              <span className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                Editing Mode
+              </span>
+            )}
+          </div>
+
+          <AddUserForm
+            initialUser={editingUser}
+            users={users}
+            roles={roles}
+            onSave={handleSave}
+            onCancel={handleCancelEdit}
+            disabled={saving}
+            isEdit={editingIndex !== null}
+          />
         </div>
-
-        <AddUserForm
-          initialUser={editingUser}
-          users={users}
-          roles={roles}
-          onSave={handleSave}
-          onCancel={handleCancelEdit}
-          disabled={saving}
-          isEdit={editingIndex !== null}
-        />
-      </div>
+      )}
 
       {/* ---------------- TABLE CARD ---------------- */}
-      <div>
-        <ViewAllUsers users={users} onEdit={handleEdit} reload={loadUsers} />
-      </div>
+      {canView && (
+        <div>
+          <ViewAllUsers
+            users={users}
+            onEdit={handleEdit}
+            reload={loadUsers}
+            canUpdate={canUpdate}
+          />
+        </div>
+      )}
 
       {/* ---------------- ERROR MODAL ---------------- */}
       {errorModal.open && (

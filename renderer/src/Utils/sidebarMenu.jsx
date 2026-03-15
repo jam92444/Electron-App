@@ -115,7 +115,7 @@ export const menuItems = [
       { label: "User Profile", path: "/users/profile" },
       // { label: "Document Settings", path: "/projects/link3" },
       {
-        label: "Create Role",
+        label: "Role Management",
         path: "/setting/config-permission",
         permission: "role.view",
       },

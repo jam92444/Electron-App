@@ -11,6 +11,7 @@ import {
   updateSize,
   deleteSize,
 } from "../Services/sizes";
+import { useStateContext } from "../../../context/StateContext";
 
 // ----------- Main Component -----------
 const Size = () => {
@@ -21,6 +22,15 @@ const Size = () => {
   const [confirmSave, setConfirmSave] = useState(false);
   const [sizeToSave, setSizeToSave] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const { state } = useStateContext();
+  const canCreateOrUpdate =
+    state.user.permissions.includes("size.create") ||
+    state.user.permissions.includes("size.update") ||
+    state.user.permissions.includes("*.*");
+
+  const canView =
+    state.user.permissions.includes("size.view") ||
+    state.user.permissions.includes("*.*");
 
   const loadSizes = async () => {
     const res = await getSizes();
@@ -92,31 +102,37 @@ const Size = () => {
       </div>
 
       {/* ---------- FORM CARD ---------- */}
-      <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
-        <h2 className="text-md font-semibold text-gray-800 mb-4">
-          {editIndex !== null ? "Edit Size" : "Add New Size"}
-        </h2>
+      {canCreateOrUpdate && (
+        <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
+          <h2 className="text-md font-semibold text-gray-800 mb-4">
+            {editIndex !== null ? "Edit Size" : "Add New Size"}
+          </h2>
 
-        <AddSizeForm
-          initialSize={editSize}
-          onSave={handleSaveClick}
-          onCancel={() => setEditIndex(null)}
-        />
-      </div>
+          <AddSizeForm
+            initialSize={editSize}
+            onSave={handleSaveClick}
+            onCancel={() => setEditIndex(null)}
+          />
+        </div>
+      )}
 
       {/* ---------- TABLE CARD ---------- */}
-      <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-        <h2 className="text-md font-semibold text-gray-800 mb-4">All Sizes</h2>
+      {canView && (
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+          <h2 className="text-md font-semibold text-gray-800 mb-4">
+            All Sizes
+          </h2>
 
-        <ViewAllSizes
-          sizes={sizes}
-          onEdit={(i) => {
-            setEditIndex(i);
-            setEditSize(sizes[i]);
-          }}
-          onDelete={(i) => setConfirmDelete(i)}
-        />
-      </div>
+          <ViewAllSizes
+            sizes={sizes}
+            onEdit={(i) => {
+              setEditIndex(i);
+              setEditSize(sizes[i]);
+            }}
+            onDelete={(i) => setConfirmDelete(i)}
+          />
+        </div>
+      )}
 
       {/* ---------- MODALS ---------- */}
       {confirmSave && (
@@ -224,6 +240,14 @@ const AddSizeForm = ({ initialSize, onSave, onCancel }) => {
 
 // ----------- ViewAllSizes -----------
 const ViewAllSizes = ({ sizes, onEdit, onDelete }) => {
+  const { state } = useStateContext();
+  const canDelete =
+    state.user.permissions.includes("size.delete") ||
+    state.user.permissions.includes("*.*");
+  const canUpdate =
+    state.user.permissions.includes("size.update") ||
+    state.user.permissions.includes("*.*");
+
   const columns = [
     {
       title: "S.No",
@@ -235,26 +259,34 @@ const ViewAllSizes = ({ sizes, onEdit, onDelete }) => {
       dataIndex: "sizeName",
       key: "sizeName",
     },
-    {
-      title: "Actions",
-      align: "center",
-      render: (_, __, index) => (
-        <Space>
-          <span
-            className="text-blue-600 cursor-pointer hover:scale-110 transition"
-            onClick={() => onEdit(index)}
-          >
-            <FaPen />
-          </span>
-          <span
-            className="text-red-500 cursor-pointer hover:scale-110 transition"
-            onClick={() => onDelete(index)}
-          >
-            <FaTrashCan />
-          </span>
-        </Space>
-      ),
-    },
+    ...(canDelete || canUpdate
+      ? [
+          {
+            title: "Actions",
+            align: "center",
+            render: (_, __, index) => (
+              <Space>
+                {canUpdate && (
+                  <span
+                    className="text-blue-600 cursor-pointer hover:scale-110 transition"
+                    onClick={() => onEdit(index)}
+                  >
+                    <FaPen />
+                  </span>
+                )}
+                {canDelete && (
+                  <span
+                    className="text-red-500 cursor-pointer hover:scale-110 transition"
+                    onClick={() => onDelete(index)}
+                  >
+                    <FaTrashCan />
+                  </span>
+                )}
+              </Space>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (

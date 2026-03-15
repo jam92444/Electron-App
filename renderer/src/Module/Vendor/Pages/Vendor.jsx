@@ -37,7 +37,7 @@ const Vendor = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const editingVendor = location.state?.vendor;
-
+  
   /* ---------------- STATE ---------------- */
   const [vendorData, setVendorData] = useState(
     editingVendor ?? initialVendorState

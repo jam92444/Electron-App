@@ -10,6 +10,7 @@ import {
   createCustomer,
   updateCustomer,
 } from "../Services/customer.services";
+import { useStateContext } from "../../../context/StateContext";
 
 /* ---------------------------------------------------------
    MAIN COMPONENT
@@ -25,6 +26,16 @@ const Customer = () => {
     message: "",
   });
   const [saving, setSaving] = useState(false);
+  const { state } = useStateContext();
+  const canUpdate =
+    state.user.permissions.includes("customer.update") ||
+    state.user.permissions.includes("*.*");
+  const canCreate =
+    state.user.permissions.includes("customer.create") ||
+    state.user.permissions.includes("*.*");
+  const canDelete =
+    state.user.permissions.includes("customer.delete") ||
+    state.user.permissions.includes("*.*");
 
   useEffect(() => {
     loadCustomers();
@@ -45,7 +56,7 @@ const Customer = () => {
       console.error(err);
     }
   };
-  console.log(customers);
+
   // Load discounts
   const loadDiscounts = async () => {
     try {
@@ -60,6 +71,14 @@ const Customer = () => {
 
   // Handle edit button click
   const handleEdit = (index) => {
+    if (!canUpdate) {
+      setErrorModal({
+        open: true,
+        title: "Access Denied",
+        message: "You do not have permission to update customers.",
+      });
+      return;
+    }
     setEditingIndex(index);
     setEditingCustomer(customers[index]);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -67,6 +86,15 @@ const Customer = () => {
 
   // Handle save (create/update)
   const handleSave = async (customerData, isEdit) => {
+    if (!isEdit && !canCreate) {
+      setErrorModal({
+        open: true,
+        title: "Access Denied",
+        message: "You do not have permission to create customers.",
+      });
+      return;
+    }
+
     if (saving) return;
     setSaving(true);
 
@@ -116,28 +144,30 @@ const Customer = () => {
       </div>
 
       {/* ---------------- FORM CARD ---------------- */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-md font-semibold text-gray-800">
-            {editingIndex !== null ? "Edit Customer" : "Add New Customer"}
-          </h2>
+      {(canCreate || canUpdate) && (
+        <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-md font-semibold text-gray-800">
+              {editingIndex !== null ? "Edit Customer" : "Add New Customer"}
+            </h2>
 
-          {editingIndex !== null && (
-            <span className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">
-              Editing Mode
-            </span>
-          )}
+            {editingIndex !== null && (
+              <span className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                Editing Mode
+              </span>
+            )}
+          </div>
+
+          <AddCustomerForm
+            initialCustomer={editingCustomer}
+            discounts={discounts}
+            onSave={handleSave}
+            onCancel={handleCancelEdit}
+            isEdit={editingIndex !== null}
+            disabled={saving}
+          />
         </div>
-
-        <AddCustomerForm
-          initialCustomer={editingCustomer}
-          discounts={discounts}
-          onSave={handleSave}
-          onCancel={handleCancelEdit}
-          isEdit={editingIndex !== null}
-          disabled={saving}
-        />
-      </div>
+      )}
 
       {/* ---------------- TABLE CARD ---------------- */}
       <div className="bg-white rounded-xl border shadow-sm p-6">
@@ -149,6 +179,8 @@ const Customer = () => {
           customers={customers}
           onEdit={handleEdit}
           reload={loadCustomers}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
         />
       </div>
 

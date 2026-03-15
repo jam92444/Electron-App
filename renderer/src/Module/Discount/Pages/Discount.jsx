@@ -12,6 +12,7 @@ import {
   createDiscount,
   updateDiscount,
 } from "../Services/discount.services";
+import { useStateContext } from "../../../context/StateContext";
 
 const Discount = () => {
   const [discounts, setDiscounts] = useState([]);
@@ -19,7 +20,16 @@ const Discount = () => {
   const [confirm, setConfirm] = useState(false);
   const [modal, setModal] = useState(null);
   const [discountToSave, setDiscountToSave] = useState(null);
-
+  const { state } = useStateContext();
+  const canUpdate =
+    state.user.permissions.includes("discount.update") ||
+    state.user.permissions.includes("*.*");
+  const canView =
+    state.user.permissions.includes("discount.view") ||
+    state.user.permissions.includes("*.*");
+  const canCreate =
+    state.user.permissions.includes("discount.create") ||
+    state.user.permissions.includes("*.*");
   useEffect(() => {
     loadDiscounts();
     window.scrollTo(0, 0);
@@ -62,6 +72,15 @@ const Discount = () => {
   };
 
   const handleSaveClick = (discount) => {
+    const isCreating = !editDiscount?.id;
+    if (isCreating && !canCreate) {
+      setModal({
+        title: "Access Denied",
+        message: "You do not have permission to create discounts.",
+      });
+      return;
+    }
+
     if (!validateDiscount(discount)) return;
 
     setDiscountToSave({
@@ -104,28 +123,30 @@ const Discount = () => {
         </p>
       </div>
 
-      <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
-        <h2 className="text-md font-semibold mb-4">
-          {editDiscount ? "Edit Discount" : "Add New Discount"}
-        </h2>
+      {(canUpdate || canCreate) && (
+        <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
+          <h2 className="text-md font-semibold mb-4">
+            {editDiscount ? "Edit Discount" : "Add New Discount"}
+          </h2>
 
-        <AddDiscountForm
-          initialDiscount={editDiscount}
-          onSave={handleSaveClick}
-          onCancel={() => setEditDiscount(null)}
-        />
-      </div>
+          <AddDiscountForm
+            initialDiscount={editDiscount}
+            onSave={handleSaveClick}
+            onCancel={() => setEditDiscount(null)}
+          />
+        </div>
+      )}
+      {canView && (
+        <div className="bg-white rounded-xl border shadow-sm p-6">
+          <h2 className="text-md font-semibold mb-4">All Discounts</h2>
 
-      <div className="bg-white rounded-xl border shadow-sm p-6">
-        <h2 className="text-md font-semibold mb-4">All Discounts</h2>
-
-        <ViewAllDiscounts
-          discounts={discounts}
-          onEdit={(discount) => setEditDiscount(discount)}
-          reload={loadDiscounts}
-        />
-      </div>
-
+          <ViewAllDiscounts
+            discounts={discounts}
+            onEdit={(discount) => setEditDiscount(discount)}
+            reload={loadDiscounts}
+          />
+        </div>
+      )}
       {confirm && (
         <Modal
           title="Confirm Save"

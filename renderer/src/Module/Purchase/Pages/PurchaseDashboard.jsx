@@ -12,6 +12,7 @@ import {
   Legend,
 } from "chart.js";
 import Button from "../../../components/ReuseComponents/Button";
+import Modal from "../../../components/ReuseComponents/Modal";
 import PurchasesListTable from "../Components/PurchaseListTable";
 import {
   getDashboardSummary,
@@ -23,6 +24,7 @@ import {
   getMonthlyPurchaseSummary,
   getVendorStatusStats,
 } from "../Services/purchaseService";
+import { useStateContext } from "../../../context/StateContext";
 
 ChartJS.register(
   CategoryScale, LinearScale, BarElement,
@@ -37,7 +39,6 @@ const daysAgo = (n) => {
   return d.toISOString().split("T")[0];
 };
 
-// Preset ranges for the quick-filter buttons
 const PRESETS = [
   { label: "7D",  startDate: daysAgo(7),   endDate: today() },
   { label: "30D", startDate: daysAgo(30),  endDate: today() },
@@ -48,9 +49,25 @@ const PRESETS = [
 // ─── Main Component ──────────────────────────────────────────────────────────
 const PurchaseDashboard = () => {
   const navigate = useNavigate();
+  const { state } = useStateContext();
+
+  // ── Permissions ──
+  const canCreate =
+    state.user.permissions.includes("purchase.create") ||
+    state.user.permissions.includes("*.*");
+  const canView =
+    state.user.permissions.includes("purchase.view") ||
+    state.user.permissions.includes("*.*");
+  const canUpdate =
+    state.user.permissions.includes("purchase.update") ||
+    state.user.permissions.includes("*.*");
+  const canDelete =
+    state.user.permissions.includes("purchase.delete") ||
+    state.user.permissions.includes("*.*");
 
   const [loading, setLoading]               = useState(true);
   const [error, setError]                   = useState(null);
+  const [accessModal, setAccessModal]       = useState(null);
   const [summary, setSummary]               = useState({});
   const [purchaseTrend, setPurchaseTrend]   = useState([]);
   const [topVendors, setTopVendors]         = useState([]);
@@ -61,7 +78,6 @@ const PurchaseDashboard = () => {
   const [vendorStatus, setVendorStatus]     = useState([]);
   const [showAllVariants, setShowAllVariants] = useState(false);
 
-  // Date filter state
   const [startDate, setStartDate] = useState(daysAgo(30));
   const [endDate, setEndDate]     = useState(today());
   const [activePreset, setActivePreset] = useState("30D");
@@ -78,10 +94,10 @@ const PurchaseDashboard = () => {
         getPurchaseTrend(dateRange),
         getTopVendors(dateRange),
         getRecentPurchases(dateRange),
-        getLowStockItems(),                  // stock snapshot — no date filter
-        getVariantStockSummary(),            // stock snapshot — no date filter
+        getLowStockItems(),
+        getVariantStockSummary(),
         getMonthlyPurchaseSummary(dateRange),
-        getVendorStatusStats(),              // vendor config — no date filter
+        getVendorStatusStats(),
       ]);
 
       const [
@@ -89,13 +105,13 @@ const PurchaseDashboard = () => {
         lowStockRes, variantStockRes, monthlyRes, vendorStatusRes,
       ] = results.map((r) => (r.status === "fulfilled" ? r.value : null));
 
-      if (summaryRes?.success)     setSummary(summaryRes.data);
-      if (trendRes?.success)       setPurchaseTrend(trendRes.data);
-      if (topVendorRes?.success)   setTopVendors(topVendorRes.data);
-      if (recentRes?.success)      setRecentPurchases(recentRes.data);
-      if (lowStockRes?.success)    setLowStock(lowStockRes.data);
+      if (summaryRes?.success)      setSummary(summaryRes.data);
+      if (trendRes?.success)        setPurchaseTrend(trendRes.data);
+      if (topVendorRes?.success)    setTopVendors(topVendorRes.data);
+      if (recentRes?.success)       setRecentPurchases(recentRes.data);
+      if (lowStockRes?.success)     setLowStock(lowStockRes.data);
       if (variantStockRes?.success) setVariantStock(variantStockRes.data);
-      if (monthlyRes?.success)     setMonthlySummary(monthlyRes.data);
+      if (monthlyRes?.success)      setMonthlySummary(monthlyRes.data);
       if (vendorStatusRes?.success) setVendorStatus(vendorStatusRes.data);
     } catch (err) {
       console.error("Dashboard load failed:", err);
@@ -105,12 +121,10 @@ const PurchaseDashboard = () => {
     }
   };
 
-  // Initial load
   useEffect(() => {
     loadDashboard(startDate, endDate);
   }, []);
 
-  // Apply a preset quick-filter
   const applyPreset = (preset) => {
     setActivePreset(preset.label);
     setStartDate(preset.startDate);
@@ -118,18 +132,49 @@ const PurchaseDashboard = () => {
     loadDashboard(preset.startDate, preset.endDate);
   };
 
-  // Apply custom date range from the date inputs
   const applyCustomRange = () => {
     if (!startDate || !endDate) return;
     if (startDate > endDate) {
       alert("Start date cannot be after end date.");
       return;
     }
-    setActivePreset(null); // deselect preset
+    setActivePreset(null);
     loadDashboard(startDate, endDate);
   };
 
-  // Memoized chart data
+  const handleNewPurchase = () => {
+    if (!canCreate) {
+      setAccessModal({
+        title: "Access Denied",
+        message: "You do not have permission to create purchases.",
+      });
+      return;
+    }
+    navigate("/purchase/new");
+  };
+
+  const handleViewPurchase = (row) => {
+    if (!canView) {
+      setAccessModal({
+        title: "Access Denied",
+        message: "You do not have permission to view purchases.",
+      });
+      return;
+    }
+    navigate(`/purchase/${row.id}`);
+  };
+
+  const handleRecentPurchaseClick = (p) => {
+    if (!canView) {
+      setAccessModal({
+        title: "Access Denied",
+        message: "You do not have permission to view purchases.",
+      });
+      return;
+    }
+    navigate(`/purchase/${p.id}`);
+  };
+
   const purchaseTrendData = useMemo(() => ({
     labels: purchaseTrend.map((p) => p.date),
     datasets: [{
@@ -179,12 +224,13 @@ const PurchaseDashboard = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Purchase Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">Complete purchase & vendor overview</p>
         </div>
-        <Button buttonName="+ New Purchase" onClick={() => navigate("/purchase/new")} />
+        {canCreate && (
+          <Button buttonName="+ New Purchase" onClick={handleNewPurchase} />
+        )}
       </div>
 
       {/* ── DATE FILTER BAR ── */}
       <div className="bg-white rounded-2xl shadow-sm p-4 flex flex-col sm:flex-row sm:items-end gap-3">
-        {/* Preset buttons */}
         <div className="flex gap-2 flex-wrap">
           {PRESETS.map((p) => (
             <button
@@ -201,10 +247,8 @@ const PurchaseDashboard = () => {
           ))}
         </div>
 
-        {/* Divider */}
         <div className="hidden sm:block w-px h-8 bg-gray-200" />
 
-        {/* Custom range inputs */}
         <div className="flex flex-col sm:flex-row items-start sm:items-end gap-2 flex-1">
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-400 font-medium">From</label>
@@ -235,7 +279,6 @@ const PurchaseDashboard = () => {
           </button>
         </div>
 
-        {/* Active range label */}
         <p className="text-xs text-gray-400 sm:ml-auto whitespace-nowrap">
           {startDate} → {endDate}
         </p>
@@ -243,10 +286,10 @@ const PurchaseDashboard = () => {
 
       {/* ── SUMMARY CARDS ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <SummaryCard title="Purchases"     value={summary.totalPurchases ?? 0}  icon="🛒" color="from-blue-400 to-blue-600" />
-        <SummaryCard title="Total Amount"  value={`₹ ${Number(summary.totalPurchaseAmount || 0).toLocaleString()}`} icon="💰" color="from-green-400 to-green-600" />
-        <SummaryCard title="Vendors"       value={summary.totalVendors ?? 0}    icon="🏢" color="from-purple-400 to-purple-600" />
-        <SummaryCard title="Items"         value={summary.totalItems ?? 0}      icon="📦" color="from-yellow-400 to-yellow-500" />
+        <SummaryCard title="Purchases"    value={summary.totalPurchases ?? 0}  icon="🛒" color="from-blue-400 to-blue-600" />
+        <SummaryCard title="Total Amount" value={`₹ ${Number(summary.totalPurchaseAmount || 0).toLocaleString()}`} icon="💰" color="from-green-400 to-green-600" />
+        <SummaryCard title="Vendors"      value={summary.totalVendors ?? 0}    icon="🏢" color="from-purple-400 to-purple-600" />
+        <SummaryCard title="Items"        value={summary.totalItems ?? 0}      icon="📦" color="from-yellow-400 to-yellow-500" />
       </div>
 
       {/* ── CHARTS ── */}
@@ -312,8 +355,12 @@ const PurchaseDashboard = () => {
         {recentPurchases.length === 0 ? <Empty /> : recentPurchases.map((p) => (
           <div
             key={p.id}
-            onClick={() => navigate(`/purchase/${p.id}`)}
-            className="flex justify-between py-2 px-3 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors"
+            onClick={() => handleRecentPurchaseClick(p)}
+            className={`flex justify-between py-2 px-3 rounded-lg transition-colors ${
+              canView
+                ? "hover:bg-blue-50 cursor-pointer"
+                : "cursor-not-allowed opacity-60"
+            }`}
           >
             <span className="text-gray-700">{p.vendorName}</span>
             <span className="font-semibold text-gray-800">₹ {Number(p.totalAmount).toLocaleString()}</span>
@@ -322,7 +369,28 @@ const PurchaseDashboard = () => {
       </ListSection>
 
       {/* ── FULL TABLE ── */}
-      <PurchasesListTable onView={(row) => navigate(`/purchase/${row.id}`)} />
+      <PurchasesListTable
+        onView={handleViewPurchase}
+        canView={canView}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+      />
+
+      {/* ── ACCESS DENIED MODAL ── */}
+      {accessModal && (
+        <Modal
+          title={accessModal.title}
+          message={accessModal.message}
+          onClose={() => setAccessModal(null)}
+          actions={
+            <Button
+              buttonName="OK"
+              buttonType="save"
+              onClick={() => setAccessModal(null)}
+            />
+          }
+        />
+      )}
     </div>
   );
 };

@@ -4,6 +4,20 @@ import Select from "react-select";
 import Input from "../../../components/ReuseComponents/Input";
 import Button from "../../../components/ReuseComponents/Button";
 
+const today = new Date().toISOString().split("T")[0];
+const nextYear = new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+  .toISOString()
+  .split("T")[0];
+
+const emptyCustomer = {
+  name: "",
+  phone: "",
+  discountId: "",
+  discountPercentage: 0,
+  discountStartDate: today,
+  discountEndDate: nextYear,
+};
+
 const AddCustomerForm = ({
   initialCustomer,
   discounts,
@@ -12,27 +26,13 @@ const AddCustomerForm = ({
   isEdit,
   disabled,
 }) => {
-  const [customer, setCustomer] = useState({
-    name: "",
-    phone: "",
-    discountId: "",
-    discountPercentage: 0,
-    discountStartDate: "",
-    discountEndDate: "",
-  });
+  const [customer, setCustomer] = useState(emptyCustomer);
 
   useEffect(() => {
     if (initialCustomer) {
       setCustomer(initialCustomer);
     } else {
-      setCustomer({
-        name: "",
-        phone: "",
-        discountId: "",
-        discountPercentage: 0,
-        discountStartDate: "",
-        discountEndDate: "",
-      });
+      setCustomer(emptyCustomer);
     }
   }, [initialCustomer]);
 
@@ -49,8 +49,8 @@ const AddCustomerForm = ({
         ...customer,
         discountId: "",
         discountPercentage: 0,
-        discountStartDate: "",
-        discountEndDate: "",
+        discountStartDate: today,
+        discountEndDate: nextYear,
       });
       return;
     }
@@ -77,6 +77,7 @@ const AddCustomerForm = ({
     }
 
     onSave(customer, isEdit);
+    setCustomer(emptyCustomer);
   };
 
   return (
@@ -101,7 +102,10 @@ const AddCustomerForm = ({
         <div className="flex flex-col">
           <Select
             options={discountOptions}
-            value={discountOptions.find((d) => d.value === customer.discountId) || null}
+            value={
+              discountOptions.find((d) => d.value === customer.discountId) ||
+              null
+            }
             onChange={handleDiscountChange}
             isClearable
             placeholder="Select discount..."
@@ -116,15 +120,25 @@ const AddCustomerForm = ({
           value={customer.discountPercentage}
           disabled
         />
+
         <Input
           label="Discount Start Date"
+          type="date"
           value={customer.discountStartDate}
-          disabled
+          onChange={(e) =>
+            setCustomer({ ...customer, discountStartDate: e.target.value })
+          }
+          disabled={disabled}
         />
+
         <Input
           label="Discount End Date"
+          type="date"
           value={customer.discountEndDate}
-          disabled
+          onChange={(e) =>
+            setCustomer({ ...customer, discountEndDate: e.target.value })
+          }
+          disabled={disabled}
         />
       </div>
 

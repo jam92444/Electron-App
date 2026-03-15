@@ -15,8 +15,8 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  // Run when state.user updates after successful login
   useEffect(() => {
     if (state.user?.id) {
       navigate("/dashboard");
@@ -29,11 +29,9 @@ const Login = () => {
     try {
       const response = await loginUser({ username, password });
 
-      // console.log("Response", response);
-
       if (!response.success) {
-        localStorage.removeItem("userData"); // clear any stale data
-        alert(response.message);
+        localStorage.removeItem("userData");
+        setErrorMsg(response.message);
         setUsername("");
         setPassword("");
         return;
@@ -47,8 +45,8 @@ const Login = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-      localStorage.removeItem("userData"); // clear any stale data
-      alert("Login failed. Check console for details.");
+      localStorage.removeItem("userData");
+      setErrorMsg("Login failed. Check console for details.");
     }
   };
 
@@ -106,7 +104,10 @@ const Login = () => {
                 type="text"
                 placeholder="Enter your Username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setErrorMsg("");
+                }}
                 className="px-4 py-2 border rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 border-gray-400 focus:ring-orange-100"
               />
             </div>
@@ -124,7 +125,10 @@ const Login = () => {
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrorMsg("");
+                }}
                 className="px-4 py-2 border rounded-lg text-xs sm:text-sm pr-10 focus:outline-none focus:ring-2 border-gray-400 focus:ring-orange-100"
               />
               <span
@@ -134,6 +138,13 @@ const Login = () => {
                 {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
               </span>
             </div>
+
+            {/* Error Message */}
+            {errorMsg && (
+              <p className="text-red-500 text-xs text-center -mt-2">
+                {errorMsg}
+              </p>
+            )}
 
             {/* Login Button */}
             <Button

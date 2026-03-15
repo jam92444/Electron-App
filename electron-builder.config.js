@@ -1,6 +1,6 @@
 module.exports = {
   appId: "com.inviOX.app",
-  productName: "InviOX OfflineApp",
+  productName: "InviOX Billing App",
 
   directories: {
     output: "dist_electron",
@@ -25,11 +25,11 @@ module.exports = {
     target: ["AppImage"],
     icon: "assets/icon.png", // 👈 Add this
   },
-
   nsis: {
     oneClick: false,
-    perMachine: false,
     allowElevation: true,
     allowToChangeInstallationDirectory: true,
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
   },
 };

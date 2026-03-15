@@ -38,7 +38,7 @@ const AddItem = () => {
       console.error(err);
     }
   };
-
+  console.log("permission", state.user);
   // ✅ Fix 1: handleEdit takes item object now
   const handleEdit = (item) => {
     setEditingItem(item);
@@ -108,30 +108,34 @@ const AddItem = () => {
       </div>
 
       {/* ---------------- FORM CARD ---------------- */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-md font-semibold text-gray-800">
-            {editingIndex !== null ? "Edit Item" : "Add New Item"}
-          </h2>
+      {state.user.permissions.includes("items.create") ||
+        state.user.permissions.includes("items.update") ||
+        (state.user.permissions.includes("*.*") && (
+          <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-md font-semibold text-gray-800">
+                {editingIndex !== null ? "Edit Item" : "Add New Item"}
+              </h2>
 
-          {editingIndex !== null && (
-            <span className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">
-              Editing Mode
-            </span>
-          )}
-        </div>
+              {editingIndex !== null && (
+                <span className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                  Editing Mode
+                </span>
+              )}
+            </div>
 
-        <AddItemForm
-          initialItem={editingItem}
-          items={items}
-          onSave={handleSave}
-          units={units}
-          onCancel={() => handleCancelEdit()}
-          mode="MASTER"
-          disabled={saving}
-          isEdit={editingIndex !== null}
-        />
-      </div>
+            <AddItemForm
+              initialItem={editingItem}
+              items={items}
+              onSave={handleSave}
+              units={units}
+              onCancel={() => handleCancelEdit()}
+              mode="MASTER"
+              disabled={saving}
+              isEdit={editingIndex !== null}
+            />
+          </div>
+        ))}
 
       {/* ---------------- TABLE CARD ---------------- */}
       <div>

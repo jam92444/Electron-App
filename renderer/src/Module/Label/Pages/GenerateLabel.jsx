@@ -6,6 +6,8 @@ import { getItemsByPurchaseIds } from "../Services/labelServices";
 import { getCompanyDetails } from "../../Settings/Services/settingService";
 import { Tag } from "antd";
 import Button from "../../../components/ReuseComponents/Button";
+import Modal from "../../../components/ReuseComponents/Modal";
+import { useStateContext } from "../../../context/StateContext";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 const buildLabels = (items) => {
@@ -40,7 +42,6 @@ const buildLabels = (items) => {
   return labels;
 };
 
-// ✅ Uses companyDetails instead of hardcoded values
 const printLabels = (items, company = {}) => {
   const labels = buildLabels(items);
   if (!labels.length) return toast.error("No labels to print");
@@ -142,26 +143,38 @@ const ITEM_COLUMNS = [
 
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 const GenerateLabel = () => {
+  const { state } = useStateContext();
+
+  // ── Permissions ──
+  const canCreate =
+    state.user.permissions.includes("label.create") ||
+    state.user.permissions.includes("*.*");
+  const canView =
+    state.user.permissions.includes("label.view") ||
+    state.user.permissions.includes("*.*");
+
   const [purchases, setPurchases] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
-  const [hasMore, setHasMore] = useState(true); // ✅ separate flag
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [fetchingItems, setFetchingItems] = useState(false);
   const [selectedPurchases, setSelectedPurchases] = useState([]);
   const [items, setItems] = useState([]);
   const [companyDetails, setCompanyDetails] = useState({});
-  const itemsSectionRef = useRef(null); // ✅ scroll to items
+  const [accessModal, setAccessModal] = useState(null);
+  const itemsSectionRef = useRef(null);
 
   const pageSize = 20;
 
   useEffect(() => {
+    if (!canView) return; // don't fetch if no view permission
     fetchPurchases();
     getCompanyDetails().then((res) => {
       if (res?.success) setCompanyDetails(res.data);
     });
   }, []);
 
-  /* ── Fetch purchases ────────────────────────────────────────────────── */
+  /* ── Fetch purchases ── */
   const fetchPurchases = async () => {
     if (loading || !hasMore) return;
     setLoading(true);
@@ -173,7 +186,7 @@ const GenerateLabel = () => {
       if (res.success) {
         setPurchases((prev) => [...prev, ...res.data]);
         setNextCursor(res.nextCursor);
-        setHasMore(!!res.nextCursor); // ✅ correct end-of-list detection
+        setHasMore(!!res.nextCursor);
       } else toast.error(res.error);
     } catch {
       toast.error("Failed to fetch purchases");
@@ -182,7 +195,7 @@ const GenerateLabel = () => {
     }
   };
 
-  /* ── Selection helpers ──────────────────────────────────────────────── */
+  /* ── Selection helpers ── */
   const allSelected =
     purchases.length > 0 &&
     purchases.every((p) => selectedPurchases.includes(p.id));
@@ -197,7 +210,7 @@ const GenerateLabel = () => {
     );
   };
 
-  /* ── Fetch items for selected purchases ─────────────────────────────── */
+  /* ── Fetch items for selected purchases ── */
   const fetchItems = async () => {
     if (!selectedPurchases.length)
       return toast.error("Select at least one purchase");
@@ -205,8 +218,7 @@ const GenerateLabel = () => {
     try {
       const res = await getItemsByPurchaseIds(selectedPurchases);
       if (res.success) {
-        setItems(res.data); // ✅ replaces, not appends
-        // ✅ Scroll to items section after load
+        setItems(res.data);
         setTimeout(
           () => itemsSectionRef.current?.scrollIntoView({ behavior: "smooth" }),
           100,
@@ -224,9 +236,46 @@ const GenerateLabel = () => {
     setItems([]);
   };
 
+  const handlePrint = () => {
+    if (!canCreate) {
+      setAccessModal({
+        title: "Access Denied",
+        message: "You do not have permission to generate labels.",
+      });
+      return;
+    }
+    printLabels(items, companyDetails);
+  };
+
+  const handleContinue = () => {
+    if (!canView) {
+      setAccessModal({
+        title: "Access Denied",
+        message: "You do not have permission to view label items.",
+      });
+      return;
+    }
+    fetchItems();
+  };
+
   const labelCount = items.length ? buildLabels(items).length : 0;
 
-  /* ── Render ─────────────────────────────────────────────────────────── */
+  /* ── No view permission screen ── */
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 flex items-center justify-center">
+        <div className="text-center space-y-2">
+          <p className="text-2xl">🔒</p>
+          <p className="text-gray-700 font-medium">Access Denied</p>
+          <p className="text-sm text-gray-400">
+            You do not have permission to view labels.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Render ── */
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 space-y-6">
       {/* Header */}
@@ -241,7 +290,6 @@ const GenerateLabel = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-gray-800">Purchase Orders</h2>
-          {/* ✅ Selected count badge */}
           {selectedPurchases.length > 0 && (
             <span className="text-xs bg-green-100 text-green-700 border border-green-200 px-2 py-1 rounded-full font-medium">
               {selectedPurchases.length} selected
@@ -253,7 +301,6 @@ const GenerateLabel = () => {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                {/* ✅ Select all checkbox */}
                 <th className="px-3 py-2 text-left w-10">
                   <input
                     type="checkbox"
@@ -287,7 +334,6 @@ const GenerateLabel = () => {
                 purchases.map((p) => {
                   const isSelected = selectedPurchases.includes(p.id);
                   return (
-                    // ✅ Highlighted selected rows
                     <tr
                       key={p.id}
                       onClick={() => toggleSelectPurchase(p.id)}
@@ -340,7 +386,7 @@ const GenerateLabel = () => {
             Reset selection
           </button>
           <button
-            onClick={fetchItems}
+            onClick={handleContinue}
             disabled={!selectedPurchases.length || fetchingItems}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               selectedPurchases.length
@@ -362,7 +408,6 @@ const GenerateLabel = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-semibold text-gray-800">Items to Label</h2>
-              {/* ✅ Label count preview */}
               <p className="text-xs text-gray-500 mt-0.5">
                 {items.length} item types ·{" "}
                 <span className="font-medium text-orange-600">
@@ -381,13 +426,31 @@ const GenerateLabel = () => {
               buttonType="cancel"
               onClick={handleReset}
             />
-            <Button
-              buttonName={`Print ${labelCount} Labels`}
-              buttonType="save"
-              onClick={() => printLabels(items, companyDetails)}
-            />
+            {canCreate && (
+              <Button
+                buttonName={`Print ${labelCount} Labels`}
+                buttonType="save"
+                onClick={handlePrint}
+              />
+            )}
           </div>
         </div>
+      )}
+
+      {/* ── Access Denied Modal ── */}
+      {accessModal && (
+        <Modal
+          title={accessModal.title}
+          message={accessModal.message}
+          onClose={() => setAccessModal(null)}
+          actions={
+            <Button
+              buttonName="OK"
+              buttonType="save"
+              onClick={() => setAccessModal(null)}
+            />
+          }
+        />
       )}
     </div>
   );

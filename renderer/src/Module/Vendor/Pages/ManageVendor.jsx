@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/immutability */
 import { Space, Table, Tag, Spin } from "antd";
 import { FaPen, FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
@@ -10,25 +9,30 @@ import {
 import { useEffect, useState } from "react";
 import Modal from "../../../components/ReuseComponents/Modal";
 import Button from "../../../components/ReuseComponents/Button";
+import { useStateContext } from "../../../context/StateContext";
 
 const ManageVendor = ({ reload }) => {
   const navigate = useNavigate();
-
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
-
+  const [modal, setModal] = useState(null);
   // Dashboard data
   const [dashboard, setDashboard] = useState(null);
-
   // Pagination
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
     total: 0,
   });
+  const { state } = useStateContext();
+  const canUpdate =
+    state.user.permissions.includes("vendor.update") ||
+    state.user.permissions.includes("*.*");
+  const canDelete =
+    state.user.permissions.includes("vendor.delete") ||
+    state.user.permissions.includes("*.*");
 
   /* ---------------- FETCH DATA ---------------- */
 
@@ -51,7 +55,6 @@ const ManageVendor = ({ reload }) => {
       const response = await getVendors();
 
       if (response.success) {
-        // client-side pagination fallback (upgrade later to DB pagination)
         const start = (page - 1) * pageSize;
         const end = start + pageSize;
 
@@ -129,19 +132,39 @@ const ManageVendor = ({ reload }) => {
       render: (_, record) => (
         <Space>
           <span
-            className="text-blue-600 cursor-pointer"
-            onClick={() =>
-              navigate("/vendor/add-vendor", {
-                state: { vendor: record },
-              })
+            className={
+              canUpdate
+                ? "text-blue-600 cursor-pointer"
+                : "text-gray-300 cursor-not-allowed"
             }
+            onClick={() => {
+              if (!canUpdate) {
+                setModal({
+                  title: "Access Denied",
+                  message: "You do not have permission to update vendors.",
+                });
+                return;
+              }
+              navigate("/vendor/add-vendor", { state: { vendor: record } });
+            }}
           >
             <FaPen />
           </span>
 
           <span
-            className="text-red-600 cursor-pointer"
+            className={
+              canDelete
+                ? "text-red-600 cursor-pointer"
+                : "text-gray-300 cursor-not-allowed"
+            }
             onClick={() => {
+              if (!canDelete) {
+                setModal({
+                  title: "Access Denied",
+                  message: "You do not have permission to delete vendors.",
+                });
+                return;
+              }
               setSelectedVendor(record);
               setConfirmDelete(true);
             }}
@@ -225,6 +248,9 @@ const ManageVendor = ({ reload }) => {
           }
         />
       )}
+
+      {/* ---------- ACCESS DENIED ALERT ---------- */}
+      {modal && <Modal {...modal} onClose={() => setModal(null)} />}
     </div>
   );
 };
