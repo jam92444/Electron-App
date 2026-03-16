@@ -51,6 +51,10 @@ INSERT OR IGNORE INTO permissions (permission_key) VALUES
 ('discount.view'),
 ('discount.update'),
 ('discount.delete'),
+('expense.create'),
+('expense.view'),
+('expense.update'),
+('expense.delete'),
 ('vendor.create'),
 ('vendor.view'),
 ('vendor.update'),
@@ -67,10 +71,10 @@ INSERT OR IGNORE INTO permissions (permission_key) VALUES
 ('purchase.view'),
 ('purchase.update'),
 ('purchase.delete'),
-  ('label.create'),
-  ('label.view'),
-  ('label.update'),
-  ('label.delete'),
+('label.create'),
+('label.view'),
+('label.update'),
+('label.delete'),
 ('user.create'),
 ('user.view'),
 ('user.update'),
@@ -79,6 +83,10 @@ INSERT OR IGNORE INTO permissions (permission_key) VALUES
 ('role.view'),
 ('role.update'),
 ('role.delete'),
+('expense.create'),
+('expense.view'),
+('expense.update'),
+('expense.delete'),
 ('company_setting.view'),
 ('company_setting.update'),
 ('user_profile.view'),
@@ -112,7 +120,6 @@ SELECT r.id, p.id
 FROM roles r, permissions p
 WHERE r.name = 'super_admin'
 AND p.permission_key = '*.*';
-
 
 -- Assign super_admin role to superadmin user
 INSERT OR IGNORE INTO user_roles (user_id, role_id)
@@ -254,6 +261,37 @@ CREATE TABLE IF NOT EXISTS bill_items (
   quantity INTEGER NOT NULL DEFAULT 1,
   total_amount REAL,
   FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE
+);
+
+-- =============================
+-- EXPENSE CATEGORIES
+-- =============================
+CREATE TABLE IF NOT EXISTS expense_categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE NOT NULL,
+  is_default INTEGER DEFAULT 0
+);
+
+-- Seed default categories
+INSERT OR IGNORE INTO expense_categories (name, is_default) VALUES
+('Snack', 1),
+('Petrol', 1),
+('Logistics', 1),
+('Rent', 1),
+('Other', 1);
+
+-- =============================
+-- EXPENSES
+-- =============================
+CREATE TABLE IF NOT EXISTS expenses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category_id INTEGER NOT NULL,
+  amount REAL NOT NULL CHECK (amount > 0),
+  description TEXT,
+  expense_date TEXT NOT NULL DEFAULT (DATE('now')),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (category_id) REFERENCES expense_categories(id) ON DELETE RESTRICT
 );
 
 -- =============================

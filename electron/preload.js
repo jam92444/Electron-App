@@ -55,6 +55,23 @@ contextBridge.exposeInMainWorld("api", {
   deleteVendor: (vendorId) => ipcRenderer.invoke("db:deleteVendor", vendorId),
   filterVendors: (filters) => ipcRenderer.invoke("db:filterVendors", filters),
 
+  /* ----------------- Expenses ----------------- */
+  getExpenses: () => ipcRenderer.invoke("db:getExpenses"),
+  getExpensesByDateRange: (range) =>
+    ipcRenderer.invoke("db:getExpensesByDateRange", range),
+  getExpenseSummary: (range) =>
+    ipcRenderer.invoke("db:getExpenseSummary", range),
+  insertExpense: (expense) => ipcRenderer.invoke("db:insertExpense", expense),
+  updateExpense: (expense) => ipcRenderer.invoke("db:updateExpense", expense),
+  deleteExpense: (id) => ipcRenderer.invoke("db:deleteExpense", id),
+
+  /* ----------------- Expense Categories ----------------- */
+  getExpenseCategories: () => ipcRenderer.invoke("db:getExpenseCategories"),
+  insertExpenseCategory: (name) =>
+    ipcRenderer.invoke("db:insertExpenseCategory", name),
+  deleteExpenseCategory: (id) =>
+    ipcRenderer.invoke("db:deleteExpenseCategory", id),
+
   /* ----------------- Purchases ----------------- */
   createPurchase: (purchase) =>
     ipcRenderer.invoke("db:createPurchase", purchase),
@@ -103,7 +120,8 @@ contextBridge.exposeInMainWorld("api", {
     }),
 
   getVendorStatusStats: () => ipcRenderer.invoke("db:getVendorStatusStats"),
-  getPurchaseItems: (purchaseId) => ipcRenderer.invoke("db:getPurchaseItems", purchaseId),
+  getPurchaseItems: (purchaseId) =>
+    ipcRenderer.invoke("db:getPurchaseItems", purchaseId),
 
   // One-call dashboard loader
   getDashboardData: ({ startDate, endDate } = {}) =>

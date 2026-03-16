@@ -1,5 +1,6 @@
 import { HomeIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import {
+  HiOutlineCreditCard,
   HiOutlineDatabase,
   HiOutlineShoppingCart,
   HiOutlineTag,
@@ -67,6 +68,17 @@ export const menuItems = [
         label: "Sales Bill",
         path: "/billing/sales-bill",
         permission: "bill.view",
+      },
+    ],
+  },
+  {
+    label: "Others",
+    icon: <HiOutlineCreditCard className="w-4 h-4" />,
+    children: [
+      {
+        label: "Expense Management",
+        path: "/expense",
+        permission: "expense.view",
       },
     ],
   },
