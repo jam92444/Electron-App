@@ -163,7 +163,7 @@ This project is licensed under the **MIT License**.
 
 # 👨‍💻 Author
 
-Developed by **Your Name**
+Developed by **Mohamed Yusuf Jamal N (CBE)**
 
 GitHub:
 [https://github.com/jam92444](https://github.com/jam92444)
