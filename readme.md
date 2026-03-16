@@ -170,13 +170,3 @@ GitHub:
 
 ---
 
-💡 **Pro tip:**
-Add **3 screenshots** to your repo — recruiters love seeing UI.
-
-Example:
-
-- Dashboard
-- Product management
-- Billing page
-
----
