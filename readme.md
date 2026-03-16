@@ -31,7 +31,7 @@ The application uses **web technologies (HTML, CSS, JavaScript)** combined with 
 | **Electron** | Desktop application framework |
 | **Node.js**  | Backend runtime               |
 | HTML5        | UI structure                  |
-| CSS3         | Styling                       |
+| Tailwind Css | Styling                       |
 | JavaScript   | Application logic             |
 
 ---
