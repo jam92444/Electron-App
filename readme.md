@@ -113,9 +113,17 @@ The renderer process handles:
 
 # 📸 Screenshots
 
+Dashboard
 ![Dashboard](./screenshots/dashboard.png)
 
+Items Master
 ![Item Listing](./screenshots/product-list.png)
+
+Sales Billing
+![Sales Bill Creation](./screenshots/Billing.PNG)
+
+Label Generation
+![Sales Bill Creation](./screenshots/Label%20Generation.png)
 
 ---
 
