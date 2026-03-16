@@ -1,4 +1,3 @@
-
 # 🧾 Inviox – Mini Retail Management System
 
 ![Electron](https://img.shields.io/badge/Electron-Desktop_App-blue)
@@ -86,15 +85,15 @@ This will launch the **Inviox Desktop Application**.
 The **Electron main process** initializes the app and creates the application window.
 
 ```javascript id="invioxp5"
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow } = require("electron");
 
 function createWindow() {
   const win = new BrowserWindow({
     width: 900,
-    height: 600
+    height: 600,
   });
 
-  win.loadFile('index.html');
+  win.loadFile("index.html");
 }
 
 app.whenReady().then(createWindow);
@@ -106,39 +105,28 @@ app.whenReady().then(createWindow);
 
 The renderer process handles:
 
-* UI interactions
-* Retail management logic
-* Data display
+- UI interactions
+- Retail management logic
+- Data display
 
 ---
 
 # 📸 Screenshots
 
-*(Add screenshots here after running your app)*
+![Dashboard](./screenshots/dashboard.png)
 
-Example:
-
-```
-/screenshots/dashboard.png
-/screenshots/product-list.png
-```
-
-Then add:
-
-```
-![Dashboard](screenshots/dashboard.png)
-```
+![Item Listing](./screenshots/product-list.png)
 
 ---
 
 # 🚀 Future Improvements
 
-* 📦 Inventory tracking system
-* 🧾 Invoice & billing system
-* 👥 Customer management
-* 📊 Sales analytics & reports
-* 💾 Database integration (SQLite / MongoDB)
-* 🖨 Receipt printing
+- 📦 Inventory tracking system
+- 🧾 Invoice & billing system
+- 👥 Customer management
+- 📊 Sales analytics & reports
+- 💾 Database integration (SQLite / MongoDB)
+- 🖨 Receipt printing
 
 ---
 
@@ -146,11 +134,11 @@ Then add:
 
 Inviox is useful for:
 
-* Small retail stores
-* Mini supermarkets
-* Local shop owners
-* Student project demonstrations
-* Learning **desktop app development**
+- Small retail stores
+- Mini supermarkets
+- Local shop owners
+- Student project demonstrations
+- Learning **desktop app development**
 
 ---
 
@@ -187,8 +175,8 @@ Add **3 screenshots** to your repo — recruiters love seeing UI.
 
 Example:
 
-* Dashboard
-* Product management
-* Billing page
+- Dashboard
+- Product management
+- Billing page
 
 ---
