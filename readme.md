@@ -2,7 +2,6 @@
 
 ![Electron](https://img.shields.io/badge/Electron-Desktop_App-blue)
 ![Node](https://img.shields.io/badge/Node.js-Backend-green)
-![License](https://img.shields.io/badge/License-MIT-yellow)
 ![Status](https://img.shields.io/badge/Project-Active-success)
 
 **Inviox** is a **Mini Retail Management System** built as a desktop application using **Electron**.
@@ -163,11 +162,6 @@ Steps:
 
 ---
 
-# 📄 License
-
-This project is licensed under the **MIT License**.
-
----
 
 # 👨‍💻 Author
 
