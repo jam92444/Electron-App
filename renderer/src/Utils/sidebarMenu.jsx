@@ -13,48 +13,61 @@ import {
 } from "react-icons/io5";
 
 export const menuItems = [
+  // Dashboard
   {
     label: "Dashboard",
     path: "/dashboard",
     permission: "*.*",
     icon: <HomeIcon className="w-4 h-4" />,
   },
+
+  // Masters
   {
     label: "Masters",
     icon: <HiOutlineDatabase className="w-4 h-4" />,
     children: [
-      { label: "Items", path: "/add-item", permission: "items.view" },
-      { label: "Sizes", path: "/size", permission: "size.view" },
-      { label: "Discounts", path: "/discounts", permission: "discount.view" },
-    ],
-  },
-  {
-    label: "Vendor",
-    icon: <IoStorefrontOutline className="w-4 h-4" />,
-    children: [
       {
-        label: "Create Vendor",
-        path: "/vendor/add-vendor",
-        permission: "vendor.create",
+        label: "Items",
+        path: "/items",
+        permission: "items.view",
       },
       {
-        label: "Manage Vendor",
+        label: "Sizes",
+        path: "/sizes",
+        permission: "size.view",
+      },
+      {
+        label: "Discounts",
+        path: "/discounts",
+        permission: "discount.view",
+      },
+    ],
+  },
+
+  // Purchase & Vendor
+  {
+    label: "Purchase",
+    icon: <HiOutlineShoppingCart className="w-4 h-4" />,
+    children: [
+      {
+        label: "Purchase Management",
+        path: "/purchase",
+        permission: "purchase.view",
+      },
+      {
+        label: "Vendors",
         path: "/vendor/manage-vendor",
         permission: "vendor.view",
       },
-    ],
-  },
-  {
-    label: "Customer",
-    icon: <IoPeopleOutline className="w-4 h-4" />,
-    children: [
       {
-        label: "Manage Customer",
-        path: "/customer",
-        permission: "customer.view",
+        label: "Add Vendor",
+        path: "/vendor/add-vendor",
+        permission: "vendor.create",
       },
     ],
   },
+
+  // Sales
   {
     label: "Sales",
     icon: <IoReceiptOutline className="w-4 h-4" />,
@@ -65,14 +78,29 @@ export const menuItems = [
         permission: "bill.create",
       },
       {
-        label: "Sales Bill",
+        label: "Sales Bills",
         path: "/billing/sales-bill",
         permission: "bill.view",
       },
     ],
   },
+
+  // Customers
   {
-    label: "Others",
+    label: "Customers",
+    icon: <IoPeopleOutline className="w-4 h-4" />,
+    children: [
+      {
+        label: "Customer Management",
+        path: "/customer",
+        permission: "customer.view",
+      },
+    ],
+  },
+
+  // Expenses
+  {
+    label: "Expenses",
     icon: <HiOutlineCreditCard className="w-4 h-4" />,
     children: [
       {
@@ -82,19 +110,10 @@ export const menuItems = [
       },
     ],
   },
+
+  // Labels
   {
-    label: "Purchase",
-    icon: <HiOutlineShoppingCart className="w-4 h-4" />,
-    children: [
-      {
-        label: "Purchase Management",
-        path: "/purchase",
-        permission: "purchase.view",
-      },
-    ],
-  },
-  {
-    label: "Label",
+    label: "Labels",
     icon: <HiOutlineTag className="w-4 h-4" />,
     children: [
       {
@@ -104,6 +123,8 @@ export const menuItems = [
       },
     ],
   },
+
+  // Users
   {
     label: "Users",
     icon: <UserCircleIcon className="w-4 h-4" />,
@@ -113,8 +134,14 @@ export const menuItems = [
         path: "/users",
         permission: "user.view",
       },
+      {
+        label: "User Profile",
+        path: "/users/profile",
+      },
     ],
   },
+
+  // Settings
   {
     label: "Settings",
     icon: <IoSettingsOutline className="w-4 h-4" />,
@@ -124,8 +151,6 @@ export const menuItems = [
         path: "/setting/company-details",
         permission: "company_setting.view",
       },
-      { label: "User Profile", path: "/users/profile" },
-      // { label: "Document Settings", path: "/projects/link3" },
       {
         label: "Role Management",
         path: "/setting/config-permission",
