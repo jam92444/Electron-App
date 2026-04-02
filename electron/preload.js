@@ -73,6 +73,13 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("db:deleteExpenseCategory", id),
 
   /* ----------------- Purchases ----------------- */
+  getPurchaseList: ({ page, pageSize, startDate, endDate }) =>
+    ipcRenderer.invoke("db:getPurchaseList", {
+      page,
+      pageSize,
+      startDate,
+      endDate,
+    }),
   createPurchase: (purchase) =>
     ipcRenderer.invoke("db:createPurchase", purchase),
 

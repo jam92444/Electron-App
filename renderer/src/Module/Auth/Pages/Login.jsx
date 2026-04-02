@@ -19,7 +19,7 @@ const Login = () => {
 
   useEffect(() => {
     if (state.user?.id) {
-      navigate("/dashboard");
+      navigate("/");
     }
   }, [state.user]);
 
@@ -42,7 +42,7 @@ const Login = () => {
 
       localStorage.setItem("userData", JSON.stringify(response.user));
 
-      navigate("/dashboard");
+      navigate("/");
     } catch (error) {
       console.error("Login error:", error);
       localStorage.removeItem("userData");

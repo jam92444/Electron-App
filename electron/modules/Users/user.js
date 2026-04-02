@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 function registerUserHandlers(db) {
   /* =====================================================

@@ -1,13 +1,8 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const NotFoundPage = () => {
   const navigate = useNavigate();
-  useEffect(() => {
-    if (window.location.pathname === "/") {
-      window.location.replace("/dashboard");
-    }
-  }, []);
+
   return (
     <main className="grid h-screen place-items-center bg-orange-100 px-6 py-24 sm:py-32 lg:px-8">
       <div className="text-center">
@@ -20,7 +15,7 @@ const NotFoundPage = () => {
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <a
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/")}
             className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-orange-100 shadow-xs hover:bg-orange-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 cursor-pointer"
           >
             Go back home

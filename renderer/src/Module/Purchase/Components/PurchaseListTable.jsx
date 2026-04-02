@@ -1,57 +1,49 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
-import DataTable from "../../../components/ReuseComponents/DataTable";
+import { Table, Popconfirm } from "antd";
 import {
-  getPurchaseListCursor,
+  getPurchaseList, // ⚠️ updated service
   deletePurchase,
 } from "../Services/purchaseService";
 import toast from "react-hot-toast";
 
-const PurchasesListTable = ({ onView }) => {
+const PurchasesListTable = ({
+  onView,
+  startDate,
+  endDate,
+  canView,
+  canUpdate,
+  canDelete,
+}) => {
   const [purchases, setPurchases] = useState([]);
-  const [nextCursor, setNextCursor] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const pageSize = 20;
-  // console.log(purchases, "Purchase list");
-  const columns = [
-    { key: "id", label: "ID" },
-    { key: "purchaseDate", label: "Purchase Date" },
-    { key: "vendorName", label: "Vendor Name" },
-    { key: "remarks", label: "Remarks" },
-    {
-      key: "totalAmount",
-      label: "Total Amount",
-      render: (val) => (
-        <span className="font-medium text-gray-700">₹{val}</span>
-      ),
-    },
-    {
-      key: "actions", // ✅ UNIQUE KEY
-      label: "View Details",
-      render: (_, row) => (
-        <p
-          onClick={() => onView(row)}
-          className="font-medium text-blue-700 cursor-pointer underline"
-        >
-          View details
-        </p>
-      ),
-    },
-  ];
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 20,
+    total: 0,
+  });
 
-  const fetchPurchases = async () => {
-    if (loading || (nextCursor === null && purchases.length > 0)) return;
-
+  const fetchPurchases = async (page = 1, pageSize = 20) => {
     setLoading(true);
     try {
-      const res = await getPurchaseListCursor({
-        lastId: nextCursor ?? Number.MAX_SAFE_INTEGER,
+      const res = await getPurchaseList({
+        page,
         pageSize,
+        startDate,
+        endDate,
       });
+      console.log("date", startDate, endDate);
 
       if (res.success) {
-        setPurchases((prev) => [...prev, ...res.data]);
-        setNextCursor(res.nextCursor);
+        setPurchases(res.data);
+        setPagination((prev) => ({
+          ...prev,
+          current: page,
+          pageSize,
+          total: res.total,
+        }));
+        console.log(res)
       } else {
         toast.error(res.error || "Failed to fetch purchases");
       }
@@ -64,55 +56,68 @@ const PurchasesListTable = ({ onView }) => {
   };
 
   useEffect(() => {
-    fetchPurchases();
-  }, []);
+    fetchPurchases(1, pagination.pageSize);
+  }, [startDate, endDate]);
 
-  // const handleEdit = (index) => {
-  //   const purchase = purchases[index];
-  //   // console.log("Edit purchase:", purchase);
-  // };
+  const handleDelete = async (record) => {
+    const res = await deletePurchase(record.id);
 
-  const handleDelete = async (index) => {
-    const purchase = purchases[index];
-    const confirmed = confirm(
-      `Are you sure you want to delete Purchase ID ${purchase.id}?`,
-    );
-    if (!confirmed) return;
-
-    const res = await deletePurchase(purchase.id);
     if (res.success) {
       toast.success("Purchase deleted");
-      setPurchases((prev) => prev.filter((p) => p.id !== purchase.id));
+      fetchPurchases(pagination.current, pagination.pageSize);
     } else {
       toast.error(res.error || "Failed to delete purchase");
     }
   };
 
-  return (
-    <div>
-      <DataTable
-        columns={columns}
-        data={purchases}
-        // onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-
-      {nextCursor !== null && (
-        <div className="mt-4 text-center">
-          <button
-            onClick={fetchPurchases}
-            disabled={loading}
-            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
+  const columns = [
+    {
+      title: "S No",
+      key: "index",
+      render: (_, __, index) =>
+        (pagination.current - 1) * pagination.pageSize + index + 1,
+    },
+    { title: "Purchase Date", dataIndex: "purchaseDate" },
+    { title: "Vendor Name", dataIndex: "vendorName" },
+    { title: "Remarks", dataIndex: "remarks" },
+    {
+      title: "Total Amount",
+      dataIndex: "totalAmount",
+      render: (val) => <span>₹{val}</span>,
+    },
+    {
+      title: "Actions",
+      render: (_, record) => (
+        <div className="flex gap-3">
+          <span
+            onClick={() => onView(record)}
+            style={{ color: "#1677ff", cursor: "pointer" }}
           >
-            {loading ? "Loading..." : "Load More"}
-          </button>
-        </div>
-      )}
+            View
+          </span>
 
-      {nextCursor === null && purchases.length > 0 && (
-        <p className="mt-2 text-center text-gray-500">No more purchases.</p>
-      )}
-    </div>
+          <Popconfirm
+            title="Delete Purchase"
+            onConfirm={() => handleDelete(record)}
+          >
+            <span style={{ color: "red", cursor: "pointer" }}>Delete</span>
+          </Popconfirm>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <Table
+      columns={columns}
+      dataSource={purchases}
+      rowKey="id"
+      loading={loading}
+      pagination={pagination}
+      onChange={(pager) => {
+        fetchPurchases(pager.current, pager.pageSize);
+      }}
+    />
   );
 };
 

@@ -14,6 +14,7 @@ import { userRoutes } from "../Module/User/Routes/user.routes";
 import ProtectedRoute from "./ProtectedRoute";
 import { Login } from "../Module/Auth/Routes/auth.lazyImports";
 import ExpenseRoutes from "../Module/Others/Routes/expense.routes";
+import { Navigate } from "react-router-dom";
 
 const protectedModules = [
   ...DashboardRoutes,
@@ -26,7 +27,7 @@ const protectedModules = [
   ...CustomerRoutes,
   ...PurchaseRoutes,
   ...userRoutes,
-  ...ExpenseRoutes
+  ...ExpenseRoutes,
 ];
 
 // Wrap each protected route's element with ProtectedRoute

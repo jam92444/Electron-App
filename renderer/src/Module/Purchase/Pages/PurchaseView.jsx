@@ -52,7 +52,7 @@ const PurchaseView = () => {
           </div>
         </div>
       </div>
-
+            
       <ViewAllItems items={purchase.items} mode="PURCHASE" readOnly />
     </div>
   );

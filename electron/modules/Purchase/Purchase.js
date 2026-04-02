@@ -44,7 +44,7 @@ function registerPurchaseHandlers(db) {
       const rows = db
         .prepare(
           `
-      SELECT * FROM items WHERE purchase_id = ?
+      SELECT * FROM items WHERE purchaseId = ?
     `,
         )
         .all(purchaseId);
@@ -328,28 +328,58 @@ function registerPurchaseHandlers(db) {
   /** -----------------------
    * GET PURCHASE LIST
    * ----------------------- */
-  ipcMain.handle("db:getPurchaseList", () => {
-    try {
-      const purchases = db
-        .prepare(
-          `
-        SELECT p.*, v.vendorName
+  ipcMain.handle(
+    "db:getPurchaseList",
+    (e, { page = 1, pageSize = 20, startDate, endDate }) => {
+      try {
+        const offset = (page - 1) * pageSize;
+
+        // Base query
+        let query = `
+        SELECT 
+          p.id,
+          p.purchaseDate,
+          p.vendorId,
+          p.totalAmount,
+          p.remarks,
+          p.created_at,
+          v.vendorName
         FROM purchases p
         LEFT JOIN vendors v ON v.id = p.vendorId
-        ORDER BY p.id DESC
-      `,
-        )
-        .all();
+      `;
 
-      return {
-        success: true,
-        data: purchases,
-      };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
+        let countQuery = `SELECT COUNT(*) as count FROM purchases p`;
 
+        const params = [];
+        const countParams = [];
+
+        // ✅ Apply date filter if both startDate and endDate are provided
+        if (startDate && endDate) {
+          query += ` WHERE p.purchaseDate >= ? AND p.purchaseDate <= ?`;
+          countQuery += ` WHERE p.purchaseDate >= ? AND p.purchaseDate <= ?`;
+
+          params.push(startDate, endDate);
+          countParams.push(startDate, endDate);
+        }
+
+        // Add ordering and pagination
+        query += ` ORDER BY p.id DESC LIMIT ? OFFSET ?`;
+        params.push(pageSize, offset);
+
+        // Execute queries
+        const data = db.prepare(query).all(...params);
+        const total = db.prepare(countQuery).get(...countParams).count;
+
+        return {
+          success: true,
+          data,
+          total,
+        };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
+  );
   /** -----------------------
    * DELETE PURCHASE
    * ----------------------- */

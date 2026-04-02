@@ -15,6 +15,7 @@ import {
   AddItemForm,
   ViewAllItems,
 } from "../../Items/Routers/items.lazyimports";
+import { updateItem } from "../../Items/Services/items";
 
 const PurchaseCreate = () => {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ const PurchaseCreate = () => {
   const [items, setItems] = useState([]);
   const [creating, setCreating] = useState(false);
   const [errors, setErrors] = useState({});
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
 
   useEffect(() => {
     getVendors().then((res) => res?.success && setVendors(res.data || []));
@@ -36,6 +39,8 @@ const PurchaseCreate = () => {
     value: v.id,
     label: v.vendorName,
   }));
+
+  console.log("items", items);
 
   /* ── Validate purchase header ─────────────────────────────────────── */
   const validate = () => {
@@ -70,19 +75,46 @@ const PurchaseCreate = () => {
   };
 
   /* ── Step 2: Insert item + refresh list ──────────────────────────── */
-  const handleItemAdded = async (payload) => {
-    const res = await insertPurchaseItem(payload);
+  const handleItemAdded = async (payload, isEdit) => {
+    let res;
+
+    if (isEdit) {
+      res = await await updateItem(payload); // 🔥 create this API
+    } else {
+      res = await insertPurchaseItem(payload);
+    }
+
     if (!res?.success) {
-      toast.error("Failed to add item");
+      if (res.error == "ITEM_ID_EXISTS") {
+        toast.error("Item ID already exist.");
+      } else {
+        toast.error(`Failed to ${isEdit ? "update" : "add"} item`);
+      }
+      console.log("error", res);
       return;
     }
-    // ✅ Dedicated fetch instead of second insertPurchaseItem call
+
     const refresh = await getPurchaseItems(purchaseId);
     if (refresh?.success) setItems(refresh.data);
+
+    // reset edit state
+    setEditingItem(null);
+    setEditingIndex(null);
   };
 
   /* ── Done: navigate back ─────────────────────────────────────────── */
   const handleDone = () => navigate("/purchase");
+
+  const handleEdit = (item) => {
+    setEditingItem(item);
+    setEditingIndex(item.itemID); // or just use editingItem !== null as the flag
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItem(null);
+    setEditingIndex(null);
+  };
 
   const isStep2 = !!purchaseId;
 
@@ -234,20 +266,20 @@ const PurchaseCreate = () => {
             vendorId={vendor?.value}
             purchaseDate={purchaseDate}
             onSave={handleItemAdded}
+            initialItem={editingItem}
+            onCancel={handleCancelEdit}
+            isEdit={editingIndex !== null}
           />
-
           {/* Items list with count */}
-          {items.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Added Items</h3>
-                <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">
-                  {items.length} {items.length === 1 ? "item" : "items"}
-                </span>
-              </div>
-              <ViewAllItems items={items} mode="PURCHASE" />
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-800">Added Items</h3>
+              <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">
+                {items.length} {items.length === 1 ? "item" : "items"}
+              </span>
             </div>
-          )}
+            <ViewAllItems items={items} mode="PURCHASE" onEdit={handleEdit} />
+          </div>
 
           {/* ✅ Done button with clear intent */}
           <div className="flex justify-end pt-2">

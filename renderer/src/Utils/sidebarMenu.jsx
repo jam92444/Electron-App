@@ -16,7 +16,7 @@ export const menuItems = [
   // Dashboard
   {
     label: "Dashboard",
-    path: "/dashboard",
+    path: "/",
     permission: "*.*",
     icon: <HomeIcon className="w-4 h-4" />,
   },

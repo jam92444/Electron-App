@@ -27,8 +27,13 @@ import {
 import { useStateContext } from "../../../context/StateContext";
 
 ChartJS.register(
-  CategoryScale, LinearScale, BarElement,
-  LineElement, PointElement, Tooltip, Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Tooltip,
+  Legend,
 );
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
@@ -40,10 +45,10 @@ const daysAgo = (n) => {
 };
 
 const PRESETS = [
-  { label: "7D",  startDate: daysAgo(7),   endDate: today() },
-  { label: "30D", startDate: daysAgo(30),  endDate: today() },
-  { label: "90D", startDate: daysAgo(90),  endDate: today() },
-  { label: "1Y",  startDate: daysAgo(365), endDate: today() },
+  { label: "7D", startDate: daysAgo(7), endDate: today() },
+  { label: "30D", startDate: daysAgo(30), endDate: today() },
+  { label: "90D", startDate: daysAgo(90), endDate: today() },
+  { label: "1Y", startDate: daysAgo(365), endDate: today() },
 ];
 
 // ─── Main Component ──────────────────────────────────────────────────────────
@@ -65,21 +70,21 @@ const PurchaseDashboard = () => {
     state.user.permissions.includes("purchase.delete") ||
     state.user.permissions.includes("*.*");
 
-  const [loading, setLoading]               = useState(true);
-  const [error, setError]                   = useState(null);
-  const [accessModal, setAccessModal]       = useState(null);
-  const [summary, setSummary]               = useState({});
-  const [purchaseTrend, setPurchaseTrend]   = useState([]);
-  const [topVendors, setTopVendors]         = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [accessModal, setAccessModal] = useState(null);
+  const [summary, setSummary] = useState({});
+  const [purchaseTrend, setPurchaseTrend] = useState([]);
+  const [topVendors, setTopVendors] = useState([]);
   const [recentPurchases, setRecentPurchases] = useState([]);
-  const [lowStock, setLowStock]             = useState([]);
-  const [variantStock, setVariantStock]     = useState([]);
+  const [lowStock, setLowStock] = useState([]);
+  const [variantStock, setVariantStock] = useState([]);
   const [monthlySummary, setMonthlySummary] = useState([]);
-  const [vendorStatus, setVendorStatus]     = useState([]);
+  const [vendorStatus, setVendorStatus] = useState([]);
   const [showAllVariants, setShowAllVariants] = useState(false);
 
   const [startDate, setStartDate] = useState(daysAgo(30));
-  const [endDate, setEndDate]     = useState(today());
+  const [endDate, setEndDate] = useState(today());
   const [activePreset, setActivePreset] = useState("30D");
 
   const loadDashboard = async (start, end) => {
@@ -101,17 +106,23 @@ const PurchaseDashboard = () => {
       ]);
 
       const [
-        summaryRes, trendRes, topVendorRes, recentRes,
-        lowStockRes, variantStockRes, monthlyRes, vendorStatusRes,
+        summaryRes,
+        trendRes,
+        topVendorRes,
+        recentRes,
+        lowStockRes,
+        variantStockRes,
+        monthlyRes,
+        vendorStatusRes,
       ] = results.map((r) => (r.status === "fulfilled" ? r.value : null));
 
-      if (summaryRes?.success)      setSummary(summaryRes.data);
-      if (trendRes?.success)        setPurchaseTrend(trendRes.data);
-      if (topVendorRes?.success)    setTopVendors(topVendorRes.data);
-      if (recentRes?.success)       setRecentPurchases(recentRes.data);
-      if (lowStockRes?.success)     setLowStock(lowStockRes.data);
+      if (summaryRes?.success) setSummary(summaryRes.data);
+      if (trendRes?.success) setPurchaseTrend(trendRes.data);
+      if (topVendorRes?.success) setTopVendors(topVendorRes.data);
+      if (recentRes?.success) setRecentPurchases(recentRes.data);
+      if (lowStockRes?.success) setLowStock(lowStockRes.data);
       if (variantStockRes?.success) setVariantStock(variantStockRes.data);
-      if (monthlyRes?.success)      setMonthlySummary(monthlyRes.data);
+      if (monthlyRes?.success) setMonthlySummary(monthlyRes.data);
       if (vendorStatusRes?.success) setVendorStatus(vendorStatusRes.data);
     } catch (err) {
       console.error("Dashboard load failed:", err);
@@ -175,29 +186,41 @@ const PurchaseDashboard = () => {
     navigate(`/purchase/${p.id}`);
   };
 
-  const purchaseTrendData = useMemo(() => ({
-    labels: purchaseTrend.map((p) => p.date),
-    datasets: [{
-      label: "Purchase Amount",
-      data: purchaseTrend.map((p) => p.total),
-      borderColor: "#3b82f6",
-      backgroundColor: "#3b82f620",
-      tension: 0.3,
-      fill: true,
-    }],
-  }), [purchaseTrend]);
+  const purchaseTrendData = useMemo(
+    () => ({
+      labels: purchaseTrend.map((p) => p.date),
+      datasets: [
+        {
+          label: "Purchase Amount",
+          data: purchaseTrend.map((p) => p.total),
+          borderColor: "#3b82f6",
+          backgroundColor: "#3b82f620",
+          tension: 0.3,
+          fill: true,
+        },
+      ],
+    }),
+    [purchaseTrend],
+  );
 
-  const monthlySummaryData = useMemo(() => ({
-    labels: monthlySummary.map((m) => m.month),
-    datasets: [{
-      label: "Total Amount",
-      data: monthlySummary.map((m) => m.totalAmount),
-      backgroundColor: "#10b981aa",
-      borderRadius: 6,
-    }],
-  }), [monthlySummary]);
+  const monthlySummaryData = useMemo(
+    () => ({
+      labels: monthlySummary.map((m) => m.month),
+      datasets: [
+        {
+          label: "Total Amount",
+          data: monthlySummary.map((m) => m.totalAmount),
+          backgroundColor: "#10b981aa",
+          borderRadius: 6,
+        },
+      ],
+    }),
+    [monthlySummary],
+  );
 
-  const visibleVariants = showAllVariants ? variantStock : variantStock.slice(0, 8);
+  const visibleVariants = showAllVariants
+    ? variantStock
+    : variantStock.slice(0, 8);
 
   if (loading) return <DashboardSkeleton />;
 
@@ -217,12 +240,15 @@ const PurchaseDashboard = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 bg-gray-50 min-h-screen">
-
       {/* ── HEADER ── */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Purchase Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">Complete purchase & vendor overview</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+            Purchase Dashboard
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Complete purchase & vendor overview
+          </p>
         </div>
         {canCreate && (
           <Button buttonName="+ New Purchase" onClick={handleNewPurchase} />
@@ -256,7 +282,10 @@ const PurchaseDashboard = () => {
               type="date"
               value={startDate}
               max={endDate}
-              onChange={(e) => { setStartDate(e.target.value); setActivePreset(null); }}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setActivePreset(null);
+              }}
               className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
           </div>
@@ -267,7 +296,10 @@ const PurchaseDashboard = () => {
               value={endDate}
               min={startDate}
               max={today()}
-              onChange={(e) => { setEndDate(e.target.value); setActivePreset(null); }}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setActivePreset(null);
+              }}
               className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
           </div>
@@ -286,22 +318,70 @@ const PurchaseDashboard = () => {
 
       {/* ── SUMMARY CARDS ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <SummaryCard title="Purchases"    value={summary.totalPurchases ?? 0}  icon="🛒" color="from-blue-400 to-blue-600" />
-        <SummaryCard title="Total Amount" value={`₹ ${Number(summary.totalPurchaseAmount || 0).toLocaleString()}`} icon="💰" color="from-green-400 to-green-600" />
-        <SummaryCard title="Vendors"      value={summary.totalVendors ?? 0}    icon="🏢" color="from-purple-400 to-purple-600" />
-        <SummaryCard title="Items"        value={summary.totalItems ?? 0}      icon="📦" color="from-yellow-400 to-yellow-500" />
+        <SummaryCard
+          title="Purchases"
+          value={summary.totalPurchases ?? 0}
+          icon="🛒"
+          color="from-blue-400 to-blue-600"
+        />
+        <SummaryCard
+          title="Total Amount"
+          value={`₹ ${Number(summary.totalPurchaseAmount || 0).toLocaleString()}`}
+          icon="💰"
+          color="from-green-400 to-green-600"
+        />
+        <SummaryCard
+          title="Vendors"
+          value={summary.totalVendors ?? 0}
+          icon="🏢"
+          color="from-purple-400 to-purple-600"
+        />
+        <SummaryCard
+          title="Items"
+          value={summary.totalItems ?? 0}
+          icon="📦"
+          color="from-yellow-400 to-yellow-500"
+        />
       </div>
+
+      {/* ── FULL TABLE ── */}
+      <PurchasesListTable
+        onView={handleViewPurchase}
+        canView={canView}
+        canUpdate={canUpdate}
+        startDate={startDate}
+        endDate={endDate}
+        canDelete={canDelete}
+      />
 
       {/* ── CHARTS ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ChartSection title="Purchase Trend">
-          {purchaseTrend.length === 0 ? <Empty /> : (
-            <Line data={purchaseTrendData} options={{ responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }} />
+          {purchaseTrend.length === 0 ? (
+            <Empty />
+          ) : (
+            <Line
+              data={purchaseTrendData}
+              options={{
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } },
+              }}
+            />
           )}
         </ChartSection>
         <ChartSection title="Monthly Summary">
-          {monthlySummary.length === 0 ? <Empty /> : (
-            <Bar data={monthlySummaryData} options={{ responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }} />
+          {monthlySummary.length === 0 ? (
+            <Empty />
+          ) : (
+            <Bar
+              data={monthlySummaryData}
+              options={{
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } },
+              }}
+            />
           )}
         </ChartSection>
       </div>
@@ -309,72 +389,100 @@ const PurchaseDashboard = () => {
       {/* ── TOP VENDORS + VENDOR STATUS ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ListSection title="Top Vendors">
-          {topVendors.length === 0 ? <Empty /> : topVendors.map((v, i) => (
-            <Row key={i} left={v.vendorName} right={`₹ ${Number(v.total).toLocaleString()}`} />
-          ))}
+          {topVendors.length === 0 ? (
+            <Empty />
+          ) : (
+            topVendors.map((v, i) => (
+              <Row
+                key={i}
+                left={v.vendorName}
+                right={`₹ ${Number(v.total).toLocaleString()}`}
+              />
+            ))
+          )}
         </ListSection>
         <ListSection title="Vendor Status">
-          {vendorStatus.length === 0 ? <Empty /> : vendorStatus.map((s, i) => (
-            <Row key={i} left={s.status} right={s.count} />
-          ))}
+          {vendorStatus.length === 0 ? (
+            <Empty />
+          ) : (
+            vendorStatus.map((s, i) => (
+              <Row key={i} left={s.status} right={s.count} />
+            ))
+          )}
         </ListSection>
       </div>
 
       {/* ── STOCK ALERTS ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ListSection title="Low Stock Items">
-          {lowStock.length === 0
-            ? <Empty message="No low stock items 🎉" />
-            : lowStock.map((item, idx) => (
-                <Row
-                  key={idx}
-                  left={`${item.itemName} (${item.vendorName || "—"})`}
-                  right={<span className="text-red-500 font-bold">Qty: {item.quantity}</span>}
-                />
-              ))}
+          {lowStock.length === 0 ? (
+            <Empty message="No low stock items 🎉" />
+          ) : (
+            lowStock.map((item, idx) => (
+              <Row
+                key={idx}
+                left={`${item.itemName} (${item.vendorName || "—"})`}
+                right={
+                  <span className="text-red-500 font-bold">
+                    Qty: {item.quantity}
+                  </span>
+                }
+              />
+            ))
+          )}
         </ListSection>
         <ListSection
           title="Variant Stock"
-          action={variantStock.length > 8 && (
-            <button
-              onClick={() => setShowAllVariants((p) => !p)}
-              className="text-xs text-blue-500 hover:underline"
-            >
-              {showAllVariants ? "Show less" : `+${variantStock.length - 8} more`}
-            </button>
-          )}
+          action={
+            variantStock.length > 8 && (
+              <button
+                onClick={() => setShowAllVariants((p) => !p)}
+                className="text-xs text-blue-500 hover:underline"
+              >
+                {showAllVariants
+                  ? "Show less"
+                  : `+${variantStock.length - 8} more`}
+              </button>
+            )
+          }
         >
-          {variantStock.length === 0 ? <Empty /> : visibleVariants.map((v, idx) => (
-            <Row key={idx} left={`${v.itemName} - ${v.size}`} right={`Qty: ${v.quantity}`} />
-          ))}
+          {variantStock.length === 0 ? (
+            <Empty />
+          ) : (
+            visibleVariants.map((v, idx) => (
+              <Row
+                key={idx}
+                left={`${v.itemName} - ${v.size}`}
+                right={`Qty: ${v.quantity}`}
+              />
+            ))
+          )}
         </ListSection>
       </div>
 
       {/* ── RECENT PURCHASES ── */}
       <ListSection title="Recent Purchases">
-        {recentPurchases.length === 0 ? <Empty /> : recentPurchases.map((p) => (
-          <div
-            key={p.id}
-            onClick={() => handleRecentPurchaseClick(p)}
-            className={`flex justify-between py-2 px-3 rounded-lg transition-colors ${
-              canView
-                ? "hover:bg-blue-50 cursor-pointer"
-                : "cursor-not-allowed opacity-60"
-            }`}
-          >
-            <span className="text-gray-700">{p.vendorName}</span>
-            <span className="font-semibold text-gray-800">₹ {Number(p.totalAmount).toLocaleString()}</span>
-          </div>
-        ))}
+        {recentPurchases.length === 0 ? (
+          <Empty />
+        ) : (
+          recentPurchases.map((p) => (
+            <div
+              key={p.id}
+              onClick={() => handleRecentPurchaseClick(p)}
+              className={`flex justify-between py-2 px-3 rounded-lg transition-colors ${
+                canView
+                  ? "hover:bg-blue-50 cursor-pointer"
+                  : "cursor-not-allowed opacity-60"
+              }`}
+            >
+              <span className="text-gray-700">{p.vendorName}</span>
+              <span className="font-semibold text-gray-800">
+                ₹ {Number(p.totalAmount).toLocaleString()}
+              </span>
+            </div>
+          ))
+        )}
       </ListSection>
-
-      {/* ── FULL TABLE ── */}
-      <PurchasesListTable
-        onView={handleViewPurchase}
-        canView={canView}
-        canUpdate={canUpdate}
-        canDelete={canDelete}
-      />
 
       {/* ── ACCESS DENIED MODAL ── */}
       {accessModal && (
@@ -398,7 +506,9 @@ const PurchaseDashboard = () => {
 /* ─── Sub-components ─────────────────────────────────────────────────────── */
 
 const SummaryCard = ({ title, value, icon, color }) => (
-  <div className={`bg-gradient-to-r ${color} text-white p-5 rounded-2xl shadow-lg flex items-center space-x-4`}>
+  <div
+    className={`bg-gradient-to-r ${color} text-white p-5 rounded-2xl shadow-lg flex items-center space-x-4`}
+  >
     <div className="text-3xl">{icon}</div>
     <div>
       <p className="text-sm opacity-90">{title}</p>
@@ -440,13 +550,19 @@ const DashboardSkeleton = () => (
     <div className="h-8 bg-gray-200 rounded w-64" />
     <div className="h-16 bg-gray-200 rounded-2xl" />
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-gray-200 rounded-2xl" />)}
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-24 bg-gray-200 rounded-2xl" />
+      ))}
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {[...Array(2)].map((_, i) => <div key={i} className="h-56 bg-gray-200 rounded-2xl" />)}
+      {[...Array(2)].map((_, i) => (
+        <div key={i} className="h-56 bg-gray-200 rounded-2xl" />
+      ))}
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {[...Array(4)].map((_, i) => <div key={i} className="h-40 bg-gray-200 rounded-2xl" />)}
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-40 bg-gray-200 rounded-2xl" />
+      ))}
     </div>
   </div>
 );

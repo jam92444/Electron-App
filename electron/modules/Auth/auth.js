@@ -1,6 +1,6 @@
 // modules/Auth/auth.js
 const { ipcMain } = require("electron");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const Store = require("electron-store").default;
 
 const store = new Store();

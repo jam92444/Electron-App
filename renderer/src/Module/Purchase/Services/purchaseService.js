@@ -26,6 +26,20 @@ export const getPurchaseListCursor = (options) =>
 export const getPurchaseItems = (purchaseId) =>
   window.api.getPurchaseItems(purchaseId);
 
+export const getPurchaseList = async ({
+  page,
+  pageSize,
+  startDate,
+  endDate,
+}) => {
+  return window.api.getPurchaseList("db:getPurchaseList", {
+    page,
+    pageSize,
+    startDate,
+    endDate,
+  });
+};
+
 /* ---------------- DASHBOARD SERVICES ---------------- */
 
 export const getDashboardSummary = ({ startDate, endDate } = {}) =>
@@ -43,14 +57,12 @@ export const getRecentPurchases = ({ startDate, endDate, limit = 10 } = {}) =>
 export const getLowStockItems = ({ threshold = 2 } = {}) =>
   window.api.getLowStockItems({ threshold });
 
-export const getVariantStockSummary = () =>
-  window.api.getVariantStockSummary();
+export const getVariantStockSummary = () => window.api.getVariantStockSummary();
 
 export const getMonthlyPurchaseSummary = ({ year, startDate, endDate } = {}) =>
   window.api.getMonthlyPurchaseSummary({ year, startDate, endDate });
 
-export const getVendorStatusStats = () =>
-  window.api.getVendorStatusStats();
+export const getVendorStatusStats = () => window.api.getVendorStatusStats();
 
 /**
  * One-call dashboard loader

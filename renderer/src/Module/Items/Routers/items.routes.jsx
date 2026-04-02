@@ -4,6 +4,6 @@ import Size from "../Pages/Size";
 
 export const ItemsRoutes = [
   // Masters
-  { path: "add-item", element: withSuspense(<AddItem />) },
-  { path: "size", element: withSuspense(<Size />) },
+  { path: "items", element: withSuspense(<AddItem />) },
+  { path: "sizes", element: withSuspense(<Size />) },
 ];
