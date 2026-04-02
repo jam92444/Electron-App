@@ -138,6 +138,9 @@ contextBridge.exposeInMainWorld("api", {
     item, // <-- NEW
   ) => ipcRenderer.invoke("db:updatePurchaseItem", item),
 
+  getProfitLoss: ({ startDate, endDate } = {}) =>
+    ipcRenderer.invoke("db:getProfitLoss", { startDate, endDate }),
+
   /* ----------------- Discounts ----------------- */
   getDiscounts: () => ipcRenderer.invoke("db:getDiscounts"),
   getDiscountById: (discountId) =>

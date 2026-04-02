@@ -17,7 +17,15 @@ function initDatabase() {
   db.pragma("journal_mode = WAL");
   db.pragma("busy_timeout = 5000"); // waits 5 seconds if DB is locked
   db.pragma("foreign_keys = ON");
-
+  // In your main.js or db init, after db is created:
+  try {
+    db.prepare(
+      `ALTER TABLE bills ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP`,
+    ).run();
+    console.log("✅ Migrated: added created_at to bills");
+  } catch (e) {
+    // Column already exists, safe to ignore
+  }
   try {
     // Execute full schema only if tables do not exist
     db.exec(fullSchema);

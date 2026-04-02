@@ -64,6 +64,8 @@ export const getMonthlyPurchaseSummary = ({ year, startDate, endDate } = {}) =>
 
 export const getVendorStatusStats = () => window.api.getVendorStatusStats();
 
+
+
 /**
  * One-call dashboard loader
  * Returns:

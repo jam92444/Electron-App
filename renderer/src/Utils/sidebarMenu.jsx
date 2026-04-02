@@ -5,11 +5,11 @@ import {
   HiOutlineShoppingCart,
   HiOutlineTag,
 } from "react-icons/hi";
+import { TbReport } from "react-icons/tb";
 import {
   IoPeopleOutline,
   IoReceiptOutline,
   IoSettingsOutline,
-  IoStorefrontOutline,
 } from "react-icons/io5";
 
 export const menuItems = [
@@ -119,6 +119,17 @@ export const menuItems = [
       {
         label: "Generate Label",
         path: "/label/generate-label",
+        permission: "label.view",
+      },
+    ],
+  },
+  {
+    label: "Reports",
+    icon: <TbReport className="w-4 h-4" />,
+    children: [
+      {
+        label: "Business Report",
+        path: "/reports",
         permission: "label.view",
       },
     ],

@@ -373,6 +373,111 @@ function registerDashboardHandlers(db) {
       return { success: false, error: err.message };
     }
   });
+
+  /* -----------------------
+   * PROFIT & LOSS SUMMARY
+   * ----------------------- */
+  ipcMain.handle("db:getProfitLoss", (e, { startDate, endDate } = {}) => {
+    try {
+      const dateClause = (
+        column,
+        startDate,
+        endDate,
+        existingWhere = false,
+      ) => {
+        const keyword = existingWhere ? "AND" : "WHERE";
+        if (startDate && endDate)
+          return {
+            clause: `${keyword} ${column} BETWEEN ? AND ?`,
+            params: [startDate, endDate],
+          };
+        if (startDate)
+          return { clause: `${keyword} ${column} >= ?`, params: [startDate] };
+        if (endDate)
+          return { clause: `${keyword} ${column} <= ?`, params: [endDate] };
+        return { clause: "", params: [] };
+      };
+
+      /* -----------------------
+       * SALES + COST (COGS)
+       * ----------------------- */
+      const { clause: billClause, params: billParams } = dateClause(
+        "b.created_at",
+        startDate,
+        endDate,
+      );
+
+      const salesData = db
+        .prepare(
+          `
+        SELECT 
+          SUM(bi.total_amount) AS totalSales,
+
+          SUM(
+            CASE 
+              WHEN bi.size IS NOT NULL AND bi.size != ''
+              THEN (
+                SELECT iv.sellingPrice - i.purchaseRate
+                FROM item_variants iv
+                JOIN items i ON i.itemID = iv.itemID
+                WHERE i.itemName = bi.item_name AND iv.size = bi.size
+                LIMIT 1
+              ) * bi.quantity
+
+              ELSE (
+                SELECT i.sellingPrice - i.purchaseRate
+                FROM items i
+                WHERE i.itemName = bi.item_name
+                LIMIT 1
+              ) * bi.quantity
+            END
+          ) AS grossProfit
+
+        FROM bill_items bi
+        JOIN bills b ON b.id = bi.bill_id
+        ${billClause}
+      `,
+        )
+        .get(...billParams);
+
+      /* -----------------------
+       * EXPENSES
+       * ----------------------- */
+      const { clause: expClause, params: expParams } = dateClause(
+        "expense_date",
+        startDate,
+        endDate,
+      );
+
+      const expenseData = db
+        .prepare(
+          `
+        SELECT COALESCE(SUM(amount),0) AS totalExpenses
+        FROM expenses
+        ${expClause}
+      `,
+        )
+        .get(...expParams);
+
+      const totalSales = salesData?.totalSales || 0;
+      const grossProfit = salesData?.grossProfit || 0;
+      const totalExpenses = expenseData?.totalExpenses || 0;
+
+      const netProfit = grossProfit - totalExpenses;
+
+      return {
+        success: true,
+        data: {
+          totalSales,
+          grossProfit,
+          totalExpenses,
+          netProfit,
+        },
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
 }
 
 module.exports = { registerDashboardHandlers };

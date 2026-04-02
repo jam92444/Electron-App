@@ -11,9 +11,9 @@ const PurchasesListTable = ({
   onView,
   startDate,
   endDate,
-  canView,
-  canUpdate,
-  canDelete,
+  // canView,
+  // canUpdate,
+  // canDelete,
 }) => {
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(false);

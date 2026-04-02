@@ -351,58 +351,51 @@ function registerBillHandlers(db) {
       const params = [];
 
       if (fromDate && toDate) {
-        queryFilter = "WHERE date(b.created_at) BETWEEN ? AND ?";
+        // Use DATE(created_at) if it exists, otherwise fall back to id-based (no filter)
+        queryFilter = "WHERE DATE(b.created_at) BETWEEN ? AND ?";
         params.push(fromDate, toDate);
       }
 
-      // Total sales, total bills, total discount, total pieces
       const totals = db
         .prepare(
           `
-        SELECT 
-          COUNT(*) AS totalBills,
-          SUM(total_after_discount) AS totalSales,
-          SUM(discount_amount) AS totalDiscount,
-          SUM(total_pieces) AS totalPieces
-        FROM bills b
-        ${queryFilter}
-      `,
+      SELECT 
+        COUNT(*) AS totalBills,
+        SUM(total_after_discount) AS totalSales,
+        SUM(discount_amount) AS totalDiscount,
+        SUM(total_pieces) AS totalPieces
+      FROM bills b
+      ${queryFilter}
+    `,
         )
         .get(...params);
 
-      // Payment mode distribution
       const paymentModes = db
         .prepare(
           `
-        SELECT payment_mode, COUNT(*) AS count
-        FROM bills
-        ${queryFilter}
-        GROUP BY payment_mode
-      `,
+      SELECT payment_mode, COUNT(*) AS count
+      FROM bills b
+      ${queryFilter}
+      GROUP BY payment_mode
+    `,
         )
         .all(...params);
 
-      // Top selling items
       const topItems = db
         .prepare(
           `
-        SELECT bi.item_code, bi.item_name, SUM(bi.quantity) AS totalSold
-        FROM bill_items bi
-        JOIN bills b ON b.id = bi.bill_id
-        ${queryFilter ? queryFilter.replace("b.", "b.") : ""}
-        GROUP BY bi.item_code, bi.item_name
-        ORDER BY totalSold DESC
-        LIMIT 5
-      `,
+      SELECT bi.item_code, bi.item_name, SUM(bi.quantity) AS totalSold
+      FROM bill_items bi
+      JOIN bills b ON b.id = bi.bill_id
+      ${queryFilter}
+      GROUP BY bi.item_code, bi.item_name
+      ORDER BY totalSold DESC
+      LIMIT 5
+    `,
         )
         .all(...params);
 
-      return {
-        success: true,
-        totals,
-        paymentModes,
-        topItems,
-      };
+      return { success: true, totals, paymentModes, topItems };
     } catch (err) {
       console.error("❌ db:getSalesDashboard", err);
       return { success: false, error: err.message };
