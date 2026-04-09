@@ -189,7 +189,7 @@ const Home = () => {
             <KpiCard
               icon={<FaTags />}
               label="Total Discount"
-              value={`₹${salesDashboard?.totals?.totalDiscount || 0}`}
+              value={`₹${salesDashboard?.totals?.totalDiscount.toFixed(2) || 0}`}
               color="bg-yellow-500"
             />
             <KpiCard

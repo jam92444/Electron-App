@@ -1,6 +1,6 @@
 import { withSuspense } from "../../../Router/withSuspense";
 import AddRole from "../pages/AddRole";
-import { CompanySetting } from "./Setting.lazyImport";
+import { Backup, CompanySetting } from "./Setting.lazyImport";
 
 export const SettingRoutes = [
   {
@@ -10,5 +10,9 @@ export const SettingRoutes = [
   {
     path: "setting/config-permission",
     element: withSuspense(<AddRole />),
+  },
+  {
+    path: "setting/backup",
+    element: withSuspense(<Backup />),
   },
 ];

@@ -36,7 +36,7 @@ const Login = () => {
         setPassword("");
         return;
       }
-
+      console.log("response",response)
       dispatch({ type: USER_DATA, payload: response.user });
       dispatch({ type: SET_TOKEN, payload: "logged-in" });
 

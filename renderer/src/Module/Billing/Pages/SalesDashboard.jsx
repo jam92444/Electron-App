@@ -40,7 +40,9 @@ const SalesDashboard = () => {
           <FaRupeeSign className="text-3xl" />
           <div>
             <p className="text-sm">Total Sales</p>
-            <p className="text-2xl font-bold">₹{dashboard.totals.totalSales}</p>
+            <p className="text-2xl font-bold">
+              ₹{dashboard.totals.totalSales.toFixed(2)}
+            </p>
           </div>
         </div>
 
@@ -49,7 +51,7 @@ const SalesDashboard = () => {
           <div>
             <p className="text-sm">Total Discount</p>
             <p className="text-2xl font-bold">
-              ₹{dashboard.totals.totalDiscount}
+              ₹{dashboard.totals.totalDiscount.toFixed(2)}
             </p>
           </div>
         </div>

@@ -40,7 +40,7 @@ const PurchaseCreate = () => {
     label: v.vendorName,
   }));
 
-  console.log("items", items);
+  // console.log("items", items);
 
   /* ── Validate purchase header ─────────────────────────────────────── */
   const validate = () => {

@@ -1,9 +1,15 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getPurchaseById, insertPurchaseItem } from "../Services/purchaseService";
+import {
+  getPurchaseById,
+  insertPurchaseItem,
+} from "../Services/purchaseService";
 import { FaArrowLeft } from "react-icons/fa6";
-import { AddItemForm, ViewAllItems } from "../../Items/Routers/items.lazyimports";
+import {
+  AddItemForm,
+  ViewAllItems,
+} from "../../Items/Routers/items.lazyimports";
 import { units } from "../../../Utils/data";
 import { updateItem } from "../../Items/Services/items";
 import toast from "react-hot-toast";
@@ -26,25 +32,34 @@ const PurchaseView = () => {
     refreshPurchase();
   }, [refreshPurchase]);
 
-  const handleItemAdded = useCallback(async (payload, isEdit) => {
-    // ✅ Removed unused `finalPayload`
-    const res = isEdit
-      ? await updateItem(payload)          // ✅ Fixed double await
-      : await insertPurchaseItem(payload);
+  const handleItemAdded = useCallback(
+    async (payload, isEdit) => {
+      // ✅ Removed unused `finalPayload`
+      const res = isEdit
+        ? await updateItem(payload) // ✅ Fixed double await
+        : await insertPurchaseItem(payload);
 
-    if (!res?.success) {
-      toast.error(
-        res?.error === "ITEM_ID_EXISTS"
-          ? "Item ID already exists."
-          : `Failed to ${isEdit ? "update" : "add"} item`
-      );
-      return;
-    }
+      if (!res?.success) {
+        toast.error(
+          res?.error === "ITEM_ID_EXISTS"
+            ? "Item ID already exists."
+            : `Failed to ${isEdit ? "update" : "add"} item`,
+        );
+        return;
+      }
 
-    await refreshPurchase();
-    setEditingItem(null);
-    setAddNewItem(false);
-  }, [id, refreshPurchase]);
+      await refreshPurchase();
+      setEditingItem(null);
+      setAddNewItem(false);
+    },
+    [id, refreshPurchase],
+  );
+
+  const handleEdit = (item) => {
+    setEditingItem(item);
+    setAddNewItem(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleCancelEdit = useCallback(() => {
     setEditingItem(null);
@@ -92,7 +107,9 @@ const PurchaseView = () => {
         </div>
       )}
 
-      <div className={`${addNewItem ? "h-full block" : "h-0 hidden"} transition-all duration-500`}>
+      <div
+        className={`${addNewItem ? "h-full block" : "h-0 hidden"} transition-all duration-500`}
+      >
         <AddItemForm
           units={units}
           mode="PURCHASE"
@@ -102,11 +119,16 @@ const PurchaseView = () => {
           onSave={handleItemAdded}
           initialItem={editingItem}
           onCancel={handleCancelEdit}
-          isEdit={isEditing}   // ✅ Derived cleanly
+          isEdit={isEditing} // ✅ Derived cleanly
         />
       </div>
 
-      <ViewAllItems items={purchase.items} mode="PURCHASE" readOnly />
+      <ViewAllItems
+        items={purchase.items}
+        onEdit={handleEdit}
+        mode="PURCHASE"
+        readOnly
+      />
     </div>
   );
 };

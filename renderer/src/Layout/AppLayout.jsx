@@ -29,18 +29,22 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
   const { state, dispatch } = useStateContext();
   const userPermissions = state?.user?.permissions || [];
 
+  // Determine if user is admin (or has full permissions)
+  const isAdmin =
+    userPermissions.includes("*.*") || state.user?.role === "super_admin";
+
   const hasPermission = (permission) => {
-    if (!permission) return true;
-    if (userPermissions.includes("*.*")) return true;
-    if (permission === "*.*") return true;
+    if (!permission) return true; // no restriction
+    if (isAdmin) return true; // admin sees everything
     return userPermissions.includes(permission);
   };
 
+  // Filter menu items based on permissions
   const filteredMenu = menuItems
     .map((item) => {
       if (item.children) {
         const filteredChildren = item.children.filter((child) =>
-          hasPermission(child.permission)
+          hasPermission(child.permission),
         );
         return filteredChildren.length > 0
           ? { ...item, children: filteredChildren }
@@ -49,7 +53,6 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
       return hasPermission(item.permission) ? item : null;
     })
     .filter(Boolean);
-
   const handleLogout = async () => {
     try {
       await logoutUser();
@@ -95,7 +98,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
             "translate-x-0": isOpen,
             "-translate-x-full": !isOpen,
             "lg:translate-x-0": true,
-          }
+          },
         )}
       >
         {/* Logo */}
@@ -119,7 +122,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
                     <button
                       onClick={() =>
                         setOpenMenu((prev) =>
-                          prev === item.label ? null : item.label
+                          prev === item.label ? null : item.label,
                         )
                       }
                       className={classNames(
@@ -128,7 +131,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
                           "bg-orange-100 text-white":
                             openMenu === item.label ||
                             isActiveChild(item.children),
-                        }
+                        },
                       )}
                     >
                       <span className="flex items-center gap-2">
@@ -136,9 +139,12 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
                         {item.label}
                       </span>
                       <span
-                        className={classNames("transition-transform duration-200", {
-                          "rotate-180": openMenu === item.label,
-                        })}
+                        className={classNames(
+                          "transition-transform duration-200",
+                          {
+                            "rotate-180": openMenu === item.label,
+                          },
+                        )}
                       >
                         <IoIosArrowDown />
                       </span>
@@ -154,7 +160,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
                                 "block py-2 px-2.5 text-sm rounded-lg cursor-pointer transition-colors",
                                 location.pathname === child.path
                                   ? "bg-orange-400 text-white font-semibold"
-                                  : "text-gray-700 hover:bg-orange-100 hover:text-white"
+                                  : "text-gray-700 hover:bg-orange-100 hover:text-white",
                               )}
                             >
                               {child.label}
@@ -171,7 +177,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
                       "flex items-center gap-2 py-2 px-2.5 text-sm rounded-lg cursor-pointer transition-colors",
                       location.pathname === item.path
                         ? "bg-orange-400 text-white font-semibold"
-                        : "text-gray-700 hover:bg-orange-100 hover:text-white"
+                        : "text-gray-700 hover:bg-orange-100 hover:text-white",
                     )}
                   >
                     {item.icon}
@@ -268,8 +274,8 @@ const AppLayout = () => {
             <div className="w-7 h-7 rounded-full bg-white text-orange-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
               {getInitials(userData?.full_name)}
             </div>
-            <span className="whitespace-nowrap text-sm font-semibold text-white">
-              Hi, {userData?.full_name}
+            <span className="whitespace-nowrap capitalize text-sm font-semibold text-white">
+              Hi, {userData?.username}
             </span>
           </div>
         </div>

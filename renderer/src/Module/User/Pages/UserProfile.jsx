@@ -33,7 +33,7 @@ const UserProfile = () => {
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 -mt-10 sm:-mt-12">
               {/* Avatar */}
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-indigo-600 border-4 border-white shadow-md flex items-center justify-center text-white text-2xl sm:text-3xl font-bold flex-shrink-0">
-                {getInitials(user.full_name)}
+                {getInitials(user.username)}
               </div>
 
               {/* Badge */}

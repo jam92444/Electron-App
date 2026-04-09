@@ -58,7 +58,7 @@ const AddBillItemForm = ({ initialItem, onSave, onCancel }) => {
     };
     fetchItems();
   }, []);
-  console.log("ALL item", AllItems);
+  // console.log("ALL item", AllItems);
   return (
     <form
       onSubmit={(e) => {

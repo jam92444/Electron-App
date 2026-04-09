@@ -33,7 +33,7 @@ const PurchasesListTable = ({
         startDate,
         endDate,
       });
-      console.log("date", startDate, endDate);
+      // console.log("date", startDate, endDate);
 
       if (res.success) {
         setPurchases(res.data);
@@ -43,11 +43,11 @@ const PurchasesListTable = ({
           pageSize,
           total: res.total,
         }));
-        console.log(res)
+        // console.log(res)
       } else {
         toast.error(res.error || "Failed to fetch purchases");
       }
-    } catch (err) {
+    } catch (err) { 
       console.error(err);
       toast.error("API call failed");
     } finally {

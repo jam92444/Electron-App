@@ -130,7 +130,7 @@ export const menuItems = [
       {
         label: "Business Report",
         path: "/reports",
-        permission: "label.view",
+        permission: "*.*",
       },
     ],
   },
@@ -166,6 +166,11 @@ export const menuItems = [
         label: "Role Management",
         path: "/setting/config-permission",
         permission: "role.view",
+      },
+      {
+        label: "Backup",
+        path: "/setting/backup",
+        permission: "*.*",
       },
     ],
   },

@@ -62,9 +62,15 @@ const billingSchema = yup.object({
 
 // ─── EditableField ────────────────────────────────────────────────────────────
 const EditableField = ({
-  label, value, onChange, isEditing,
-  type = "text", inputType = "input",
-  error, maxLength, options = [],
+  label,
+  value,
+  onChange,
+  isEditing,
+  type = "text",
+  inputType = "input",
+  error,
+  maxLength,
+  options = [],
 }) => {
   const baseClass =
     "mt-1 p-2 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm";
@@ -78,7 +84,9 @@ const EditableField = ({
 
     return (
       <div>
-        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">{label}</p>
+        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">
+          {label}
+        </p>
         <p className="text-sm font-medium text-gray-800 mt-1">{displayValue}</p>
       </div>
     );
@@ -95,7 +103,9 @@ const EditableField = ({
         >
           <option value="">Select {label}</option>
           {options.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
           ))}
         </select>
         {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
@@ -132,7 +142,9 @@ const EditableField = ({
 const SectionCard = ({ children, isEditing }) => (
   <section
     className={`bg-white p-5 border rounded-xl transition-all duration-200 ${
-      isEditing ? "border-blue-300 shadow-md ring-1 ring-blue-100" : "border-gray-200 shadow-sm"
+      isEditing
+        ? "border-blue-300 shadow-md ring-1 ring-blue-100"
+        : "border-gray-200 shadow-sm"
     }`}
   >
     {children}
@@ -140,7 +152,15 @@ const SectionCard = ({ children, isEditing }) => (
 );
 
 // ─── Section Header ───────────────────────────────────────────────────────────
-const SectionHeader = ({ title, subtitle, editMode, onEdit, onSave, onCancel, isSaving }) => (
+const SectionHeader = ({
+  title,
+  subtitle,
+  editMode,
+  onEdit,
+  onSave,
+  onCancel,
+  isSaving,
+}) => (
   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5">
     <div>
       <h2 className="font-semibold text-base text-gray-900">{title}</h2>
@@ -208,7 +228,7 @@ const CompanySetting = () => {
         // Dispatch all at once
         dispatch({ type: SET_COMPANY_SETTINGS, payload: res.data });
         dispatch({ type: SET_BILLING_SETTINGS, payload: res.data });
-        dispatch({ type: SET_OTHER_SETTINGS,   payload: res.data });
+        dispatch({ type: SET_OTHER_SETTINGS, payload: res.data });
       }
       setLoading(false);
     };
@@ -216,9 +236,9 @@ const CompanySetting = () => {
   }, []);
 
   const tabs = [
-    { id: "company", label: "Company",  icon: "🏢" },
-    { id: "billing", label: "Billing",  icon: "📍" },
-    { id: "other",   label: "Other",    icon: "⚙️" },
+    { id: "company", label: "Company", icon: "🏢" },
+    { id: "billing", label: "Billing", icon: "📍" },
+    { id: "other", label: "Other", icon: "⚙️" },
   ];
 
   return (
@@ -273,15 +293,18 @@ const CompanySetting = () => {
 // ─── Company Details ──────────────────────────────────────────────────────────
 const CompanyDetails = ({ initialData }) => {
   const [editMode, setEditMode] = useState(false);
-  const [errors, setErrors]     = useState({});
+  const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const defaultForm = useCallback(() => ({
-    companyName:   initialData?.companyName   || "",
-    gstTin:        initialData?.gstTin        || "",
-    contactNumber: initialData?.contactNumber || "",
-    companyEmail:  initialData?.companyEmail  || "",
-  }), [initialData]);
+  const defaultForm = useCallback(
+    () => ({
+      companyName: initialData?.companyName || "",
+      gstTin: initialData?.gstTin || "",
+      contactNumber: initialData?.contactNumber || "",
+      companyEmail: initialData?.companyEmail || "",
+    }),
+    [initialData],
+  );
 
   const [formData, setFormData] = useState(defaultForm);
 
@@ -301,7 +324,7 @@ const CompanyDetails = ({ initialData }) => {
       const err = {};
       e.inner.forEach((i) => (err[i.path] = i.message));
       setErrors(err);
-      toast.error("Please fix the errors before saving");
+      toast.error("Kindly fill all mandatory fields to save.");
       return;
     }
 
@@ -330,10 +353,36 @@ const CompanyDetails = ({ initialData }) => {
         isSaving={isSaving}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <EditableField label="Company Name"   value={formData.companyName}   onChange={set("companyName")}   isEditing={editMode} error={errors.companyName} />
-        <EditableField label="GST TIN"        value={formData.gstTin}        onChange={set("gstTin")}        isEditing={editMode} error={errors.gstTin} />
-        <EditableField label="Contact Number" value={formData.contactNumber} onChange={set("contactNumber")} isEditing={editMode} error={errors.contactNumber} maxLength={10} />
-        <EditableField label="Company Email"  value={formData.companyEmail}  onChange={set("companyEmail")}  isEditing={editMode} error={errors.companyEmail} type="email" />
+        <EditableField
+          label="Company Name"
+          value={formData.companyName}
+          onChange={set("companyName")}
+          isEditing={editMode}
+          error={errors.companyName}
+        />
+        <EditableField
+          label="GST TIN"
+          value={formData.gstTin}
+          onChange={set("gstTin")}
+          isEditing={editMode}
+          error={errors.gstTin}
+        />
+        <EditableField
+          label="Contact Number"
+          value={formData.contactNumber}
+          onChange={set("contactNumber")}
+          isEditing={editMode}
+          error={errors.contactNumber}
+          maxLength={10}
+        />
+        <EditableField
+          label="Company Email"
+          value={formData.companyEmail}
+          onChange={set("companyEmail")}
+          isEditing={editMode}
+          error={errors.companyEmail}
+          type="email"
+        />
       </div>
     </SectionCard>
   );
@@ -342,16 +391,19 @@ const CompanyDetails = ({ initialData }) => {
 // ─── Billing Details ──────────────────────────────────────────────────────────
 const BillingDetails = ({ initialData }) => {
   const [editMode, setEditMode] = useState(false);
-  const [errors, setErrors]     = useState({});
+  const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const defaultForm = useCallback(() => ({
-    fullAddress: initialData?.fullAddress || "",
-    country:     "IN",
-    state:       initialData?.state       || "",
-    city:        initialData?.city        || "",
-    pinCode:     initialData?.pinCode     || "",
-  }), [initialData]);
+  const defaultForm = useCallback(
+    () => ({
+      fullAddress: initialData?.fullAddress || "",
+      country: "IN",
+      state: initialData?.state || "",
+      city: initialData?.city || "",
+      pinCode: initialData?.pinCode || "",
+    }),
+    [initialData],
+  );
 
   const [formData, setFormData] = useState(defaultForm);
 
@@ -400,12 +452,46 @@ const BillingDetails = ({ initialData }) => {
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="sm:col-span-2">
-          <EditableField label="Full Address" inputType="textarea" value={formData.fullAddress} onChange={set("fullAddress")} isEditing={editMode} error={errors.fullAddress} />
+          <EditableField
+            label="Full Address"
+            inputType="textarea"
+            value={formData.fullAddress}
+            onChange={set("fullAddress")}
+            isEditing={editMode}
+            error={errors.fullAddress}
+          />
         </div>
-        <EditableField label="Country" inputType="select" options={INDIA_COUNTRY} value="IN" isEditing={false} />
-        <EditableField label="State"   inputType="select" options={INDIA_STATES}  value={formData.state}   onChange={set("state")}   isEditing={editMode} error={errors.state} />
-        <EditableField label="City"    value={formData.city}    onChange={set("city")}    isEditing={editMode} error={errors.city} />
-        <EditableField label="Pin Code" value={formData.pinCode} onChange={set("pinCode")} isEditing={editMode} error={errors.pinCode} maxLength={6} />
+        <EditableField
+          label="Country"
+          inputType="select"
+          options={INDIA_COUNTRY}
+          value="IN"
+          isEditing={false}
+        />
+        <EditableField
+          label="State"
+          inputType="select"
+          options={INDIA_STATES}
+          value={formData.state}
+          onChange={set("state")}
+          isEditing={editMode}
+          error={errors.state}
+        />
+        <EditableField
+          label="City"
+          value={formData.city}
+          onChange={set("city")}
+          isEditing={editMode}
+          error={errors.city}
+        />
+        <EditableField
+          label="Pin Code"
+          value={formData.pinCode}
+          onChange={set("pinCode")}
+          isEditing={editMode}
+          error={errors.pinCode}
+          maxLength={6}
+        />
       </div>
     </SectionCard>
   );
@@ -414,16 +500,19 @@ const BillingDetails = ({ initialData }) => {
 // ─── Other Details ────────────────────────────────────────────────────────────
 const OtherDetails = ({ initialData }) => {
   const [editMode, setEditMode] = useState(false);
-  const [errors, setErrors]     = useState({});
+  const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const defaultForm = useCallback(() => ({
-    supportContact:      initialData?.supportContact      || "",
-    website:             initialData?.website             || "",
-    termsConditions:     initialData?.termsConditions     || "",
-    invoicePrefix:       initialData?.invoicePrefix       || "",
-    enableInvoicePrefix: !!initialData?.enableInvoicePrefix,
-  }), [initialData]);
+  const defaultForm = useCallback(
+    () => ({
+      supportContact: initialData?.supportContact || "",
+      website: initialData?.website || "",
+      termsConditions: initialData?.termsConditions || "",
+      invoicePrefix: initialData?.invoicePrefix || "",
+      enableInvoicePrefix: !!initialData?.enableInvoicePrefix,
+    }),
+    [initialData],
+  );
 
   const [formData, setFormData] = useState(defaultForm);
 
@@ -476,30 +565,59 @@ const OtherDetails = ({ initialData }) => {
         isSaving={isSaving}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <EditableField label="Support Contact" value={formData.supportContact} onChange={set("supportContact")} isEditing={editMode} error={errors.supportContact} maxLength={10} />
-        <EditableField label="Website"         value={formData.website}        onChange={set("website")}        isEditing={editMode} />
+        <EditableField
+          label="Support Contact"
+          value={formData.supportContact}
+          onChange={set("supportContact")}
+          isEditing={editMode}
+          error={errors.supportContact}
+          maxLength={10}
+        />
+        <EditableField
+          label="Website"
+          value={formData.website}
+          onChange={set("website")}
+          isEditing={editMode}
+        />
         <div className="sm:col-span-2">
-          <EditableField label="Terms & Conditions" inputType="textarea" value={formData.termsConditions} onChange={set("termsConditions")} isEditing={editMode} />
+          <EditableField
+            label="Terms & Conditions"
+            inputType="textarea"
+            value={formData.termsConditions}
+            onChange={set("termsConditions")}
+            isEditing={editMode}
+          />
         </div>
 
         {/* Invoice Prefix toggle */}
         <div className="sm:col-span-2">
-          <label className={`flex items-center gap-3 cursor-pointer w-fit ${!editMode ? "opacity-60 pointer-events-none" : ""}`}>
+          <label
+            className={`flex items-center gap-3 cursor-pointer w-fit ${!editMode ? "opacity-60 pointer-events-none" : ""}`}
+          >
             <div
-              onClick={() => editMode && setFormData((p) => ({
-                ...p,
-                enableInvoicePrefix: !p.enableInvoicePrefix,
-                invoicePrefix: p.enableInvoicePrefix ? "" : p.invoicePrefix,
-              }))}
+              onClick={() =>
+                editMode &&
+                setFormData((p) => ({
+                  ...p,
+                  enableInvoicePrefix: !p.enableInvoicePrefix,
+                  invoicePrefix: p.enableInvoicePrefix ? "" : p.invoicePrefix,
+                }))
+              }
               className={`w-10 h-5 rounded-full transition-colors relative ${
                 formData.enableInvoicePrefix ? "bg-blue-500" : "bg-gray-300"
               }`}
             >
-              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                formData.enableInvoicePrefix ? "translate-x-5" : "translate-x-0.5"
-              }`} />
+              <span
+                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  formData.enableInvoicePrefix
+                    ? "translate-x-5"
+                    : "translate-x-0.5"
+                }`}
+              />
             </div>
-            <span className="text-sm font-medium text-gray-700">Enable Invoice Prefix</span>
+            <span className="text-sm font-medium text-gray-700">
+              Enable Invoice Prefix
+            </span>
           </label>
           {formData.enableInvoicePrefix && (
             <div className="mt-3 max-w-xs">

@@ -148,81 +148,106 @@
 //     }
 //   });
 // });
+const { app, BrowserWindow, Menu, ipcMain, shell } = require("electron");
+const path = require("path");
 
+const { initDatabase, backupDatabase } = require("./db/db");
 
-
-const { app, BrowserWindow, Menu } = require("electron"); // ✅ Added Menu 
-const path = require("path"); 
-const { initDatabase } = require("./db/db"); 
-const { registerItemHandlers } = require("./modules/Items/items"); 
-const { registerSizeHandlers } = require("./modules/Items/size"); 
-const { registerBillHandlers } = require("./modules/Billing/billHandlers"); 
-const { registerVendorHandlers } = require("./modules/Vendor/Vendor"); 
-const { registerPurchaseHandlers } = require("./modules/Purchase/Purchase"); 
-const { registerSettingsHandlers } = require("./modules/Settings/Setting"); 
-const { registerDiscountHandlers } = require("./modules/Discount/discount"); 
-const { registerCustomerHandlers } = require("./modules/Customer/customer"); 
-const { registerDashboardHandlers } = require("./modules/Purchase/Dashboard"); 
-const { 
-  registerUserHandlers, 
-  createSuperAdmin, 
-} = require("./modules/Users/user"); 
-const registerRoleHandlers = require("./modules/Items/role"); 
-const registerAuthHandler = require("./modules/Auth/auth"); 
+const { registerItemHandlers } = require("./modules/Items/items");
+const { registerSizeHandlers } = require("./modules/Items/size");
+const { registerBillHandlers } = require("./modules/Billing/billHandlers");
+const { registerVendorHandlers } = require("./modules/Vendor/Vendor");
+const { registerPurchaseHandlers } = require("./modules/Purchase/Purchase");
+const { registerSettingsHandlers } = require("./modules/Settings/Setting");
+const { registerDiscountHandlers } = require("./modules/Discount/discount");
+const { registerCustomerHandlers } = require("./modules/Customer/customer");
+const { registerDashboardHandlers } = require("./modules/Purchase/Dashboard");
+const {
+  registerUserHandlers,
+  createSuperAdmin,
+} = require("./modules/Users/user");
+const registerRoleHandlers = require("./modules/Items/role");
+const registerAuthHandler = require("./modules/Auth/auth");
 const { registerExpenseHandlers } = require("./modules/Others/Expense");
+const { registerBackupHandlers } = require("./modules/Settings/backup");
 
-let mainWindow; 
-let db; 
+let mainWindow;
+let db;
 
-function createWindow() { 
-  mainWindow = new BrowserWindow({ 
-    width: 1000, 
-    height: 700, 
-    webPreferences: { 
-      preload: path.join(__dirname, "preload.js"), 
-      contextIsolation: true, 
-      nodeIntegration: false, 
-    }, 
-  }); 
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1000,
+    height: 700,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
 
-  // ✅ Hide the top menu for all platforms 
-  Menu.setApplicationMenu(null); 
+  // ✅ Optional: Hide default menu (recommended for production)
+  // Menu.setApplicationMenu(null);
 
-  if (process.env.VITE_DEV_SERVER_URL) { 
-    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL); 
-    mainWindow.webContents.openDevTools(); 
-  } else { 
-    mainWindow.loadFile(path.join(__dirname, "../renderer/dist/index.html")); 
-  } 
-} 
+  if (process.env.VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+    mainWindow.webContents.openDevTools();
+  } else {
+    mainWindow.loadFile(path.join(__dirname, "../renderer/dist/index.html"), {
+      hash: "/",
+    });
+  }
+}
 
-app.whenReady().then(async () => { 
-  db = initDatabase(); 
+app.whenReady().then(async () => {
+  // ✅ Init DB
+  db = initDatabase();
 
-  // Create super admin securely 
-  await createSuperAdmin(db); 
+  // ✅ Create super admin
+  await createSuperAdmin(db);
 
-  // Register IPC handlers 
-  registerItemHandlers(db); 
-  registerSizeHandlers(db); 
-  registerBillHandlers(db); 
-  registerVendorHandlers(db); 
-  registerPurchaseHandlers(db); 
-  registerDashboardHandlers(db); 
-  registerSettingsHandlers(db); 
-  registerDiscountHandlers(db); 
-  registerCustomerHandlers(db); 
-  registerUserHandlers(db); 
-  registerRoleHandlers(db); 
-  registerAuthHandler(db); 
-  registerExpenseHandlers(db)
-  createWindow(); 
-}); 
+  // ✅ Register IPC handlers
+  registerItemHandlers(db);
+  registerSizeHandlers(db);
+  registerBillHandlers(db);
+  registerVendorHandlers(db);
+  registerPurchaseHandlers(db);
+  registerDashboardHandlers(db);
+  registerSettingsHandlers(db);
+  registerDiscountHandlers(db);
+  registerCustomerHandlers(db);
+  registerUserHandlers(db);
+  registerRoleHandlers(db);
+  registerAuthHandler(db);
+  registerExpenseHandlers(db);
+  registerBackupHandlers(db);
 
-app.on("window-all-closed", () => { 
-  if (process.platform !== "darwin") app.quit(); 
-}); 
+  // ✅ Auto backup every 6 hours
+  setInterval(
+    async () => {
+      await backupDatabase();
+    },
+    1000 * 60 * 60 * 6,
+  );
 
-app.on("activate", () => { 
-  if (BrowserWindow.getAllWindows().length === 0) createWindow(); 
-}); 
+  // ✅ Create window
+  createWindow();
+});
+
+app.on("window-all-closed", async () => {
+  // ✅ Backup before app closes (IMPORTANT)
+  try {
+    await backupDatabase();
+  } catch (e) {
+    console.error("Backup on close failed:", e);
+  }
+
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});
+
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});

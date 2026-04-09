@@ -15,8 +15,8 @@ const ViewAllItems = ({ items = [], onEdit, reload, mode = "MASTER" }) => {
 
   const canEdit = hasPermission("items.update");
   const canDelete = hasPermission("items.delete");
-  console.log(canDelete, "delete");
-  console.log(canEdit, "edit");
+  // console.log(canDelete, "delete");
+  // console.log(canEdit, "edit");
 
   const handleDelete = async () => {
     if (!canDelete) {

@@ -4,7 +4,7 @@ import { useStateContext } from "../context/StateContext";
 
 const ProtectedRoute = ({ children }) => {
   const { state } = useStateContext();
-  const isAuthenticated = !!state.user?.id; // true if user exists
+  const isAuthenticated = !!state?.user?.id; // true if user exists
 
   // console.log(object)
   if (!isAuthenticated) {

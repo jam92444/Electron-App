@@ -219,11 +219,11 @@ async function createSuperAdmin(db) {
   if (!existing) {
     const hashedPassword = await bcrypt.hash("jamal@1231", 10);
 
-    db.prepare(
+    const result = db.prepare(
       `
       INSERT INTO users (username, password_hash, full_name, email, status)
       VALUES (?, ?, ?, ?, ?)
-    `,
+    `
     ).run(
       "superadmin",
       hashedPassword,
@@ -232,8 +232,24 @@ async function createSuperAdmin(db) {
       "Active",
     );
 
-    console.log("✅ Super admin created with hashed password");
+    const userId = result.lastInsertRowid;
+
+    // ✅ Get super_admin role id
+    const role = db
+      .prepare("SELECT id FROM roles WHERE name = ?")
+      .get("super_admin");
+
+    if (role) {
+      // ✅ Assign role to user
+      db.prepare(
+        `
+        INSERT OR IGNORE INTO user_roles (user_id, role_id)
+        VALUES (?, ?)
+      `
+      ).run(userId, role.id);
+    }
+
+    console.log("✅ Super admin created with role assigned");
   }
 }
-
 module.exports = { registerUserHandlers, createSuperAdmin };

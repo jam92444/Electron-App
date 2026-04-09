@@ -184,4 +184,11 @@ contextBridge.exposeInMainWorld("api", {
   logoutUser: () => ipcRenderer.invoke("db:logout"),
   getCurrentUser: () => ipcRenderer.invoke("db:getCurrentUser"),
   restoreSession: () => ipcRenderer.invoke("db:restoreSession"),
+  /* ----------------- Backup ----------------- */
+  backupDatabase: () => ipcRenderer.invoke("db:backup-db"),
+  getBackups: () => ipcRenderer.invoke("db:get-backups"),
+  getBackupPath: () => ipcRenderer.invoke("db:get-backup-path"),
+  openBackupFolder: () => ipcRenderer.invoke("db:open-backup-folder"),
+  selectBackupFolder: () => ipcRenderer.invoke("db:select-backup-folder"),
+  setBackupPath: (path) => ipcRenderer.invoke("db:set-backup-path", path),
 });
