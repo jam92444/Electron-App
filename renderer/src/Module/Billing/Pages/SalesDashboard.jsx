@@ -32,7 +32,7 @@ const SalesDashboard = () => {
           <FaShoppingCart className="text-3xl" />
           <div>
             <p className="text-sm">Total Bills</p>
-            <p className="text-2xl font-bold">{dashboard.totals.totalBills}</p>
+            <p className="text-2xl font-bold">{dashboard.totals.totalBills || 0}</p>
           </div>
         </div>
 
@@ -41,7 +41,7 @@ const SalesDashboard = () => {
           <div>
             <p className="text-sm">Total Sales</p>
             <p className="text-2xl font-bold">
-              ₹{dashboard.totals.totalSales.toFixed(2)}
+              ₹{(dashboard.totals.totalSales || 0).toFixed(2)}
             </p>
           </div>
         </div>
@@ -51,7 +51,7 @@ const SalesDashboard = () => {
           <div>
             <p className="text-sm">Total Discount</p>
             <p className="text-2xl font-bold">
-              ₹{dashboard.totals.totalDiscount.toFixed(2)}
+              ₹{(dashboard.totals.totalDiscount || 0).toFixed(2)}
             </p>
           </div>
         </div>
@@ -60,7 +60,7 @@ const SalesDashboard = () => {
           <FaBoxes className="text-3xl" />
           <div>
             <p className="text-sm">Total Pieces Sold</p>
-            <p className="text-2xl font-bold">{dashboard.totals.totalPieces}</p>
+            <p className="text-2xl font-bold">{dashboard.totals.totalPieces || 0}</p>
           </div>
         </div>
       </div>
@@ -75,7 +75,7 @@ const SalesDashboard = () => {
                 key={item.item_code}
                 className="bg-orange-100 text-white px-3 py-1 rounded-full text-sm font-medium capitalize"
               >
-                {item.item_name} ({item.totalSold})
+                {item.item_name} ({item.totalSold || 0})
               </span>
             ))
           ) : (

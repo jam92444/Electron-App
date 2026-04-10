@@ -176,8 +176,8 @@ let db;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 700,
+    width: 1200,
+    height: 800,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -186,7 +186,7 @@ function createWindow() {
   });
 
   // ✅ Optional: Hide default menu (recommended for production)
-  // Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(null);
 
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
@@ -199,38 +199,48 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  // ✅ Init DB
-  db = initDatabase();
+  try {
+    // ✅ Init DB
+    db = initDatabase();
 
-  // ✅ Create super admin
-  await createSuperAdmin(db);
+    // ✅ Create super admin
+    await createSuperAdmin(db);
 
-  // ✅ Register IPC handlers
-  registerItemHandlers(db);
-  registerSizeHandlers(db);
-  registerBillHandlers(db);
-  registerVendorHandlers(db);
-  registerPurchaseHandlers(db);
-  registerDashboardHandlers(db);
-  registerSettingsHandlers(db);
-  registerDiscountHandlers(db);
-  registerCustomerHandlers(db);
-  registerUserHandlers(db);
-  registerRoleHandlers(db);
-  registerAuthHandler(db);
-  registerExpenseHandlers(db);
-  registerBackupHandlers(db);
+    // ✅ Register IPC handlers
+    registerItemHandlers(db);
+    registerSizeHandlers(db);
+    registerBillHandlers(db);
+    registerVendorHandlers(db);
+    registerPurchaseHandlers(db);
+    registerDashboardHandlers(db);
+    registerSettingsHandlers(db);
+    registerDiscountHandlers(db);
+    registerCustomerHandlers(db);
+    registerUserHandlers(db);
+    registerRoleHandlers(db);
+    registerAuthHandler(db);
+    registerExpenseHandlers(db);
+    registerBackupHandlers(db);
 
-  // ✅ Auto backup every 6 hours
-  setInterval(
-    async () => {
-      await backupDatabase();
-    },
-    1000 * 60 * 60 * 6,
-  );
+    // ✅ Auto backup every 6 hours
+    setInterval(
+      async () => {
+        await backupDatabase();
+      },
+      1000 * 60 * 60 * 6,
+    );
 
-  // ✅ Create window
-  createWindow();
+    // ✅ Create window
+    createWindow();
+  } catch (err) {
+    console.error("Startup failed:", err);
+    dialog.showErrorBox(
+      "Startup Error",
+      "Failed to initialize the application.\n\nPlease reinstall the app or contact support.\n\n" +
+        err.message,
+    );
+    app.quit();
+  }
 });
 
 app.on("window-all-closed", async () => {
@@ -243,6 +253,14 @@ app.on("window-all-closed", async () => {
 
   if (process.platform !== "darwin") {
     app.quit();
+  }
+});
+
+app.on("before-quit", () => {
+  try {
+    if (db) db.close();
+  } catch (err) {
+    console.error("Failed to close database:", err);
   }
 });
 

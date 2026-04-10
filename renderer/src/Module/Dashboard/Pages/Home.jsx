@@ -177,25 +177,25 @@ const Home = () => {
             <KpiCard
               icon={<FaShoppingCart />}
               label="Total Bills"
-              value={salesDashboard?.totals?.totalBills || 0}
+              value={`₹${Number(salesDashboard?.totals?.totalBills || 0).toFixed(2)}`}
               color="bg-blue-500"
             />
             <KpiCard
               icon={<FaRupeeSign />}
               label="Total Sales"
-              value={`₹${salesDashboard?.totals?.totalSales || 0}`}
+              value={`₹${Number(salesDashboard?.totals?.totalSales || 0).toFixed(2)}`}
               color="bg-green-500"
             />
             <KpiCard
               icon={<FaTags />}
               label="Total Discount"
-              value={`₹${salesDashboard?.totals?.totalDiscount.toFixed(2) || 0}`}
+              value={`₹${Number(salesDashboard?.totals?.totalDiscount || 0).toFixed(2)}`}
               color="bg-yellow-500"
             />
             <KpiCard
               icon={<FaBoxes />}
               label="Total Pieces Sold"
-              value={salesDashboard?.totals?.totalPieces || 0}
+              value={`₹${Number(salesDashboard?.totals?.totalPieces || 0).toFixed(2)}`}
               color="bg-purple-500"
             />
           </>

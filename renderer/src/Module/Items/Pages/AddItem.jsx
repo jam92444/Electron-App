@@ -38,7 +38,7 @@ const AddItem = () => {
       console.error(err);
     }
   };
-  console.log("permission", state.user);
+  // console.log("permission", state.user);
   // ✅ Fix 1: handleEdit takes item object now
   const handleEdit = (item) => {
     setEditingItem(item);
