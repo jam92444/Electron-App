@@ -4,7 +4,6 @@ import * as yup from "yup";
 import toast from "react-hot-toast";
 import Input from "../../../components/ReuseComponents/Input";
 import Textarea from "../../../components/ReuseComponents/TextArea";
-import Button from "../../../components/ReuseComponents/Button";
 import {
   getSettings,
   updateCompanySettings,

@@ -251,9 +251,9 @@ const Report = () => {
             return null;
           }),
         ]);
-      // console.log(plRes, "Profile and  loss response");
-      // getSalesDashboard: { success, totals, paymentModes, topItems }
+      // salesRes, expRes, vendRes, monthRes, varRes, dashRes, plRes
       if (salesRes?.success) {
+        // console.log(salesRes, "Sales data");
         setSalesTotals(salesRes.totals ?? null);
         setPaymentModes(salesRes.paymentModes ?? []);
         setTopSellingItems(salesRes.topItems ?? []);
@@ -277,6 +277,7 @@ const Report = () => {
       // getDashboardData: { success, data: { summary, purchaseTrend } }
       if (dashRes?.success) {
         setDashSummary(dashRes.data?.summary ?? null);
+        // console.log(dashRes.data);
         setPurchaseTrend(dashRes.data?.purchaseTrend ?? []);
       } else {
         setDashSummary(null);
@@ -648,7 +649,7 @@ const Report = () => {
                   icon="🏷️"
                 />
                 <StatCard
-                  label="Total Items"
+                  label="Total Items (filter will not applied for this)"
                   value={totalItems}
                   sub="In catalogue"
                   color="#fb923c"

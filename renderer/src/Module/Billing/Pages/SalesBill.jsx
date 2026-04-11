@@ -190,7 +190,7 @@ const BillView = ({ bill, items }) => {
       <div className="overflow-x-auto border rounded-lg">
         <table className="w-full border-collapse">
           <thead className="bg-orange-100">
-            <tr>
+            <tr className="text-white">
               <th className="border p-2 text-left">Item</th>
               <th className="border p-2">Size</th>
               <th className="border p-2">Qty</th>

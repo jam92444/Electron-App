@@ -23,7 +23,7 @@ const GenerateFinalAmount = ({
     try {
       const res = await getDiscounts();
       if (res.success) {
-        setDiscount(res.discounts);
+        setDiscount(res.discounts.filter((dis) => dis.is_active == 1));
       } else {
         setDiscount([]);
       }
